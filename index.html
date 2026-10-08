@@ -598,6 +598,15 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
+/* AI-utfylling */
+.ai-status{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;font-size:13px;line-height:1.4;padding:10px 12px;border-radius:10px;background:var(--card-hi);border:1px solid var(--line);color:var(--ink)}
+.ai-status.ok{background:var(--ph-soft);border:1px dashed var(--ph);color:#6A5016}
+.ai-status.err{background:var(--red-soft);border-color:transparent;color:var(--red-ink)}
+.ai-status .mini{color:var(--ink)}
+.ai-spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--bar);animation:aispin .8s linear infinite;flex:none}
+@keyframes aispin{to{transform:rotate(360deg)}}
+.form .ai-filled{border-color:var(--ph)!important;background:var(--ph-soft)!important}
+
 /* Innlogging */
 .login{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding-inline:16px;padding-block:24px}
 .login-card{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:14px}
@@ -1050,6 +1059,93 @@ async function uploadFile(file) {
   return { id: path, name: file.name };
 }
 const fileLink = (id, name) => `<a class="linkout filelink" href="#" data-act="openFile" data-path="${esc(id)}">${esc(name || "Vedlagt fil")} ↗</a>`;
+
+/* ---------- AI-utfylling ved opplasting (kunnskapsbasen) ----------
+   Teksten hentes ut her i nettleseren (bare de første 20 sidene), og sendes til
+   /api/autofill, som spør Claude. Svaret fylles inn som forslag i skjemaet.
+   Ingenting lagres før brukeren selv trykker «Lagre». */
+const AI_MAX_PAGES = 20, AI_MAX_CHARS = 60000;
+const AI_FIELDS = ["title", "kind", "area", "summary", "learned"];
+const AI_LABELS = { title: "tittel", kind: "type", area: "område", summary: "sammendrag", learned: "det vi lærte" };
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/";
+let pdfjsP = null, mammothP = null;
+function loadScript(src, integrity) {
+  return new Promise((ok, fail) => {
+    const s = document.createElement("script");
+    s.src = src; s.integrity = integrity; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer";
+    s.onload = ok; s.onerror = () => fail(new Error("load"));
+    document.head.appendChild(s);
+  });
+}
+const pdfjs = () => pdfjsP || (pdfjsP = import(PDFJS + "pdf.min.mjs").then(m => { m.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.mjs"; return m; }).catch(e => { pdfjsP = null; throw e; }));
+const mammothLib = () => mammothP || (mammothP = loadScript("https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.13.0/mammoth.browser.min.js",
+  "sha512-5hAL8cCOeSztnaZ+3xjLAflXeSwJpGrdrH6McLq2Dtl0vfvCQw+jO9q652eMASTNAU8anRvrXnlW9QqzlfN2HA==").then(() => window.mammoth).catch(e => { mammothP = null; throw e; }));
+function capText(text, note) {
+  if (text.length <= AI_MAX_CHARS) return { text, note };
+  return { text: text.slice(0, AI_MAX_CHARS), note: note || "Dokumentet er langt, så bare omtrent de første 20 sidene ble lest." };
+}
+async function extractText(file) {
+  const ext = (file.name.split(".").pop() || "").toLowerCase();
+  if (ext === "pdf") {
+    const lib = await pdfjs();
+    const task = lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }), doc = await task.promise;
+    const total = doc.numPages, n = Math.min(total, AI_MAX_PAGES), parts = [];
+    for (let i = 1; i <= n; i++) {
+      const c = await (await doc.getPage(i)).getTextContent();
+      parts.push(c.items.map(it => (it.str || "") + (it.hasEOL ? "\n" : " ")).join(""));
+    }
+    task.destroy();
+    return capText(parts.join("\n\n"), total > n ? `Bare de første ${n} av ${total} sidene ble lest.` : "");
+  }
+  if (ext === "docx") { const m = await mammothLib(); return capText((await m.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value || ""); }
+  if (["txt", "md", "csv"].includes(ext)) return capText(await file.text());
+  return null;
+}
+const aiSpin = '<span class="ai-spin" aria-hidden="true"></span>';
+let aiRun = 0;
+async function kbAutofill(file) {
+  const run = ++aiRun, ctx = modalCtx;
+  const live = () => run === aiRun && modalCtx === ctx && document.getElementById("ai-status");
+  const status = (html, cls) => { const box = live(); if (!box) return; box.className = "ai-status full" + (cls ? " " + cls : ""); box.innerHTML = html; box.hidden = !html; };
+  if (!file) return status("");
+  status(aiSpin + "Leser filen …");
+  let ex;
+  try { ex = await extractText(file); } catch (e) { return status("Kunne ikke lese filen. Fyll ut feltene selv.", "err"); }
+  if (!ex) return status("AI-utfylling virker for PDF, Word (.docx) og tekstfiler. Fyll ut feltene selv.");
+  if (ex.text.replace(/\s+/g, "").length < 40) return status("Fant nesten ingen tekst i filen. Er den skannet? Fyll ut feltene selv.", "err");
+  status(aiSpin + "AI lager forslag til utfylling …");
+  let data;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch("/api/autofill", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + ((session && session.access_token) || "") },
+      body: JSON.stringify({ text: ex.text, fileName: file.name, kinds: KB_KINDS, areas: AREAS.map(a => ({ id: a.id, name: a.name, desc: a.desc })) })
+    });
+    data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || "AI-utfyllingen feilet.");
+  } catch (e) { return status(esc(e.message) + " Du kan fylle ut feltene selv.", "err"); }
+  if (!live()) return;
+  // Fyll bare felt som er tomme og som brukeren ikke har endret selv
+  const filled = [], skipped = [];
+  for (const k of AI_FIELDS) {
+    const el = document.getElementById("f-" + k), v = data[k];
+    if (!el || !v || el.value === v) continue;
+    const hasContent = el.dataset.touched || (el.tagName === "SELECT" ? !ctx.isNew : el.value.trim());
+    if (hasContent) { skipped.push(k); continue; }
+    el.value = v; el.classList.add("ai-filled"); filled.push(k);
+  }
+  ctx.aiSuggest = data; ctx.aiSkipped = skipped; ctx.aiNote = ex.note;
+  aiStatusDone(filled.length);
+}
+function aiStatusDone(filledCount) {
+  const ctx = modalCtx, box = document.getElementById("ai-status"); if (!ctx || !box) return;
+  const sk = ctx.aiSkipped || [];
+  const main = filledCount ? "Forslag fra AI er fylt inn i de markerte feltene. Se over og rett opp før du trykker «Lagre»." : "Feltene var allerede fylt ut, så ingenting er endret.";
+  box.className = "ai-status full ok"; box.hidden = false;
+  box.innerHTML = `<span>${main}${ctx.aiNote ? " " + esc(ctx.aiNote) : ""}</span>` +
+    (sk.length ? `<button class="mini" type="button" data-act="aiApplyAll">Bruk AI-forslaget også for ${esc(joinNames(sk.map(k => AI_LABELS[k])))}</button>` : "");
+}
 
 /* ---------- Avledede verdier ---------- */
 const arr = c => Object.values(S[c] || {});
@@ -1556,7 +1652,7 @@ function filesHtml(rec) {
 }
 function attachFields(rec, opts = {}) {
   return [
-    { k: "file", label: "Legg ved fil", type: "file", accept: UPLOAD_ACCEPT, full: true, hint: UPLOAD_HINT },
+    { k: "file", label: "Legg ved fil", type: "file", accept: UPLOAD_ACCEPT, full: true, hint: opts.ai ? UPLOAD_HINT + " Velger du en PDF, Word- eller tekstfil, foreslår AI utfylling av skjemaet. Teksten sendes til Claude (Anthropic) for analyse, og ingenting lagres før du trykker «Lagre»." : UPLOAD_HINT },
     ...((rec.files || []).length ? [{ k: "removeFiles", label: "Fjern vedlegg", type: "multi", full: true, opts: rec.files.map(f => [f.id, f.name]) }] : []),
     ...(opts.noLink ? [] : [{ k: "link", label: "Lenke (Drive, Lovdata …)", full: true, ph: "https://" }])
   ];
@@ -2052,12 +2148,12 @@ function contactForm(c, isNew) {
 }
 function kbForm(k, isNew) {
   openForm({ title: isNew ? "Nytt kunnskapsnotat" : "Rediger notat", value: Object.assign({}, k, { tagsText: (k.tags || []).join(", ") }),
-    fields: [{ k: "title", label: "Tittel", full: true }, { k: "kind", label: "Type", type: "select", opts: KB_KINDS }, { k: "area", label: "Område", type: "select", opts: areaOpts() },
+    fields: [...attachFields(k, { noLink: true, ai: true }), { k: "aiStatus", type: "html", html: '<div id="ai-status" class="ai-status full" role="status" hidden></div>' },
+      { k: "title", label: "Tittel", full: true }, { k: "kind", label: "Type", type: "select", opts: KB_KINDS }, { k: "area", label: "Område", type: "select", opts: areaOpts() },
       { k: "summary", label: "Kort sammendrag", type: "textarea", full: true }, { k: "learned", label: "Det vi lærte (én–to setninger)", type: "textarea", full: true },
       { k: "url", label: "Lenke til originalfilen", full: true, ph: "https://drive.google.com/…" }, { k: "tagsText", label: "Tags (skill med komma)", full: true, ph: "pris, konkurrenter, arverett" },
       { k: "by", label: "Lagt inn av", type: "select", opts: personOpts() },
-      { k: "hyps", label: "Koblede hypoteser", type: "multi", full: true, opts: arr("hypotheses").sort((a, b) => a.n - b.n).map(h => [h.id, "H" + h.n + " " + h.title.slice(0, 34) + (h.title.length > 34 ? "…" : "")]) },
-      ...attachFields(k, { noLink: true })],
+      { k: "hyps", label: "Koblede hypoteser", type: "multi", full: true, opts: arr("hypotheses").sort((a, b) => a.n - b.n).map(h => [h.id, "H" + h.n + " " + h.title.slice(0, 34) + (h.title.length > 34 ? "…" : "")]) }],
     onSave: async v => {
       if (!v.title) return formError("Notatet trenger en tittel."); if (v.url && !isUrl(v.url)) return formError("Lenken må starte med https://");
       const o = Object.assign(clone(k), v, { tags: [...new Set(v.tagsText.split(",").map(s => s.trim().toLowerCase().replace(/^#/, "")).filter(Boolean))] }); delete o.tagsText;
@@ -2065,14 +2161,20 @@ function kbForm(k, isNew) {
       put("knowledge", o); closeModal(); toast("Notatet er lagret i kunnskapsbasen.");
     },
     onDelete: isNew ? null : () => { del("knowledge", k.id); closeModal(); } });
+  modalCtx.isNew = isNew;
+  const fi = document.getElementById("f-file"); if (fi) fi.addEventListener("change", () => kbAutofill(fi.files[0]));
 }
 
 /* ---------- Skjema-modal ---------- */
+const markTouched = ev => { const el = ev.target; if (el && el.id && el.id.startsWith("f-") && el.type !== "file") { el.dataset.touched = "1"; el.classList.remove("ai-filled"); } };
+document.getElementById("modal").addEventListener("input", markTouched);
+document.getElementById("modal").addEventListener("change", markTouched);
 const modalEl = document.getElementById("modal");
 let modalCtx = null;
 function fieldHtml(f, v) {
   const id = "f-" + f.k, cls = f.full ? "fl full" : "fl";
   const hint = f.hint ? `<span class="hint muted">${f.hint}</span>` : "";
+  if (f.type === "html") return f.html;
   if (f.type === "file") return `<label class="${cls}">${f.label}<input type="file" id="${id}" accept="${esc(f.accept || "")}">${hint}</label>`;
   if (f.type === "textarea") return `<label class="${cls}">${f.label}<textarea id="${id}" ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}>${esc(v)}</textarea>${hint}</label>`;
   if (f.type === "select") return `<label class="${cls}">${f.label}<select id="${id}">${f.opts.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o || "–"]; return `<option value="${esc(val)}"${String(v ?? "") === String(val) ? " selected" : ""}>${esc(lab)}</option>`; }).join("")}</select>${hint}</label>`;
@@ -2091,6 +2193,7 @@ function openForm({ title, fields, value, onSave, onDelete, extra }) {
 function readForm() {
   const out = {};
   for (const f of modalCtx.fields) {
+    if (f.type === "html") continue;
     const id = "f-" + f.k;
     if (f.type === "multi") out[f.k] = [...modalEl.querySelectorAll(`input[name="${id}"]:checked`)].map(i => i.value);
     else if (f.type === "check") out[f.k] = document.getElementById(id).checked;
@@ -2519,6 +2622,11 @@ const A = {
   cancelDelete: () => { document.getElementById("delrow").innerHTML = `<button class="btn danger" data-act="askDelete">Slett</button>`; },
   confirmDelete: () => { if (modalCtx && modalCtx.onDelete) modalCtx.onDelete(); },
   exportData, importData, checkImport, doImport,
+  aiApplyAll: () => {
+    const ctx = modalCtx; if (!ctx || !ctx.aiSuggest) return;
+    for (const k of ctx.aiSkipped || []) { const el = document.getElementById("f-" + k); if (el) { el.value = ctx.aiSuggest[k]; delete el.dataset.touched; el.classList.add("ai-filled"); } }
+    const n = (ctx.aiSkipped || []).length; ctx.aiSkipped = []; aiStatusDone(n);
+  },
   logout: () => { sb.auth.signOut().finally(() => location.reload()); },
   openFile: async el => {
     // Åpne fanen med en gang (ellers stopper nettleseren den), og send den til en lenke som varer i fem minutter

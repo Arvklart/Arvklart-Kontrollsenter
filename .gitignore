@@ -8,3 +8,4 @@ arvklart-kontrollsenter.html
 *.json.bak
 arvklart-data-*.json
 .claude/
+.testfiler/
