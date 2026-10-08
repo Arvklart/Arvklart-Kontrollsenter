@@ -1,0 +1,10 @@
+.DS_Store
+node_modules/
+.env
+.env.*
+.vercel/
+# Gammel artifact-versjon og dataeksporter skal ikke i repoet
+arvklart-kontrollsenter.html
+*.json.bak
+arvklart-data-*.json
+.claude/
