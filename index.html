@@ -607,6 +607,28 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 @keyframes aispin{to{transform:rotate(360deg)}}
 .form .ai-filled{border-color:var(--ph)!important;background:var(--ph-soft)!important}
 
+/* Venter og underoppgaver */
+.pill.s-Venter{background:var(--mustard);color:#6A5530;border-color:transparent}
+.kwait{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--muted);line-height:1.35}
+.kwait svg{width:13px;height:13px;flex:none;margin-top:1px}
+.wlink{color:var(--ink);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:2px}
+.wlink:hover{text-decoration-color:var(--ink)}
+.wdone{text-decoration:line-through;color:var(--muted)}
+.trow2 .kwait{margin-top:5px}
+.msitem{display:flex;flex-direction:column}
+.mstree{margin:-4px 0 0 0;padding:10px 16px 12px;background:var(--card-hi);border:1px solid var(--line);border-top:0;border-radius:0 0 16px 16px;font-size:13px}
+.mstree summary{cursor:pointer;font-weight:600;color:var(--muted)}
+.mstree .tree,.mstree ul{list-style:none;margin:0;padding:0}
+.mstree .tree{margin-top:8px}
+.mstree ul ul{margin-left:9px;padding-left:14px;border-left:1px dashed #CDBBA4}
+.tn-row{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;padding:4px 0}
+.tn-row a{color:var(--ink);font-weight:600;text-decoration:none}
+.tn-row a:hover{text-decoration:underline}
+.tn-row .pill{font-size:11px;padding:1px 8px}
+.tn-row .muted{font-size:12px}
+.tn-dot{width:8px;height:8px;border-radius:50%;background:#CDBBA4;flex:none}
+.tn-dot.s-Venter{background:#C9AE6B}.tn-dot.s-Pågår{background:var(--orange)}.tn-dot.s-Ferdig{background:var(--green)}
+
 /* Assistenten */
 .ai-fab{position:fixed;right:20px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:31;display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:#3A2420;border:0;border-radius:999px;padding:13px 18px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(30,18,10,.45)}
 .ai-fab:hover{background:#E08B8B}
@@ -862,14 +884,14 @@ const KB_KINDS = ["Rapport", "Statistikk", "Juridisk", "Intervjufunn", "Konkurre
 const DOC_KINDS = ["Dokument", "Avtale", "Søknad", "Presentasjon", "Regneark", "Mappe", "Annet"];
 const PEOPLE = SEED.team.map(p => p.navn);
 const INIT = { Andrea: "A", "Bård": "B", Julie: "J", "Ørjan": "Ø" };
-const STATUSES = ["Må gjøres","Pågår","Ferdig"];
+const STATUSES = ["Må gjøres","Venter","Pågår","Ferdig"];
 /* Eldre statuser fra første versjon av tavlen gjøres om til de tre nye */
 function normStatus(s) {
   if (STATUSES.includes(s)) return s;
   if (s === "Til gjennomgang") return "Pågår";
   return "Må gjøres";
 }
-const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Pågår": ["Ferdig", "Ferdig"], "Ferdig": ["Pågår", "Åpne igjen"] };
+const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "Start likevel"], "Pågår": ["Ferdig", "Ferdig"], "Ferdig": ["Pågår", "Åpne igjen"] };
 const PRIOS = ["Kritisk","Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
@@ -1201,7 +1223,7 @@ const idsOf = c => () => Object.keys(S[c] || {});
 // Hvordan forslag fra assistenten tolkes per felt: tekst, dato, tall, ett valg, eller liste
 const AI_SPEC = {
   tasks: { label: "oppgave", form: taskForm, make: () => newTask(), alias: { area: "omr" },
-    fields: { title: "text", status: ["enum", () => STATUSES], owners: ["list", () => PEOPLE], due: "date", prio: ["enum", () => PRIOS], area: ["enum", AREA_IDS], note: "text", contacts: ["list", idsOf("contacts")], ms: ["list", idsOf("milestones")] } },
+    fields: { title: "text", status: ["enum", () => STATUSES], owners: ["list", () => PEOPLE], due: "date", prio: ["enum", () => PRIOS], area: ["enum", AREA_IDS], note: "text", contacts: ["list", idsOf("contacts")], ms: ["list", idsOf("milestones")], waitsOn: ["list", () => [...Object.keys(S.tasks), ...Object.keys(S.milestones)]] } },
   contacts: { label: "kontakt", form: contactForm, make: () => ({ id: uid("c"), name: "", org: "", role: "", areas: [], status: "Bør kontaktes", owner: "", email: "", phone: "", next: "", notes: "" }),
     fields: { name: "text", org: "text", role: "text", status: ["enum", () => CONTACT_STATUS], owner: ["enum", () => PEOPLE], email: "text", phone: "text", next: "text", areas: ["list", AREA_IDS], notes: "text" } },
   knowledge: { label: "kunnskapsnotat", form: kbForm, alias: { tags: "tagsText" }, make: () => ({ id: uid("k"), title: "", kind: "Rapport", area: "research", tags: [], summary: "", learned: "", url: "", hyps: [], added: todayISO(), by: UI.me || "" }),
@@ -1218,7 +1240,7 @@ const AI_SPEC = {
     fields: { question: "text", status: ["enum", () => LEGAL_STATUS], findings: "text", next: "text", owner: ["enum", () => PEOPLE] } }
 };
 const AI_FIELD_LABELS = { title: "Tittel", status: "Status", owners: "Ansvarlige", due: "Frist", prio: "Prioritet", area: "Område", note: "Notat", contacts: "Kontakter", ms: "Milepæl",
-  name: "Navn", org: "Organisasjon", role: "Rolle", owner: "Ansvarlig", email: "E-post", phone: "Telefon", next: "Neste steg", areas: "Områder", notes: "Notater",
+  name: "Navn", org: "Organisasjon", role: "Rolle", owner: "Ansvarlig", email: "E-post", phone: "Telefon", next: "Neste steg", areas: "Områder", notes: "Notater", waitsOn: "Venter på",
   kind: "Type", summary: "Sammendrag", learned: "Det vi lærte", url: "Lenke", tags: "Tags", hyps: "Hypoteser", date: "Dato", segment: "Segment", findings: "Funn",
   family: "Familie / kontakt", source: "Kilde", stage: "Steg", price: "Pris", attendees: "Deltakere", decisions: "Beslutninger", actionsText: "Actionpunkter",
   text: "Beslutning", why: "Hvorfor", by: "Av", question: "Spørsmål" };
@@ -1344,8 +1366,26 @@ function nextDeadline() {
   return milestones().filter(m => m.date && m.status !== "Levert" && (m.type !== "Hendelse" || toUTC(m.end || m.date) >= today))
     .sort((a, b) => toUTC(a.date) - toUTC(b.date))[0] || null;
 }
+// Alle oppgaver i milepælens kjede: oppgaver koblet til milepælen og det de venter på (underoppgaver)
+function msTaskIds(m) {
+  const out = new Set(), walk = id => { if (out.has(id) || !S.tasks[id]) return; out.add(id); waitIds(S.tasks[id]).forEach(walk); };
+  tasks().filter(t => (t.ms || []).includes(m.id)).forEach(t => walk(t.id));
+  return [...out];
+}
+function msTree(m) {
+  const roots = tasks().filter(t => (t.ms || []).includes(m.id)); if (!roots.length) return "";
+  const seen = new Set();
+  const node = (t, depth) => {
+    if (seen.has(t.id) || depth > 8) return ""; seen.add(t.id);
+    const kids = waitIds(t).map(id => S.tasks[id]).filter(Boolean), msKids = waitIds(t).map(id => S.milestones[id]).filter(Boolean);
+    return `<li><div class="tn-row"><span class="tn-dot s-${esc(t.status)}"></span><a href="#" data-act="editTask" data-id="${t.id}" class="${isDone(t) ? "wdone" : ""}">${ph(t.title)}</a><span class="pill s-${esc(t.status)}">${esc(t.status)}</span>${ownersOf(t).length ? `<span class="muted">${esc(joinNames(ownersOf(t)))}</span>` : ""}</div>
+      ${kids.length || msKids.length ? `<ul>${kids.map(k => node(k, depth + 1)).join("")}${msKids.map(x => `<li><div class="tn-row"><span class="tn-dot"></span><span class="muted">Milepæl: ${esc(x.title)}</span></div></li>`).join("")}</ul>` : ""}</li>`;
+  };
+  const n = msTaskIds(m).length;
+  return `<details class="mstree"${UI.openTree && UI.openTree[m.id] ? " open" : ""} data-ms="${m.id}"><summary>Oppgaver og underoppgaver (${n})</summary><ul class="tree">${roots.map(t => node(t, 0)).join("")}</ul></details>`;
+}
 function msProgress(m) {
-  const ts = tasks().filter(t => (t.ms || []).includes(m.id));
+  const ts = msTaskIds(m).map(id => S.tasks[id]);
   const done = ts.filter(isDone).length;
   if (!ts.length) return { done: 0, total: 0, pct: m.status === "Levert" ? 100 : 0 };
   return { done, total: ts.length, pct: Math.round(done / ts.length * 100) };
@@ -1381,11 +1421,37 @@ function avatar(owner, sm) {
 const ownerText = o => o ? esc(o) : `<span class="muted">Ikke fordelt</span>`;
 /* Oppgaver kan ha flere ansvarlige. Eldre data med ett navn i «owner» gjøres om til en liste. */
 function ownersOf(t) { return Array.isArray(t.owners) ? t.owners.filter(Boolean) : (t.owner ? [t.owner] : []); }
-function normTask(t) { if (t.area === undefined) t.area = CAT_TO_AREA[t.cat] || ""; if (t.sub === undefined) t.sub = ""; if (!Array.isArray(t.contacts)) t.contacts = []; t.status = normStatus(t.status); t.owners = PEOPLE.filter(p => ownersOf(t).includes(p)).concat(ownersOf(t).filter(o => !PEOPLE.includes(o))); delete t.owner; return t; }
+function normTask(t) { if (t.area === undefined) t.area = CAT_TO_AREA[t.cat] || ""; if (t.sub === undefined) t.sub = ""; if (!Array.isArray(t.contacts)) t.contacts = []; if (!Array.isArray(t.waitsOn)) t.waitsOn = []; t.status = normStatus(t.status); t.owners = PEOPLE.filter(p => ownersOf(t).includes(p)).concat(ownersOf(t).filter(o => !PEOPLE.includes(o))); delete t.owner; return t; }
 const joinNames = a => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " og " + a[a.length - 1];
 const ownersText = t => { const a = ownersOf(t); return a.length ? esc(joinNames(a)) : `<span class="muted">Ikke fordelt</span>`; };
 function avatars(t, sm) { const a = ownersOf(t); return a.length ? `<span class="avs">${a.map(o => avatar(o, sm)).join("")}</span>` : avatar("", sm); }
 const needsOwner = s => s === "Pågår" || s === "Ferdig";
+/* «Venter på»: en oppgave kan vente på andre oppgaver eller milepæler. Kjeden blir underoppgaver. */
+const waitIds = t => (t && Array.isArray(t.waitsOn)) ? t.waitsOn : [];
+function blockerOf(id) {
+  if (S.tasks[id]) return { id, kind: "task", title: S.tasks[id].title, done: isDone(S.tasks[id]) };
+  if (S.milestones[id]) return { id, kind: "ms", title: S.milestones[id].title, done: S.milestones[id].status === "Levert" };
+  return null;
+}
+const openBlockers = t => waitIds(t).map(blockerOf).filter(b => b && !b.done);
+// Venter oppgave a (direkte eller via andre) på target? Brukes for å hindre ring-avhengigheter.
+function waitsOnDeep(a, target, seen = new Set()) {
+  for (const id of waitIds(S.tasks[a])) {
+    if (id === target) return true;
+    if (S.tasks[id] && !seen.has(id)) { seen.add(id); if (waitsOnDeep(id, target, seen)) return true; }
+  }
+  return false;
+}
+function waitLine(t) {
+  const bs = waitIds(t).map(blockerOf).filter(Boolean); if (!bs.length) return "";
+  return `<div class="kwait">${ico("clock", 2)}<span>Venter på: ${bs.map(b => `<a href="#" class="wlink${b.done ? " wdone" : ""}" data-act="${b.kind === "task" ? "editTask" : "editMs"}" data-id="${esc(b.id)}">${b.kind === "ms" ? "milepæl " : ""}${esc(b.title)}</a>`).join(", ")}</span></div>`;
+}
+// Når noe blir ferdig: oppgaver som bare ventet på dette, flyttes tilbake til «Må gjøres»
+function releaseWaiting(doneId) {
+  const ready = tasks().filter(t => t.status === "Venter" && waitIds(t).includes(doneId) && !openBlockers(t).length);
+  ready.forEach(t => put("tasks", Object.assign(clone(t), { status: "Må gjøres" })));
+  if (ready.length) setTimeout(() => toast(`Klar til å starte: ${joinNames(ready.map(t => "«" + t.title + "»"))}. ${ready.length === 1 ? "Den" : "De"} ligger nå i «Må gjøres».`), 1200);
+}
 function dueBadge(t) {
   if (!t.due) return t.dueText ? `<span class="badge t-none">${ph(t.dueText)}</span>` : `<span class="badge t-none">Ingen frist</span>`;
   const tone = taskTone(t);
@@ -1479,7 +1545,7 @@ VIEWS.hjem = function () {
   const today = todayISO();
   const over = t => t.due && daysUntil(t.due) < 0 ? 1 : 0;
   // Ukens viktigste oppgaver: regnes ut automatisk. Forfalte først, så prioritet og frist.
-  const openAll = tasks().filter(t => !isDone(t));
+  const openAll = tasks().filter(t => !isDone(t) && t.status !== "Venter");
   const top = openAll.slice().sort((a, b) => over(b) - over(a) || byPrioDue(a, b)).slice(0, 5);
   const topHtml = taskRows(top);
   const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2><p class="sub">Regnes ut fra prioritet og frist. Forfalte øverst.</p></div><span class="mono muted">${top.length}/${openAll.length}</span></div>
@@ -1571,7 +1637,7 @@ function goalsCard() {
   const timeline = `<section class="gt wide"><span class="eyebrow">Milepæler fremover</span>${tl || '<div class="empty">Ingen daterte milepæler fremover.</div>'}</section>`;
   // Oppgaver: stablet søyle per status
   const cnt = STATUSES.map(s => all.filter(t => t.status === s).length), tot = Math.max(1, all.length);
-  const colors = ["#CDBBA4", "var(--orange)", "var(--green)"];
+  const colors = ["#CDBBA4", "#C9AE6B", "var(--orange)", "var(--green)"];
   const od = overdue().length;
   const tasksTile = `<section class="gt"><span class="eyebrow">Oppgaver</span>
     <div class="gt-big"><b class="mono">${cnt[2]}</b> av ${all.length} ferdig</div>
@@ -1704,6 +1770,7 @@ function kcard(t, from) {
     <div class="kf">${dueBadge(t)}${taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}</div>
     ${own.length && !todo ? `<div class="kown">${esc(joinNames(own))}</div>` : ""}
     ${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}
+    ${isDone(t) ? "" : waitLine(t)}
     <div class="kmove"><button class="mini${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}${todo ? " " + ico("right", 2.4) : ""}</button></div></div>`;
 }
 VIEWS.oppgaver = function () {
@@ -1764,12 +1831,12 @@ VIEWS.milepaeler = function () {
     let cd = "Dato mangler";
     if (m.status === "Levert") cd = "Levert";
     else if (m.date) { const d = daysUntil(m.date); cd = m.end && d < 0 && daysUntil(m.end) >= 0 ? "Pågår nå" : d === 0 ? "I dag" : d > 0 ? `Om ${d} ${d === 1 ? "dag" : "dager"}` : `For ${-d} dager siden`; }
-    return `<div class="msrow${nd && nd.id === m.id ? " next" : ""}" data-act="editMs" data-id="${m.id}">
+    return `<div class="msitem"><div class="msrow${nd && nd.id === m.id ? " next" : ""}" data-act="editMs" data-id="${m.id}">
       <div class="msdate">${m.date ? `<b>${fmtDate(m.date, false)}</b><small>${WD[dOf(m.date).getUTCDay()]} · uke ${isoWeek(m.date)}</small>` : `<span class="ph">FYLL INN</span>`}</div>
       <div style="min-width:0"><b style="font-size:15px">${esc(m.title)}</b>${m.subtitle ? ` <span class="muted">– ${esc(m.subtitle)}</span>` : ""}
         <div class="msmeta"><span class="pill">${esc(m.type)}</span><span class="pill s-${esc(m.status)}">${esc(m.status)}</span><span class="badge t-${tone}">${cd}</span>${m.end ? `<span class="muted mono" style="font-size:12px">${fmtRange(m.date, m.end)}</span>` : ""}${!m.date ? ph(m.dateText) : ""}</div>
         ${m.note ? `<div class="muted" style="font-size:13px;margin-top:6px">${ph(m.note)}</div>` : ""}</div>
-      <div class="msprog">${m.type === "Hendelse" ? "" : `<div class="mh"><span>Oppgaver</span><span class="mono">${p.total ? `${p.done}/${p.total} · ${p.pct} %` : m.status === "Levert" ? "100 %" : "ingen koblet"}</span></div>${bar(p.pct, p.pct === 100 ? "green" : "")}`}</div></div>`;
+      <div class="msprog">${m.type === "Hendelse" ? "" : `<div class="mh"><span>Oppgaver</span><span class="mono">${p.total ? `${p.done}/${p.total} · ${p.pct} %` : m.status === "Levert" ? "100 %" : "ingen koblet"}</span></div>${bar(p.pct, p.pct === 100 ? "green" : "")}`}</div></div>${msTree(m)}</div>`;
   }).join("");
   return tl + `<div class="mslist">${list}</div>`;
 };
@@ -2096,7 +2163,7 @@ function taskRows(list, opts = {}) {
     return `<div class="trow2${done ? " done" : ""}" style="border-left-color:${done ? "var(--green)" : PEDGE[t.prio] || "var(--line)"}">
       <button class="ring${done ? " on" : ""}" data-act="toggleDone" data-id="${t.id}" aria-label="${done ? "Marker som ikke ferdig" : "Marker som ferdig"}">${ico("check", 3)}</button>
       <div class="tr-main"><div class="ft" data-act="editTask" data-id="${t.id}">${ph(t.title)}</div>
-        <div class="fm">${dueBadge(t)}${tag}<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>${own.length ? `<span>${esc(joinNames(own))}</span>` : ""}</div></div>
+        <div class="fm">${dueBadge(t)}${tag}<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>${own.length ? `<span>${esc(joinNames(own))}</span>` : ""}</div>${done ? "" : waitLine(t)}</div>
       <div class="tr-act"><button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) : "Ikke fordelt"}">${avatars(t, true)}</button>
       <button class="mini${done ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}${todo ? " " + ico("right", 2.4) : ""}</button></div></div>`;
   }).join("");
@@ -2391,6 +2458,14 @@ function closeModal() { modalEl.innerHTML = ""; modalCtx = null; }
 
 const ownerOpts = [["", "Ikke fordelt"], ...PEOPLE.map(p => [p, p])];
 function areaSubOpts() { return AREAS.flatMap(a => [[a.id, a.name], ...(SUBS[a.id] || []).map(([s, l]) => [a.id + "." + s, a.name + " › " + l])]); }
+// Valg for «Venter på»: andre oppgaver og milepæler, men ikke slike som selv venter på denne (ring)
+function waitOpts(t) {
+  const cur = waitIds(t);
+  const ts = tasks().filter(x => x.id !== t.id && !waitsOnDeep(x.id, t.id) && (!isDone(x) || cur.includes(x.id)))
+    .sort((a, b) => (a.title || "").localeCompare(b.title || "")).map(x => [x.id, x.title + (isDone(x) ? " (ferdig)" : "")]);
+  const ms = milestones().filter(m => m.status !== "Levert" || cur.includes(m.id)).map(m => [m.id, "Milepæl: " + m.title]);
+  return [...ts, ...ms];
+}
 function taskForm(t, isNew) {
   const msOpts = milestones().map(m => [m.id, m.title]);
   openForm({
@@ -2404,6 +2479,8 @@ function taskForm(t, isNew) {
       { k: "omr", label: "Område", type: "select", opts: [["", "Ikke valgt"], ...areaSubOpts()] },
       { k: "est", label: "Estimert tid (timer)", type: "number" },
       { k: "ms", label: "Milepæl", type: "multi", opts: msOpts, full: true },
+      { k: "waitsOn", label: "Venter på", type: "multi", full: true, opts: waitOpts(t),
+        hint: "Oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og flyttes tilbake til «Må gjøres» når alt den venter på er ferdig." },
       { k: "contacts", label: "Kontakter", type: "multi", full: true, opts: arr("contacts").sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(c => [c.id, c.name + (c.org ? " (" + c.org + ")" : "")]), hint: arr("contacts").length ? "" : "Ingen kontakter ennå. Legg dem inn under Kontakter." },
       { k: "note", label: "Notat", type: "textarea", full: true }
     ],
@@ -2417,10 +2494,17 @@ function taskForm(t, isNew) {
       const [area, sub] = (v.omr || "").split("."); v.area = area || ""; v.sub = sub || ""; delete v.omr;
       const o = Object.assign(clone(t), v); delete o.owner;
       if (o.due) o.dueText = "";
-      setTaskStatus(o, v.status, t.status); closeModal();
+      const blocking = openBlockers(o);
+      if (blocking.length && o.status === "Må gjøres") o.status = "Venter";
+      setTaskStatus(o, o.status, t.status); closeModal();
       if (gaveBack) toast("Ingen ansvarlig lenger. Oppgaven er lagt tilbake i «Må gjøres».");
+      else if (o.status === "Venter" && t.status !== "Venter" && blocking.length) toast(`Oppgaven venter på ${joinNames(blocking.map(b => "«" + b.title + "»"))}.`);
     },
-    onDelete: isNew ? null : () => { del("tasks", t.id); closeModal(); toast("Oppgaven er slettet."); }
+    onDelete: isNew ? null : () => {
+      tasks().filter(x => waitIds(x).includes(t.id)).forEach(x => put("tasks", Object.assign(clone(x), { waitsOn: waitIds(x).filter(id => id !== t.id) })));
+      del("tasks", t.id); closeModal(); toast("Oppgaven er slettet.");
+      releaseWaiting(t.id);
+    }
   });
 }
 /* Flytt en oppgave. Til «Pågår» eller «Ferdig» må den ha minst én ansvarlig. */
@@ -2454,6 +2538,7 @@ function setTaskStatus(t, status, prev) {
   if (status === "Ferdig" && was !== "Ferdig") {
     const all = tasks(), d = all.filter(isDone).length;
     toast(`Ferdig! ${d} av ${all.length} oppgaver er i mål.`);
+    releaseWaiting(t.id);
   }
 }
 function newTask(over) {
@@ -2477,7 +2562,7 @@ function msForm(m, isNew) {
       const o = Object.assign(clone(m), v); if (o.date) o.dateText = "";
       if (o.end && o.date && toUTC(o.end) < toUTC(o.date)) return formError("Sluttdatoen kan ikke være før startdatoen.");
       put("milestones", o); closeModal();
-      if (v.status === "Levert" && m.status !== "Levert") toast(`${o.title} er levert. Godt jobbet!`);
+      if (v.status === "Levert" && m.status !== "Levert") { toast(`${o.title} er levert. Godt jobbet!`); releaseWaiting(o.id); }
     },
     onDelete: isNew ? null : () => { del("milestones", m.id); closeModal(); }
   });
@@ -2624,7 +2709,7 @@ function meetingForm(m, isNew) {
 
 /* ---------- Hva gjør vi nå? ---------- */
 function whatNow() {
-  const cand = tasks().filter(t => !isDone(t)).sort(byPrioDue);
+  const cand = tasks().filter(t => !isDone(t) && t.status !== "Venter").sort(byPrioDue);
   if (!cand.length) { modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal"><h3>Hva gjør vi nå?</h3><p>Alle oppgaver er ferdige. Ta en pause – dere har fortjent den.</p><div class="modal-foot"><div class="r"><button class="btn" data-act="closeModal">Lukk</button></div></div></div></div>`; return; }
   const t = cand[UI.whatIdx % cand.length];
   modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-label="Hva gjør vi nå?"><h3>Hva gjør vi nå?</h3>
@@ -2845,6 +2930,7 @@ main.addEventListener("input", ev => {
   if (ev.target.id === "contact-search") { UI.cQ = ev.target.value; applySearch(UI.cQ); }
 });
 main.addEventListener("submit", ev => ev.preventDefault());
+main.addEventListener("toggle", ev => { const d = ev.target; if (d.classList && d.classList.contains("mstree")) { UI.openTree = UI.openTree || {}; UI.openTree[d.dataset.ms] = d.open; } }, true);
 main.addEventListener("mousemove", incomeHover);
 main.addEventListener("mouseout", ev => { if (ev.target.classList && ev.target.classList.contains("inc-hit")) incomeLeave(ev); });
 

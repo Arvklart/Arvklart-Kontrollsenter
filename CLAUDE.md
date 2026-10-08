@@ -31,7 +31,9 @@ Brukerne er ikke tekniske. Forklar kort og med enkle ord på norsk hva du gjør 
 - Alle klikk går via `data-act="navn"` og objektet `A`. Skjemaer lages med `openForm({ title, fields, value, onSave, onDelete })`.
 - Navigasjon via hash: `#side` eller `#område.delside`. `ALIAS` mapper gamle lenker.
 - Områder: `AREAS`. Delområder: `SUBS`.
-- Oppgaver: status «Må gjøres» → «Pågår» → «Ferdig». Må ha minst én ansvarlig før «Pågår» eller «Ferdig». Alle oppgavelister bruker `taskRows()`.
+- Oppgaver: status «Må gjøres», «Venter», «Pågår», «Ferdig». Må ha minst én ansvarlig før «Pågår» eller «Ferdig». Alle oppgavelister bruker `taskRows()`.
+- «Venter på»: `waitsOn` på en oppgave er en liste med id-er for oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og `releaseWaiting()` flytter den tilbake til «Må gjøres» når alt den venter på er ferdig (oppgave «Ferdig» eller milepæl «Levert»). Ring-avhengigheter stoppes i `waitOpts()`.
+- Milepæler: oppgaver kobles via `ms`. Kjeden av det de venter på blir underoppgaver (`msTaskIds()`, `msTree()`), og teller med i fremdriften.
 - Vedlegg: `attachFields(rec)` + `applyAttach(o, v)` i skjemaene, og `filesHtml(rec)`/`fileLink()` for visning. Filer lagres som `{ id: sti i bøtta, name }`.
 - Grafer er håndlaget SVG. Datoer regnes i Europe/Oslo og vises på norsk.
 
