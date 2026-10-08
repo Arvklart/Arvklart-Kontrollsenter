@@ -13,6 +13,8 @@ Gruppe 6 sitt felles dashbord i STR466 Venture Creation (høst 2026): oppgaver, 
 - **Innlogging** skjer med en lenke på e-post (ingen passord).
 - **AI-funksjoner** ligger i `api/` og kjører som serverless-funksjoner på Vercel. De bruker Claude (`claude-haiku-4-5`) med nøkkelen `ANTHROPIC_API_KEY` fra Vercel, og sjekker at brukeren er innlogget og på teamets liste.
   - `api/autofill.js`: foreslår tittel, type, område, sammendrag og «det vi lærte» når man laster opp en fil i kunnskapsbasen. Nettleseren leser bare de første 20 sidene. Ingenting lagres før brukeren trykker «Lagre».
+  - `api/assistant.js`: assistenten nede i hjørnet. Svarer på hvor ting ligger, og foreslår nye eller endrede oppføringer (kontakter, oppgaver, intervjuer, kunnskapsnotater, leads, møter, beslutninger, juridiske spørsmål). Den leser bare korte felt (titler, sammendrag, «det vi lærte», status, frister), aldri hele dokumenter, vedlegg eller kontaktinfo. Forslag åpnes som utfylte skjemaer, og ingenting lagres før brukeren trykker «Lagre».
+  - `api/_lib.js`: felles hjelpere (innloggingssjekk, henting av data, feilmeldinger).
 
 Den offentlige Supabase-nøkkelen i `index.html` er laget for å ligge i nettleseren. Tilgangen styres av innloggingen og RLS-reglene i databasen. Hemmelige nøkler (for eksempel `ANTHROPIC_API_KEY`) skal bare ligge som miljøvariabler i Vercel, aldri i koden.
 

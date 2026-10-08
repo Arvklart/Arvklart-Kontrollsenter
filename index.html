@@ -607,6 +607,40 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 @keyframes aispin{to{transform:rotate(360deg)}}
 .form .ai-filled{border-color:var(--ph)!important;background:var(--ph-soft)!important}
 
+/* Assistenten */
+.ai-fab{position:fixed;right:20px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:31;display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:#3A2420;border:0;border-radius:999px;padding:13px 18px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(30,18,10,.45)}
+.ai-fab:hover{background:#E08B8B}
+.ai-fab.on{background:var(--card);color:var(--ink)}
+.ai-fab svg{width:18px;height:18px}
+.ai-panel{position:fixed;right:20px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:40;width:min(420px,calc(100vw - 32px));height:min(640px,calc(100dvh - 120px));display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 20px 60px rgba(20,10,5,.45);overflow:hidden}
+.ai-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.ai-head b{font-family:var(--serif);font-size:19px;font-weight:600;display:block}
+.ai-head small{color:var(--muted);font-size:12px}
+.ai-head-r{display:flex;gap:6px;align-items:center;flex:none}
+.ai-log{flex:1;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain}
+.ai-msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.45;overflow-wrap:anywhere}
+.ai-msg.bot{align-self:flex-start;background:var(--card-hi);border:1px solid var(--line);border-bottom-left-radius:4px}
+.ai-msg.me{align-self:flex-end;background:var(--bar);color:var(--card);border-bottom-right-radius:4px}
+.ai-msg.err{background:var(--red-soft);color:var(--red-ink);border-color:transparent}
+.ai-msg .ai-spin{display:inline-block;vertical-align:-2px;margin-right:8px}
+.ai-link{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:var(--rose);text-underline-offset:3px}
+.ai-prop{background:var(--mustard);border:1px solid #DCCDA9;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.ai-prop b{font-size:14px;line-height:1.3}
+.ai-prop-f{display:flex;flex-direction:column;gap:2px;overflow-wrap:anywhere}
+.ai-prop-f span{color:var(--muted);margin-right:6px;font-size:12px}
+.ai-prop .btn{align-self:flex-start;margin-top:4px}
+.ai-starters{display:flex;flex-wrap:wrap;gap:6px}
+.ai-starters .chip{font-size:12.5px;padding:6px 11px;box-shadow:none;background:var(--card-hi);text-align:left}
+.ai-form{display:flex;gap:8px;align-items:flex-end;padding:10px 12px;border-top:1px solid var(--line)}
+.ai-form textarea{flex:1;min-width:0;resize:none;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#FBF7F1;font-size:14px;line-height:1.4;max-height:160px}
+.ai-form .btn{flex:none;padding:10px 16px}
+.ai-foot{margin:0;padding:0 14px 10px;font-size:11px;color:var(--muted)}
+.form div.fl.ai-filled{border:1px dashed var(--ph);border-radius:10px;padding:8px 10px;background:var(--ph-soft)}
+@media (max-width:640px){
+  .ai-fab{padding:13px;right:16px}.ai-fab span{display:none}
+  .ai-panel{right:0;left:0;bottom:0;width:100%;height:calc(100dvh - 40px - env(safe-area-inset-top,0px));border-radius:22px 22px 0 0;border-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+}
+
 /* Innlogging */
 .login{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding-inline:16px;padding-block:24px}
 .login-card{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:28px;display:flex;flex-direction:column;gap:14px}
@@ -646,6 +680,14 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
   <main class="main" id="main"></main>
 </div>
 <button class="fab" id="fab" data-act="whatNow" hidden></button>
+<button class="ai-fab" id="ai-fab" type="button" data-act="aiToggle" aria-expanded="false" aria-controls="ai-panel" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/></svg><span>Assistent</span></button>
+<section class="ai-panel" id="ai-panel" role="dialog" aria-label="Assistent" hidden>
+  <header class="ai-head"><div><b>Assistent</b><small>Finner frem og foreslår. Du bestemmer.</small></div>
+    <div class="ai-head-r"><button class="mini" type="button" data-act="aiClear">Ny samtale</button><button class="iconbtn" type="button" data-act="aiToggle" aria-label="Lukk assistenten"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div></header>
+  <div class="ai-log" id="ai-log" aria-live="polite"></div>
+  <form class="ai-form" id="ai-form"><textarea id="ai-input" rows="1" placeholder="Spør, eller lim inn tekst …" aria-label="Melding til assistenten"></textarea><button class="btn" id="ai-send" type="submit">Send</button></form>
+  <p class="ai-foot">Ingenting lagres før du trykker «Lagre» i skjemaet. Det du skriver sendes til Claude (Anthropic).</p>
+</section>
 <div id="modal"></div>
 <div id="toast"></div>
 
@@ -1008,6 +1050,7 @@ async function startApp(session) {
   document.getElementById("login").hidden = true;
   document.getElementById("app").hidden = false;
   document.getElementById("fab").hidden = false;
+  document.getElementById("ai-fab").hidden = false;
   setSync("Henter data …", "");
   route();
   try { await loadAll(); setSync("Delt · lagret", "ok"); }
@@ -1018,6 +1061,7 @@ async function startApp(session) {
 function showLogin(msg, err) {
   document.getElementById("app").hidden = true;
   document.getElementById("fab").hidden = true;
+  document.getElementById("ai-fab").hidden = true; CHAT.open = false; document.getElementById("ai-panel").hidden = true;
   document.getElementById("login").hidden = false;
   if (msg) loginMsg(msg, err);
 }
@@ -1146,6 +1190,144 @@ function aiStatusDone(filledCount) {
   box.innerHTML = `<span>${main}${ctx.aiNote ? " " + esc(ctx.aiNote) : ""}</span>` +
     (sk.length ? `<button class="mini" type="button" data-act="aiApplyAll">Bruk AI-forslaget også for ${esc(joinNames(sk.map(k => AI_LABELS[k])))}</button>` : "");
 }
+
+/* ---------- Assistenten nede i hjørnet ----------
+   Samtalen ligger bare i minnet (forsvinner ved ny innlasting), siden den kan
+   inneholde personopplysninger. Forslag åpnes som utfylte skjemaer: ingenting
+   lagres før brukeren selv trykker «Lagre». */
+const CHAT = { open: false, busy: false, log: [] };
+const AREA_IDS = () => AREAS.map(a => a.id);
+const idsOf = c => () => Object.keys(S[c] || {});
+// Hvordan forslag fra assistenten tolkes per felt: tekst, dato, tall, ett valg, eller liste
+const AI_SPEC = {
+  tasks: { label: "oppgave", form: taskForm, make: () => newTask(), alias: { area: "omr" },
+    fields: { title: "text", status: ["enum", () => STATUSES], owners: ["list", () => PEOPLE], due: "date", prio: ["enum", () => PRIOS], area: ["enum", AREA_IDS], note: "text", contacts: ["list", idsOf("contacts")], ms: ["list", idsOf("milestones")] } },
+  contacts: { label: "kontakt", form: contactForm, make: () => ({ id: uid("c"), name: "", org: "", role: "", areas: [], status: "Bør kontaktes", owner: "", email: "", phone: "", next: "", notes: "" }),
+    fields: { name: "text", org: "text", role: "text", status: ["enum", () => CONTACT_STATUS], owner: ["enum", () => PEOPLE], email: "text", phone: "text", next: "text", areas: ["list", AREA_IDS], notes: "text" } },
+  knowledge: { label: "kunnskapsnotat", form: kbForm, alias: { tags: "tagsText" }, make: () => ({ id: uid("k"), title: "", kind: "Rapport", area: "research", tags: [], summary: "", learned: "", url: "", hyps: [], added: todayISO(), by: UI.me || "" }),
+    fields: { title: "text", kind: ["enum", () => KB_KINDS], area: ["enum", AREA_IDS], summary: "text", learned: "text", url: "url", tags: "tags", hyps: ["list", idsOf("hypotheses")] } },
+  interviews: { label: "intervju", form: interviewForm, make: () => { const nr = Math.max(0, ...arr("interviews").map(i => i.nr || 0)) + 1; return { id: uid("i"), nr, title: "Intervju " + String(nr).padStart(2, "0"), date: todayISO(), segment: "", findings: "", owner: UI.me || "", hyps: [], files: [], link: "" }; },
+    fields: { title: "text", date: "date", segment: "text", owner: ["enum", () => PEOPLE], findings: "text", hyps: ["list", idsOf("hypotheses")] } },
+  leads: { label: "lead", form: leadForm, make: () => ({ id: uid("l"), family: "", source: "", price: null, owner: "", next: "", date: null, stage: "Lead", note: "" }),
+    fields: { family: "text", source: ["enum", () => SOURCES], stage: ["enum", () => STAGES], price: "num", owner: ["enum", () => PEOPLE], next: "text", date: "date", note: "text" } },
+  meetings: { label: "møte", form: meetingForm, make: () => ({ id: uid("mt"), title: "Teammøte", date: todayISO(), attendees: [...PEOPLE], decisions: "", actions: [] }),
+    fields: { title: "text", date: "date", attendees: ["list", () => PEOPLE], decisions: "text", actionsText: "actions" } },
+  decisions: { label: "beslutning", form: decisionForm, make: () => ({ id: uid("d"), area: "", date: todayISO(), text: "", why: "", by: UI.me || "" }),
+    fields: { text: "text", why: "text", date: "date", area: ["enum", AREA_IDS], by: ["enum", () => PEOPLE] } },
+  legal: { label: "juridisk spørsmål", form: legalForm, make: () => ({ id: uid("l"), question: "", status: "Uavklart", owner: UI.me || "", findings: "", next: "", files: [], link: "", updated: todayISO() }),
+    fields: { question: "text", status: ["enum", () => LEGAL_STATUS], findings: "text", next: "text", owner: ["enum", () => PEOPLE] } }
+};
+const AI_FIELD_LABELS = { title: "Tittel", status: "Status", owners: "Ansvarlige", due: "Frist", prio: "Prioritet", area: "Område", note: "Notat", contacts: "Kontakter", ms: "Milepæl",
+  name: "Navn", org: "Organisasjon", role: "Rolle", owner: "Ansvarlig", email: "E-post", phone: "Telefon", next: "Neste steg", areas: "Områder", notes: "Notater",
+  kind: "Type", summary: "Sammendrag", learned: "Det vi lærte", url: "Lenke", tags: "Tags", hyps: "Hypoteser", date: "Dato", segment: "Segment", findings: "Funn",
+  family: "Familie / kontakt", source: "Kilde", stage: "Steg", price: "Pris", attendees: "Deltakere", decisions: "Beslutninger", actionsText: "Actionpunkter",
+  text: "Beslutning", why: "Hvorfor", by: "Av", question: "Spørsmål" };
+
+// Gjør en verdi fra assistenten om til riktig type. Ugyldige verdier blir undefined og hoppes over.
+function aiValue(type, raw) {
+  const v = String(raw).trim(), items = v.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+  const kind = Array.isArray(type) ? type[0] : type, allowed = Array.isArray(type) ? type[1]() : null;
+  const match = s => allowed.find(a => a.toLowerCase() === s.toLowerCase());
+  if (kind === "enum") return match(v);
+  if (kind === "list") { const ok = items.map(match).filter(Boolean); return ok.length ? [...new Set(ok)] : undefined; }
+  if (kind === "date") return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined;
+  if (kind === "num") { const n = Number(v.replace(/[^\d,.-]/g, "").replace(",", ".")); return v && isFinite(n) ? n : undefined; }
+  if (kind === "url") return isUrl(v) ? v : undefined;
+  if (kind === "tags") return [...new Set(items.map(s => s.toLowerCase().replace(/^#/, "")))];
+  if (kind === "actions") return v.split("\n").map(s => s.replace(/^[-•*\d.)\s]+/, "").trim()).filter(Boolean);
+  return v;
+}
+function aiOpenProposal(p) {
+  const spec = AI_SPEC[p.collection]; if (!spec) return;
+  const isNew = p.mode !== "endre";
+  if (!isNew && !(S[p.collection] || {})[p.id]) return toast("Fant ikke oppføringen. Den kan være slettet.", true);
+  const rec = isNew ? spec.make() : clone(S[p.collection][p.id]);
+  const applied = [];
+  for (const [k, raw] of Object.entries(p.fields || {})) {
+    const type = spec.fields[k]; if (!type) continue;
+    const val = aiValue(type, raw); if (val === undefined) continue;
+    if (k === "actionsText") { const old = rec.actions || []; rec.actions = val.map(text => old.find(a => a.text === text) || { id: uid("a"), text, taskId: "" }); }
+    else rec[k] = val;
+    if (p.collection === "tasks" && k === "area") rec.sub = "";
+    applied.push((spec.alias || {})[k] || k);
+  }
+  spec.form(rec, isNew);
+  // Marker feltene assistenten har fylt inn, så de er lette å se over
+  for (const k of applied) {
+    const el = document.getElementById("f-" + k) || (modalEl.querySelector(`input[name="f-${k}"]`) || {}).closest?.(".fl");
+    if (el) el.classList.add("ai-filled");
+  }
+}
+const EDIT_OPEN = { tasks: "editTask", contacts: "editContact", knowledge: "editKb", interviews: "editInterview", leads: "editLead", meetings: "editMeeting", decisions: "editDecision", legal: "editLegal", milestones: "editMs", hypotheses: "editHyp", items: "editItem", docs: "editDoc", companyDocs: "editCdoc", funding: "editFund", budget: "editBudget" };
+function chatMd(text) {
+  let h = esc(text || "");
+  h = h.replace(/\[([^\]\n]+)\]\((#[\w.-]+)\)/g, (_, t, href) => `<a href="${href}" class="ai-link" data-close-chat="1">${t}</a>`);
+  h = h.replace(/\[([^\]\n]+)\]\(rec:(\w+)\/([\w.~:-]+)\)/g, (_, t, c, id) => EDIT_OPEN[c] && S[c] && S[c][id] ? `<a href="#" class="ai-link" data-act="aiOpenRec" data-c="${c}" data-id="${id}">${t}</a>` : t);
+  h = h.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  return h.replace(/\n/g, "<br>");
+}
+function chatCatalog() {
+  return {
+    people: PEOPLE,
+    areas: AREAS.map(a => ({ id: a.id, name: a.name, subs: (SUBS[a.id] || []).map(s => s[1]) })),
+    pages: [...PAGES.filter(p => !p.area).map(p => ({ hash: p.id, name: p.name })),
+      ...AREAS.flatMap(a => [{ hash: a.id, name: a.name }, ...(SUBS[a.id] || []).map(([s, l]) => ({ hash: a.id + "." + s, name: a.name + " › " + l }))])],
+    enums: { taskStatus: STATUSES, prio: PRIOS, contactStatus: CONTACT_STATUS, kbKinds: KB_KINDS, sources: SOURCES, stages: STAGES, legalStatus: LEGAL_STATUS }
+  };
+}
+const CHAT_STARTERS = ["Hva bør vi prioritere denne uken?", "Hvor legger jeg inn et intervju?", "Hvilke oppgaver har ingen ansvarlig?"];
+function renderChat() {
+  const panel = document.getElementById("ai-panel"), fab = document.getElementById("ai-fab");
+  panel.hidden = !CHAT.open; fab.setAttribute("aria-expanded", String(CHAT.open)); fab.classList.toggle("on", CHAT.open);
+  if (!CHAT.open) return;
+  const log = document.getElementById("ai-log");
+  const intro = `<div class="ai-msg bot">Hei! Jeg kan hjelpe deg å finne frem og legge inn ting. Lim inn et transkript, kontaktinfo eller møtenotater, så foreslår jeg hvor det passer. Du ser over og lagrer selv.</div>
+    ${CHAT.log.length ? "" : `<div class="ai-starters">${CHAT_STARTERS.map(s => `<button class="chip" type="button" data-act="aiStarter">${esc(s)}</button>`).join("")}</div>`}`;
+  log.innerHTML = intro + CHAT.log.map((m, i) => {
+    if (m.role === "user") return `<div class="ai-msg me">${esc(m.content).replace(/\n/g, "<br>")}</div>`;
+    const props = (m.proposals || []).map((p, j) => {
+      const spec = AI_SPEC[p.collection] || { label: p.collection };
+      const preview = Object.entries(p.fields).slice(0, 4).map(([k, v]) => `<div><span>${esc(AI_FIELD_LABELS[k] || k)}</span>${esc(String(v).length > 90 ? String(v).slice(0, 90) + " …" : v)}</div>`).join("");
+      return `<div class="ai-prop"><span class="eyebrow">${p.mode === "endre" ? "Endre" : "Ny"} ${esc(spec.label)}</span><b>${esc(p.label)}</b><div class="ai-prop-f">${preview}</div>
+        <button class="btn${p.opened ? " ghost" : ""}" type="button" data-act="aiOpenProp" data-i="${i}" data-j="${j}">${p.opened ? "Åpne igjen" : "Se over og lagre"}</button></div>`;
+    }).join("");
+    return `<div class="ai-msg bot${m.error ? " err" : ""}">${chatMd(m.content)}</div>${props}`;
+  }).join("") + (CHAT.busy ? `<div class="ai-msg bot">${aiSpin}Tenker …</div>` : "");
+  log.scrollTop = log.scrollHeight;
+  document.getElementById("ai-send").disabled = CHAT.busy;
+}
+async function chatSend(text) {
+  text = (text || "").trim(); if (CHAT.busy || !text) return;
+  CHAT.log.push({ role: "user", content: text }); CHAT.busy = true; renderChat();
+  const inp = document.getElementById("ai-input"); inp.style.height = "";
+  const history = CHAT.log.filter(m => !m.error).map(m => ({ role: m.role,
+    content: m.role === "assistant" && (m.proposals || []).length ? m.content + "\n[Forslag vist til brukeren: " + m.proposals.map(p => p.label).join("; ") + "]" : m.content }));
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const r = await fetch("/api/assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + ((session && session.access_token) || "") },
+      body: JSON.stringify({ messages: history, catalog: chatCatalog(), today: todayISO(), page: UI.page + (UI.sub && UI.sub !== "oversikt" ? "." + UI.sub : "") })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || "Assistenten svarte ikke. Prøv igjen.");
+    CHAT.log.push({ role: "assistant", content: data.reply || "", proposals: data.proposals || [] });
+  } catch (e) {
+    CHAT.log.push({ role: "assistant", content: e.message || "Assistenten svarte ikke. Prøv igjen.", error: true });
+  }
+  CHAT.busy = false; renderChat();
+}
+document.getElementById("ai-form").addEventListener("submit", ev => {
+  ev.preventDefault(); const inp = document.getElementById("ai-input"), t = inp.value;
+  if (!t.trim() || CHAT.busy) return; inp.value = ""; chatSend(t);
+});
+document.getElementById("ai-input").addEventListener("keydown", ev => {
+  if (ev.key === "Enter" && !ev.shiftKey && !ev.isComposing) { ev.preventDefault(); document.getElementById("ai-form").requestSubmit(); }
+});
+document.getElementById("ai-input").addEventListener("input", ev => { const t = ev.target; t.style.height = "auto"; t.style.height = Math.min(t.scrollHeight + 2, 160) + "px"; });
+document.getElementById("ai-log").addEventListener("click", ev => {
+  if (ev.target.closest("[data-close-chat]") && window.innerWidth < 700) { CHAT.open = false; renderChat(); }
+});
 
 /* ---------- Avledede verdier ---------- */
 const arr = c => Object.values(S[c] || {});
@@ -2622,6 +2804,11 @@ const A = {
   cancelDelete: () => { document.getElementById("delrow").innerHTML = `<button class="btn danger" data-act="askDelete">Slett</button>`; },
   confirmDelete: () => { if (modalCtx && modalCtx.onDelete) modalCtx.onDelete(); },
   exportData, importData, checkImport, doImport,
+  aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
+  aiClear: () => { if (CHAT.busy) return; CHAT.log = []; renderChat(); document.getElementById("ai-input").focus(); },
+  aiStarter: el => chatSend(el.textContent),
+  aiOpenProp: el => { const m = CHAT.log[+el.dataset.i], p = m && (m.proposals || [])[+el.dataset.j]; if (!p) return; p.opened = true; renderChat(); aiOpenProposal(p); },
+  aiOpenRec: el => { const act = EDIT_OPEN[el.dataset.c]; if (act && A[act]) A[act]({ dataset: { id: el.dataset.id } }); },
   aiApplyAll: () => {
     const ctx = modalCtx; if (!ctx || !ctx.aiSuggest) return;
     for (const k of ctx.aiSkipped || []) { const el = document.getElementById("f-" + k); if (el) { el.value = ctx.aiSuggest[k]; delete el.dataset.touched; el.classList.add("ai-filled"); } }
@@ -2646,7 +2833,7 @@ document.addEventListener("click", ev => {
   fn(el, ev);
 });
 document.addEventListener("keydown", ev => {
-  if (ev.key === "Escape") { if (modalEl.innerHTML) closeModal(); else if (UI.addingCol) { UI.addingCol = null; render(true); } }
+  if (ev.key === "Escape") { if (modalEl.innerHTML) closeModal(); else if (CHAT.open) { CHAT.open = false; renderChat(); document.getElementById("ai-fab").focus(); } else if (UI.addingCol) { UI.addingCol = null; render(true); } }
   if (ev.target.id === "add-input" && ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); A.addCardSave(); }
   if (ev.key === "Enter" && ev.target.matches && ev.target.matches(".kc,.lrow,.msrow,.stair,.hyp")) ev.target.click();
   if (ev.key === "Enter" && modalCtx && ev.target.tagName === "INPUT" && ev.target.type !== "checkbox") { ev.preventDefault(); A.saveModal(); }

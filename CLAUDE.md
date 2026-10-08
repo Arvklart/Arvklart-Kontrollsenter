@@ -64,3 +64,7 @@ Brukerne er ikke tekniske. Forklar kort og med enkle ord på norsk hva du gjør 
 
 - Modell: `claude-haiku-4-5`.
 - AI-en lagrer aldri noe automatisk. Den foreslår, og brukeren bekrefter eller endrer før lagring.
+- `api/autofill.js` fyller ut kunnskapsskjemaet fra en opplastet fil. `api/assistant.js` er assistenten nede i hjørnet. Felles kode ligger i `api/_lib.js`.
+- Assistentens forslag har formen `{ collection, mode: "ny" | "endre", id, label, fields }`. Feltene som kan foreslås, står i `FIELDS` i `api/assistant.js` og i `AI_SPEC` i `index.html`. De må holdes like, og nøklene må stemme med skjemaene.
+- Assistenten får bare korte felt (se `PICK` i `api/assistant.js`), aldri hele dokumenter, vedlegg, e-post eller telefonnumre.
+- Samtalen med assistenten lagres ikke (bare i minnet), siden den kan inneholde personopplysninger.
