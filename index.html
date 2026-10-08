@@ -2138,7 +2138,7 @@ function taskForm(t, isNew) {
     fields: [
       { k: "title", label: "Tittel", full: true },
       { k: "status", label: "Status", type: "select", opts: STATUSES },
-      { k: "owners", label: "Ansvarlige", type: "multi", opts: PEOPLE.map(p => [p, p]), full: true, hint: "Velg én eller flere. Må fylles ut før oppgaven kan settes til «Pågår» eller «Ferdig»." },
+      { k: "owners", label: "Ansvarlige", type: "multi", opts: PEOPLE.map(p => [p, p]), full: true, hint: "Velg én eller flere. Må fylles ut før oppgaven kan settes til «Pågår» eller «Ferdig». Fjerner du alle fra en oppgave som pågår, legges den tilbake i «Må gjøres»." },
       { k: "due", label: "Frist", type: "date", hint: t.dueText && !t.due ? "Nå: " + ph(t.dueText) : "" },
       { k: "prio", label: "Prioritet", type: "select", opts: PRIOS },
       { k: "omr", label: "Område", type: "select", opts: [["", "Ikke valgt"], ...areaSubOpts()] },
@@ -2149,11 +2149,16 @@ function taskForm(t, isNew) {
     ],
     onSave: v => {
       if (!v.title) return formError("Oppgaven trenger en tittel.");
-      if (needsOwner(v.status) && !v.owners.length) return formError(`Velg minst én ansvarlig før oppgaven settes til «${v.status}».`);
+      let gaveBack = false;
+      if (needsOwner(v.status) && !v.owners.length) {
+        if (isNew || v.status !== t.status) return formError(`Velg minst én ansvarlig før oppgaven settes til «${v.status}».`);
+        v.status = "Må gjøres"; gaveBack = true;
+      }
       const [area, sub] = (v.omr || "").split("."); v.area = area || ""; v.sub = sub || ""; delete v.omr;
       const o = Object.assign(clone(t), v); delete o.owner;
       if (o.due) o.dueText = "";
       setTaskStatus(o, v.status, t.status); closeModal();
+      if (gaveBack) toast("Ingen ansvarlig lenger. Oppgaven er lagt tilbake i «Må gjøres».");
     },
     onDelete: isNew ? null : () => { del("tasks", t.id); closeModal(); toast("Oppgaven er slettet."); }
   });
@@ -2172,10 +2177,10 @@ function openPicker(id, to) {
 }
 function renderPicker() {
   const { id, to, sel } = UI.pick, t = S.tasks[id]; if (!t) return closeModal();
-  const need = !!to || needsOwner(t.status);
+  const need = !!to, giveBack = !to && needsOwner(t.status);
   const title = to === "Pågår" ? "Hvem tar ansvaret?" : to === "Ferdig" ? "Hvem gjorde oppgaven?" : "Hvem er ansvarlig?";
-  const lead = to ? `Velg én eller flere. Oppgaven må ha en ansvarlig før den flyttes til «${to}».` : need ? "Velg én eller flere. En oppgave som pågår må ha minst én ansvarlig." : "Velg én eller flere, eller ingen for å la den stå ufordelt.";
-  const label = to === "Pågår" ? "Start oppgaven" : to === "Ferdig" ? "Marker som ferdig" : "Lagre";
+  const lead = to ? `Velg én eller flere. Oppgaven må ha en ansvarlig før den flyttes til «${to}».` : giveBack ? "Velg én eller flere. Fjerner du alle, legges oppgaven tilbake i «Må gjøres» så noen andre kan ta den." : "Velg én eller flere, eller ingen for å la den stå ufordelt.";
+  const label = to === "Pågår" ? "Start oppgaven" : to === "Ferdig" ? "Marker som ferdig" : giveBack && !sel.length ? "Legg tilbake i «Må gjøres»" : "Lagre";
   modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal" style="width:min(400px,100%)" role="dialog" aria-modal="true" aria-label="${title}"><h3>${title}</h3>
     <p style="margin:-6px 0 4px;font-weight:600">${ph(t.title)}</p><p class="muted" style="margin:0 0 14px;font-size:13px">${lead}</p>
     <div class="assign-list">${PEOPLE.map(p => `<button class="assign-opt${sel.includes(p) ? " on" : ""}" data-act="pickToggle" data-o="${esc(p)}" aria-pressed="${sel.includes(p)}">${avatar(p)}<span>${esc(p)}</span><span class="tick">${sel.includes(p) ? ico("check", 2.6) : ""}</span></button>`).join("")}</div>
@@ -2453,9 +2458,10 @@ const A = {
   },
   pickSave: () => {
     const { id, to, sel } = UI.pick; const t = clone(S.tasks[id]); if (!t) return closeModal();
-    if ((to || needsOwner(t.status)) && !sel.length) return;
+    if (to && !sel.length) return;
     t.owners = sel; closeModal();
     if (to) { setTaskStatus(t, to); if (to === "Pågår") toast(`Godt i gang, ${joinNames(sel)}! Oppgaven ligger nå under «Pågår».`); }
+    else if (!sel.length && needsOwner(t.status)) { t.status = "Må gjøres"; put("tasks", t); toast("Ingen ansvarlig lenger. Oppgaven er lagt tilbake i «Må gjøres»."); }
     else { put("tasks", t); toast(sel.length ? `Ansvarlig: ${joinNames(sel)}.` : "Satt til ikke fordelt."); }
   },
   toggleDone: el => { const t = clone(S.tasks[el.dataset.id]); if (!t) return; if (isDone(t)) { setTaskStatus(t, t.prevStatus && t.prevStatus !== "Ferdig" ? normStatus(t.prevStatus) : "Må gjøres"); } else moveTask(t, "Ferdig"); },
