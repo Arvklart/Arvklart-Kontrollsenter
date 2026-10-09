@@ -607,6 +607,11 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 @keyframes aispin{to{transform:rotate(360deg)}}
 .form .ai-filled{border-color:var(--ph)!important;background:var(--ph-soft)!important}
 
+/* Områdefilter i skjemaet */
+.checks label[hidden]{display:none}
+.checks-empty{font-weight:400;font-size:13px}
+.form .hint .mini{margin-left:4px;font-size:11.5px;padding:2px 9px}
+
 /* Venter og underoppgaver */
 .pill.s-Venter{background:var(--mustard);color:#6A5530;border-color:transparent}
 .kwait{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--muted);line-height:1.35}
@@ -895,6 +900,8 @@ const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "
 const PRIOS = ["Kritisk","Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
+const MS_TYPE_AREA = { Innlevering: "kurs", Vurdering: "kurs", Hendelse: "kurs", Finansiering: "finans", Salg: "marked" };
+const msArea = m => (m && (m.area || MS_TYPE_AREA[m.type])) || "";
 const MS_STATUS = ["Ikke startet","Pågår","Levert","Avklares","Obligatorisk","Valgfritt"];
 const STAGES = ["Lead","Kontaktet","Demo","Tilbud","Betalende","Tapt"];
 const SOURCES = ["Begravelsesbyrå","Sykehjem","Advokat","Nettverk"];
@@ -2428,7 +2435,7 @@ function fieldHtml(f, v) {
   if (f.type === "textarea") return `<label class="${cls}">${f.label}<textarea id="${id}" ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}>${esc(v)}</textarea>${hint}</label>`;
   if (f.type === "select") return `<label class="${cls}">${f.label}<select id="${id}">${f.opts.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o || "–"]; return `<option value="${esc(val)}"${String(v ?? "") === String(val) ? " selected" : ""}>${esc(lab)}</option>`; }).join("")}</select>${hint}</label>`;
   if (f.type === "check") return `<label class="${cls}"><span class="checks"><label><input type="checkbox" id="${id}"${v ? " checked" : ""}> ${f.text || f.label}</label></span>${hint}</label>`;
-  if (f.type === "multi") return `<div class="${cls}" style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)">${f.label}<span class="checks">${f.opts.map(([val, lab]) => `<label><input type="checkbox" name="${id}" value="${esc(val)}"${(v || []).includes(val) ? " checked" : ""}> ${esc(lab)}</label>`).join("")}</span>${hint}</div>`;
+  if (f.type === "multi") return `<div class="${cls}" style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)">${f.label}<span class="checks" id="${id}-list">${f.opts.map(([val, lab, area]) => `<label${area !== undefined ? ` data-area="${esc(area)}"` : ""}><input type="checkbox" name="${id}" value="${esc(val)}"${(v || []).includes(val) ? " checked" : ""}> ${esc(lab)}</label>`).join("")}<span class="muted checks-empty" hidden>Ingen i dette området.</span></span>${hint}</div>`;
   return `<label class="${cls}">${f.label}<input type="${f.type || "text"}" id="${id}" value="${esc(v ?? "")}" ${f.type === "number" ? 'step="any" min="0" inputmode="decimal"' : ""} ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}>${hint}</label>`;
 }
 function openForm({ title, fields, value, onSave, onDelete, extra }) {
@@ -2458,16 +2465,32 @@ function closeModal() { modalEl.innerHTML = ""; modalCtx = null; }
 
 const ownerOpts = [["", "Ikke fordelt"], ...PEOPLE.map(p => [p, p])];
 function areaSubOpts() { return AREAS.flatMap(a => [[a.id, a.name], ...(SUBS[a.id] || []).map(([s, l]) => [a.id + "." + s, a.name + " › " + l])]); }
+/* Når et område er valgt, viser «Milepæl» og «Venter på» bare det som hører til området.
+   Det som allerede er huket av, vises alltid. «Vis alle» viser resten. */
+const AREA_FILTER_HINT = '<span class="area-filter-note"></span> <button type="button" class="mini" data-act="toggleAreaFilter">Vis alle</button>';
+function applyAreaFilter() {
+  const sel = document.getElementById("f-omr"); if (!sel || !modalCtx) return;
+  const area = sel.value.split(".")[0], all = !!modalCtx.showAllOpts || !area;
+  for (const k of ["ms", "waitsOn"]) {
+    const list = document.getElementById("f-" + k + "-list"); if (!list) continue;
+    let shown = 0;
+    list.querySelectorAll("label[data-area]").forEach(l => { const show = all || l.dataset.area === area || l.querySelector("input").checked; l.hidden = !show; if (show) shown++; });
+    list.querySelector(".checks-empty").hidden = shown > 0;
+  }
+  const name = area && AREA[area] ? AREA[area].name : "";
+  modalEl.querySelectorAll(".area-filter-note").forEach(n => { n.textContent = area ? (all ? `Viser alle områder.` : `Viser bare ${name}.`) : ""; });
+  modalEl.querySelectorAll('[data-act="toggleAreaFilter"]').forEach(b => { b.hidden = !area; b.textContent = all ? `Bare ${name}` : "Vis alle"; });
+}
 // Valg for «Venter på»: andre oppgaver og milepæler, men ikke slike som selv venter på denne (ring)
 function waitOpts(t) {
   const cur = waitIds(t);
   const ts = tasks().filter(x => x.id !== t.id && !waitsOnDeep(x.id, t.id) && (!isDone(x) || cur.includes(x.id)))
-    .sort((a, b) => (a.title || "").localeCompare(b.title || "")).map(x => [x.id, x.title + (isDone(x) ? " (ferdig)" : "")]);
-  const ms = milestones().filter(m => m.status !== "Levert" || cur.includes(m.id)).map(m => [m.id, "Milepæl: " + m.title]);
+    .sort((a, b) => (a.title || "").localeCompare(b.title || "")).map(x => [x.id, x.title + (isDone(x) ? " (ferdig)" : ""), x.area || ""]);
+  const ms = milestones().filter(m => m.status !== "Levert" || cur.includes(m.id)).map(m => [m.id, "Milepæl: " + m.title, msArea(m)]);
   return [...ts, ...ms];
 }
 function taskForm(t, isNew) {
-  const msOpts = milestones().map(m => [m.id, m.title]);
+  const msOpts = milestones().map(m => [m.id, m.title, msArea(m)]);
   openForm({
     title: isNew ? "Ny oppgave" : "Rediger oppgave", value: Object.assign({}, t, { omr: t.area ? t.area + (t.sub ? "." + t.sub : "") : "" }),
     fields: [
@@ -2478,9 +2501,9 @@ function taskForm(t, isNew) {
       { k: "prio", label: "Prioritet", type: "select", opts: PRIOS },
       { k: "omr", label: "Område", type: "select", opts: [["", "Ikke valgt"], ...areaSubOpts()] },
       { k: "est", label: "Estimert tid (timer)", type: "number" },
-      { k: "ms", label: "Milepæl", type: "multi", opts: msOpts, full: true },
+      { k: "ms", label: "Milepæl", type: "multi", opts: msOpts, full: true, hint: AREA_FILTER_HINT },
       { k: "waitsOn", label: "Venter på", type: "multi", full: true, opts: waitOpts(t),
-        hint: "Oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og flyttes tilbake til «Må gjøres» når alt den venter på er ferdig." },
+        hint: "Oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og flyttes tilbake til «Må gjøres» når alt den venter på er ferdig. " + AREA_FILTER_HINT },
       { k: "contacts", label: "Kontakter", type: "multi", full: true, opts: arr("contacts").sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(c => [c.id, c.name + (c.org ? " (" + c.org + ")" : "")]), hint: arr("contacts").length ? "" : "Ingen kontakter ennå. Legg dem inn under Kontakter." },
       { k: "note", label: "Notat", type: "textarea", full: true }
     ],
@@ -2506,6 +2529,8 @@ function taskForm(t, isNew) {
       releaseWaiting(t.id);
     }
   });
+  const omr = document.getElementById("f-omr");
+  if (omr) { omr.addEventListener("change", () => { modalCtx.showAllOpts = false; applyAreaFilter(); }); applyAreaFilter(); }
 }
 /* Flytt en oppgave. Til «Pågår» eller «Ferdig» må den ha minst én ansvarlig. */
 function moveTask(t, to) {
@@ -2554,6 +2579,7 @@ function msForm(m, isNew) {
       { k: "date", label: "Dato (start)", type: "date", hint: m.dateText && !m.date ? "Nå: " + ph(m.dateText) : "" },
       { k: "end", label: "Sluttdato (for perioder)", type: "date" },
       { k: "type", label: "Type", type: "select", opts: MS_TYPES },
+      { k: "area", label: "Område", type: "select", opts: [["", "Ut fra typen"], ...AREAS.map(a => [a.id, a.name])], hint: "Brukes for å vise riktige milepæler når dere lager oppgaver." },
       { k: "status", label: "Status", type: "select", opts: MS_STATUS, hint: "«Levert» flytter nedtellingen til neste milepæl." },
       { k: "note", label: "Notat", type: "textarea", full: true }
     ],
@@ -2889,6 +2915,7 @@ const A = {
   cancelDelete: () => { document.getElementById("delrow").innerHTML = `<button class="btn danger" data-act="askDelete">Slett</button>`; },
   confirmDelete: () => { if (modalCtx && modalCtx.onDelete) modalCtx.onDelete(); },
   exportData, importData, checkImport, doImport,
+  toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
   aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
   aiClear: () => { if (CHAT.busy) return; CHAT.log = []; renderChat(); document.getElementById("ai-input").focus(); },
   aiStarter: el => chatSend(el.textContent),
