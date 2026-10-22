@@ -655,6 +655,8 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .mini.ok svg{width:11px;height:11px}
 .lrow .mini{flex:none}
 .closed-list{margin-top:14px}
+.ms-confirm{font-size:12.5px;font-weight:600;color:var(--red-ink);align-self:center}
+.mini.danger{background:var(--red-soft);color:var(--red-ink);border-color:transparent}
 .closed-list summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--muted);padding:6px 2px}
 .mslist + .closed-list{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 16px}
 .closed-list .mini-list{margin-top:8px}
@@ -1906,7 +1908,8 @@ VIEWS.milepaeler = function () {
 };
 /* Knapper for å avslutte en milepæl, og listen over avsluttede */
 function msActions(m) {
-  return `<div class="ms-actions"><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button><button class="mini ghosty" data-act="msDrop" data-id="${m.id}">Ikke aktuell</button></div>`;
+  if (UI.confirmMsDel === m.id) return `<div class="ms-actions"><span class="ms-confirm">Slette «${esc(m.title)}» for godt?</span><button class="mini danger" data-act="msDelYes" data-id="${m.id}">Ja, slett</button><button class="mini ghosty" data-act="msDelNo">Avbryt</button></div>`;
+  return `<div class="ms-actions"><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button><button class="mini ghosty" data-act="msDel" data-id="${m.id}">Slett</button></div>`;
 }
 function closedMs(list) {
   const done = list.filter(msClosed).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
@@ -3009,6 +3012,20 @@ const A = {
   toggleXp: (el, ev) => { if (ev && ev.target.closest && ev.target.closest(".selectable") && UI.xp && UI.xp[el.dataset.id]) return; UI.xp = UI.xp || {}; UI.xp[el.dataset.id] = !UI.xp[el.dataset.id]; render(true); },
   setFeat: el => { const i = clone(S.items[el.dataset.id]); if (!i || i.status === el.dataset.s) return; i.status = el.dataset.s; put("items", i); toast(`«${i.title}» er flyttet til ${i.status.toLowerCase()}.`); },
   msDone: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; m.prevStatus = m.status; m.status = msDoneLabel(m); put("milestones", m); toast(`${m.title}: ${m.status.toLowerCase()}. Godt jobbet! Den ligger nå under «Levert og avsluttet».`); releaseWaiting(m.id); },
+  msDel: el => { UI.confirmMsDel = el.dataset.id; render(true); },
+  msDelNo: () => { UI.confirmMsDel = null; render(true); },
+  msDelYes: el => {
+    const id = el.dataset.id, m = S.milestones[id]; UI.confirmMsDel = null; if (!m) return render(true);
+    // Oppgavene beholdes, men koblingen til milepælen fjernes
+    const freed = [];
+    tasks().filter(t => (t.ms || []).includes(id) || waitIds(t).includes(id)).forEach(t => {
+      const o = Object.assign(clone(t), { ms: (t.ms || []).filter(x => x !== id), waitsOn: waitIds(t).filter(x => x !== id) });
+      if (o.status === "Venter" && waitIds(t).includes(id) && !openBlockers(o).length) { o.status = "Må gjøres"; freed.push(o.title); }
+      put("tasks", o);
+    });
+    del("milestones", id);
+    toast(`«${m.title}» er slettet.${freed.length ? ` Klar til å starte: ${joinNames(freed.map(x => "«" + x + "»"))}.` : ""}`);
+  },
   msDrop: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; m.prevStatus = m.status; m.status = "Ikke aktuell"; put("milestones", m); toast(`${m.title} er satt som ikke aktuell. Du kan angre under «Levert og avsluttet».`); releaseWaiting(m.id); },
   msUndo: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; const back = m.prevStatus && !["Levert", "Gjennomført", "Fullført", "Ikke aktuell"].includes(m.prevStatus) ? m.prevStatus : "Ikke startet"; m.status = back; delete m.prevStatus; put("milestones", m); toast(`${m.title} er åpen igjen.`); },
   toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
