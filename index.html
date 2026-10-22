@@ -271,7 +271,7 @@ button{cursor:pointer}
 .msdate small{color:var(--muted);font-size:11.5px}
 .msmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
 .pill{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;border:1px solid var(--line);background:var(--card)}
-.pill.s-Levert,.pill.s-Ferdig,.pill.s-Betalt,.pill.s-Innvilget{background:var(--green-soft);color:var(--green-ink);border-color:transparent}
+.pill.s-Levert,.pill.s-Gjennomført,.pill.s-Fullført,.pill.s-Ferdig,.pill.s-Betalt,.pill.s-Innvilget{background:var(--green-soft);color:var(--green-ink);border-color:transparent}
 .pill.s-Pågår,.pill.s-Testes,.pill.s-Undersøkes,.pill.s-Bestilt,.pill.s-Søkt{background:var(--orange-soft);color:var(--orange-ink);border-color:transparent}
 .pill.s-Obligatorisk{background:var(--red-soft);color:var(--red-ink);border-color:transparent}
 .msprog{display:flex;flex-direction:column;gap:6px}
@@ -612,6 +612,53 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .checks-empty{font-weight:400;font-size:13px}
 .form .hint .mini{margin-left:4px;font-size:11.5px;padding:2px 9px}
 
+/* Funksjoner (produktoversikt) */
+.fx-sum{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.fx-sec{margin-top:18px}
+.fx-sec-h{display:flex;align-items:baseline;gap:10px;padding:0 2px 8px;border-bottom:1px solid var(--line)}
+.fx-sec-h b{font-family:var(--serif);font-size:16px;font-weight:600}
+.fx-sec-h .muted{font-size:12.5px}
+.fx-sec-h .mono{margin-left:auto;font-size:12px}
+.fx-list{display:flex;flex-direction:column}
+.fx{border-bottom:1px solid var(--line)}
+.fx-h{width:100%;display:flex;align-items:center;gap:12px;padding:11px 4px;background:none;border:0;text-align:left;font-weight:600;font-size:14px;color:var(--ink)}
+.fx-h:hover{background:var(--card-hi)}
+.fx-dot{width:9px;height:9px;border-radius:50%;flex:none}
+.fx-t{flex:1;min-width:0;overflow-wrap:anywhere}
+.fx-chev{flex:none;color:var(--muted);display:inline-flex;transition:transform .2s}
+.fx-chev svg{width:15px;height:15px}
+.fx.open .fx-chev,.xp.open .fx-chev{transform:rotate(180deg)}
+.fx-b{padding:2px 4px 14px 25px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.5}
+.fx-b p{margin:0;max-width:75ch}
+.fx-note{color:var(--muted)}
+.fx-move{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.seg2{display:inline-flex;flex-wrap:wrap;background:var(--card-hi);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg2 button{border:0;background:transparent;border-radius:999px;padding:4px 11px;font-size:12px;font-weight:600;color:var(--muted)}
+.seg2 button.on{background:var(--bar);color:var(--card)}
+.feat-card .closed-list{margin-top:18px}
+/* Utvidbare kort */
+.xp{cursor:pointer}
+.xp-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.kb-grid,.c-grid{align-items:start}
+.cc-head{align-items:center}
+.cc-tags{display:flex;align-items:center;gap:8px}
+.cc-tags .kb-tags{flex:1;min-width:0}
+.clogo{position:relative;flex:none;width:40px;height:40px;border-radius:12px;background:var(--mustard);border:1px solid var(--line);display:grid;place-items:center;overflow:hidden;font-weight:700;font-size:13px;color:#6A5530}
+.clogo img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:6px;background:#fff}
+.clogo.sm{width:28px;height:28px;border-radius:8px;font-size:10.5px}
+.clogo.sm img{padding:3px}
+
+/* Avslutte milepæler */
+.ms-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.mini.ok{display:inline-flex;align-items:center;gap:5px;background:var(--green-soft);color:var(--green-ink);border-color:transparent}
+.mini.ok:hover{background:#CFE0C2}
+.mini.ok svg{width:11px;height:11px}
+.lrow .mini{flex:none}
+.closed-list{margin-top:14px}
+.closed-list summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--muted);padding:6px 2px}
+.mslist + .closed-list{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 16px}
+.closed-list .mini-list{margin-top:8px}
+
 /* Venter og underoppgaver */
 .pill.s-Venter{background:var(--mustard);color:#6A5530;border-color:transparent}
 .kwait{display:flex;gap:6px;align-items:flex-start;font-size:12px;color:var(--muted);line-height:1.35}
@@ -902,7 +949,12 @@ const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
 const MS_TYPE_AREA = { Innlevering: "kurs", Vurdering: "kurs", Hendelse: "kurs", Finansiering: "finans", Salg: "marked" };
 const msArea = m => (m && (m.area || MS_TYPE_AREA[m.type])) || "";
-const MS_STATUS = ["Ikke startet","Pågår","Levert","Avklares","Obligatorisk","Valgfritt"];
+const MS_STATUS = ["Ikke startet","Pågår","Levert","Gjennomført","Fullført","Ikke aktuell","Avklares","Obligatorisk","Valgfritt"];
+/* Avsluttede milepæler: ferdige (Levert/Gjennomført/Fullført) eller droppet (Ikke aktuell). De legges i en sammenleggbar liste nederst. */
+const MS_DONE_LABEL = { Innlevering: "Levert", Vurdering: "Gjennomført", Hendelse: "Gjennomført", Finansiering: "Fullført", Salg: "Fullført" };
+const msDoneLabel = m => MS_DONE_LABEL[m.type] || "Fullført";
+const msClosed = m => ["Levert", "Gjennomført", "Fullført", "Ikke aktuell"].includes(m.status);
+const msDone = m => msClosed(m) && m.status !== "Ikke aktuell";
 const STAGES = ["Lead","Kontaktet","Demo","Tilbud","Betalende","Tapt"];
 const SOURCES = ["Begravelsesbyrå","Sykehjem","Advokat","Nettverk"];
 const DECISIONS = ["","Fortsett","Pivot","Parker"];
@@ -934,6 +986,8 @@ const I = {
   scale:'<path d="M12 3v18M5 21h14M5 7h14M7 7l-3 7a3 3 0 0 0 6 0zM17 7l-3 7a3 3 0 0 0 6 0z"/>',
   book:'<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
   users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"/>',
+  down:'<path d="M6 9l6 6 6-6"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
   link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'
 };
 const ico = (n, sw = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
@@ -1232,7 +1286,7 @@ const AI_SPEC = {
   tasks: { label: "oppgave", form: taskForm, make: () => newTask(), alias: { area: "omr" },
     fields: { title: "text", status: ["enum", () => STATUSES], owners: ["list", () => PEOPLE], due: "date", prio: ["enum", () => PRIOS], area: ["enum", AREA_IDS], note: "text", contacts: ["list", idsOf("contacts")], ms: ["list", idsOf("milestones")], waitsOn: ["list", () => [...Object.keys(S.tasks), ...Object.keys(S.milestones)]] } },
   contacts: { label: "kontakt", form: contactForm, make: () => ({ id: uid("c"), name: "", org: "", role: "", areas: [], status: "Bør kontaktes", owner: "", email: "", phone: "", next: "", notes: "" }),
-    fields: { name: "text", org: "text", role: "text", status: ["enum", () => CONTACT_STATUS], owner: ["enum", () => PEOPLE], email: "text", phone: "text", next: "text", areas: ["list", AREA_IDS], notes: "text" } },
+    fields: { name: "text", org: "text", role: "text", status: ["enum", () => CONTACT_STATUS], owner: ["enum", () => PEOPLE], email: "text", phone: "text", website: "text", next: "text", areas: ["list", AREA_IDS], notes: "text" } },
   knowledge: { label: "kunnskapsnotat", form: kbForm, alias: { tags: "tagsText" }, make: () => ({ id: uid("k"), title: "", kind: "Rapport", area: "research", tags: [], summary: "", learned: "", url: "", hyps: [], added: todayISO(), by: UI.me || "" }),
     fields: { title: "text", kind: ["enum", () => KB_KINDS], area: ["enum", AREA_IDS], summary: "text", learned: "text", url: "url", tags: "tags", hyps: ["list", idsOf("hypotheses")] } },
   interviews: { label: "intervju", form: interviewForm, make: () => { const nr = Math.max(0, ...arr("interviews").map(i => i.nr || 0)) + 1; return { id: uid("i"), nr, title: "Intervju " + String(nr).padStart(2, "0"), date: todayISO(), segment: "", findings: "", owner: UI.me || "", hyps: [], files: [], link: "" }; },
@@ -1247,7 +1301,7 @@ const AI_SPEC = {
     fields: { question: "text", status: ["enum", () => LEGAL_STATUS], findings: "text", next: "text", owner: ["enum", () => PEOPLE] } }
 };
 const AI_FIELD_LABELS = { title: "Tittel", status: "Status", owners: "Ansvarlige", due: "Frist", prio: "Prioritet", area: "Område", note: "Notat", contacts: "Kontakter", ms: "Milepæl",
-  name: "Navn", org: "Organisasjon", role: "Rolle", owner: "Ansvarlig", email: "E-post", phone: "Telefon", next: "Neste steg", areas: "Områder", notes: "Notater", waitsOn: "Venter på",
+  name: "Navn", org: "Organisasjon", role: "Rolle", owner: "Ansvarlig", email: "E-post", phone: "Telefon", website: "Nettside", next: "Neste steg", areas: "Områder", notes: "Notater", waitsOn: "Venter på",
   kind: "Type", summary: "Sammendrag", learned: "Det vi lærte", url: "Lenke", tags: "Tags", hyps: "Hypoteser", date: "Dato", segment: "Segment", findings: "Funn",
   family: "Familie / kontakt", source: "Kilde", stage: "Steg", price: "Pris", attendees: "Deltakere", decisions: "Beslutninger", actionsText: "Actionpunkter",
   text: "Beslutning", why: "Hvorfor", by: "Av", question: "Spørsmål" };
@@ -1365,12 +1419,12 @@ const isDone = t => t.status === "Ferdig";
 const prioRank = p => { const i = PRIOS.indexOf(p); return i < 0 ? 9 : i; };
 const byPrioDue = (a, b) => prioRank(a.prio) - prioRank(b.prio) || (a.due ? toUTC(a.due) : 9e15) - (b.due ? toUTC(b.due) : 9e15) || (a.n || 0) - (b.n || 0);
 function taskTone(t) { if (isDone(t)) return "green"; if (!t.due) return "none"; const d = daysUntil(t.due); return d < 0 ? "red" : d <= 3 ? "orange" : "green"; }
-function msTone(m) { if (m.status === "Levert") return "green"; if (!m.date) return "none"; const d = daysUntil(m.end || m.date); if (d < 0) return m.type === "Hendelse" ? "none" : "red"; return daysUntil(m.date) <= 7 ? "orange" : "green"; }
+function msTone(m) { if (m.status === "Ikke aktuell") return "none"; if (msDone(m)) return "green"; if (!m.date) return "none"; const d = daysUntil(m.end || m.date); if (d < 0) return m.type === "Hendelse" ? "none" : "red"; return daysUntil(m.date) <= 7 ? "orange" : "green"; }
 const milestones = () => arr("milestones").sort((a, b) => (a.date ? toUTC(a.date) : 9e15) - (b.date ? toUTC(b.date) : 9e15) || (a.n || 0) - (b.n || 0));
 /* Neste milepæl: nærmeste daterte milepæl som ikke er levert. Hendelser (f.eks. Paris-tur) teller til de er over. */
 function nextDeadline() {
   const today = toUTC(todayISO());
-  return milestones().filter(m => m.date && m.status !== "Levert" && (m.type !== "Hendelse" || toUTC(m.end || m.date) >= today))
+  return milestones().filter(m => m.date && !msClosed(m) && (m.type !== "Hendelse" || toUTC(m.end || m.date) >= today))
     .sort((a, b) => toUTC(a.date) - toUTC(b.date))[0] || null;
 }
 // Alle oppgaver i milepælens kjede: oppgaver koblet til milepælen og det de venter på (underoppgaver)
@@ -1394,7 +1448,7 @@ function msTree(m) {
 function msProgress(m) {
   const ts = msTaskIds(m).map(id => S.tasks[id]);
   const done = ts.filter(isDone).length;
-  if (!ts.length) return { done: 0, total: 0, pct: m.status === "Levert" ? 100 : 0 };
+  if (!ts.length) return { done: 0, total: 0, pct: msDone(m) ? 100 : 0 };
   return { done, total: ts.length, pct: Math.round(done / ts.length * 100) };
 }
 const overdue = () => tasks().filter(t => !isDone(t) && t.due && daysUntil(t.due) < 0);
@@ -1437,7 +1491,7 @@ const needsOwner = s => s === "Pågår" || s === "Ferdig";
 const waitIds = t => (t && Array.isArray(t.waitsOn)) ? t.waitsOn : [];
 function blockerOf(id) {
   if (S.tasks[id]) return { id, kind: "task", title: S.tasks[id].title, done: isDone(S.tasks[id]) };
-  if (S.milestones[id]) return { id, kind: "ms", title: S.milestones[id].title, done: S.milestones[id].status === "Levert" };
+  if (S.milestones[id]) return { id, kind: "ms", title: S.milestones[id].title, done: msClosed(S.milestones[id]) };
   return null;
 }
 const openBlockers = t => waitIds(t).map(blockerOf).filter(b => b && !b.done);
@@ -1563,14 +1617,14 @@ VIEWS.hjem = function () {
   const mon = addDays(mondayOf(today), UI.weekOffset * 7), sun = addDays(mon, 6);
   const inWeek = iso => iso && toUTC(iso) >= toUTC(mon) && toUTC(iso) <= toUTC(sun);
   const items = [];
-  milestones().forEach(m => { if (!m.date) return; const s = m.date, e = m.end || m.date; if (toUTC(e) >= toUTC(mon) && toUTC(s) <= toUTC(sun)) items.push({ kind: "ms", date: toUTC(s) < toUTC(mon) ? mon : s, m }); });
+  milestones().forEach(m => { if (!m.date || m.status === "Ikke aktuell") return; const s = m.date, e = m.end || m.date; if (toUTC(e) >= toUTC(mon) && toUTC(s) <= toUTC(sun)) items.push({ kind: "ms", date: toUTC(s) < toUTC(mon) ? mon : s, m }); });
   const isCur = UI.weekOffset === 0;
   tasks().forEach(t => { if (!isDone(t) && t.due && (inWeek(t.due) || (isCur && toUTC(t.due) < toUTC(mon)))) items.push({ kind: "t", date: t.due, t }); });
   items.sort((a, b) => toUTC(a.date) - toUTC(b.date) || (a.kind === "ms" ? -1 : 1));
   const fristHtml = items.map(it => {
     if (it.kind === "ms") {
       const m = it.m, tone = msTone(m), d = daysUntil(m.date);
-      const badge = m.status === "Levert" ? "Levert" : (m.end && d < 0 && daysUntil(m.end) >= 0) ? "Pågår" : relText(d);
+      const badge = msClosed(m) ? m.status : (m.end && d < 0 && daysUntil(m.end) >= 0) ? "Pågår" : relText(d);
       return `<div class="lrow ms" data-act="editMs" data-id="${m.id}"><span class="lt"><b>${esc(m.title)}</b><small><span class="mono">${m.end ? fmtRange(m.date, m.end) : fmtDate(m.date)}</span> · ${esc(m.type)}</small></span><span class="badge t-${tone}">${badge}</span></div>`;
     }
     const t = it.t, d = daysUntil(t.due);
@@ -1629,7 +1683,7 @@ function goalsCard() {
   }
   // Milepæler fremover: tidslinje + fremdrift
   const today = todayISO();
-  const up = milestones().filter(m => m.date && m.status !== "Levert" && toUTC(m.end || m.date) >= toUTC(today)).slice(0, 5);
+  const up = milestones().filter(m => m.date && !msClosed(m) && toUTC(m.end || m.date) >= toUTC(today)).slice(0, 5);
   let tl = "";
   if (up.length) {
     const t0 = toUTC(today), t1 = Math.max(...up.map(m => toUTC(m.date))), span = Math.max(1, t1 - t0);
@@ -1732,7 +1786,7 @@ function incomeLeave(ev) {
 function followUpCard() {
   const rows = [];
   overdue().sort(byPrioDue).forEach(t => rows.push({ tone: "red", k: "Forfalt", html: ph(t.title), sub: `Frist ${fmtDate(t.due)} · ${joinNames(ownersOf(t)) || "Ikke fordelt"}`, act: "editTask", id: t.id }));
-  milestones().forEach(m => { if (m.date && m.status !== "Levert" && m.type !== "Hendelse" && daysUntil(m.date) < 0) rows.push({ tone: "red", k: "Milepæl forfalt", html: esc(m.title), sub: fmtDate(m.date) + " · ikke merket som levert", act: "editMs", id: m.id }); });
+  milestones().forEach(m => { if (m.date && !msClosed(m) && m.type !== "Hendelse" && daysUntil(m.date) < 0) rows.push({ tone: "red", k: "Milepæl forfalt", html: esc(m.title), sub: fmtDate(m.date) + " · ikke merket som levert", act: "editMs", id: m.id }); });
   const soon = tasks().filter(t => !isDone(t) && !ownersOf(t).length && t.due && daysUntil(t.due) >= 0 && daysUntil(t.due) <= 7);
   if (soon.length) rows.push({ tone: "orange", k: "Ikke tatt", html: `${soon.length} ${soon.length === 1 ? "oppgave" : "oppgaver"} med frist innen en uke har ingen ansvarlig`, sub: soon.map(t => t.title).join(" · "), act: "go", p: "oppgaver" });
   const owed = outstanding();
@@ -1803,7 +1857,9 @@ VIEWS.oppgaver = function () {
   }).join("");
   return `<div class="toolbar">
       <div class="filterbar">${F.map(([k, l]) => `<button class="chip${UI.filter === k ? " on" : ""}" data-act="filter" data-f="${k}">${k === "overdue" ? '<span class="dot red"></span>' : k === "week" ? '<span class="dot orange"></span>' : k === "mine" ? ico("user") : ""}${l}${k === "mine" && UI.me ? ": " + esc(UI.me) : ""}</button>`).join("")}
-      <select id="area-filter" aria-label="Filtrer på område"><option value="">Alle områder</option>${areaSubOpts().map(([v, l]) => `<option value="${v}"${UI.areaFilter === v ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>
+      ${(() => { const [fa, fs] = (UI.areaFilter || "").split("."), subs = SUBS[fa] || [];
+        return `<select id="area-filter" aria-label="Filtrer på område"><option value="">Alle områder</option>${AREAS.map(a => `<option value="${a.id}"${fa === a.id ? " selected" : ""}>${esc(a.name)}</option>`).join("")}</select>`
+          + (subs.length ? `<select id="sub-filter" aria-label="Filtrer på delområde"><option value="">Hele ${esc(AREA[fa].short)}</option>${subs.map(([k, l]) => `<option value="${k}"${fs === k ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>` : ""); })()}
       ${UI.filter === "mine" ? `<select id="me-select" aria-label="Velg navn"><option value="">Hvem er du?</option>${PEOPLE.map(p => `<option${UI.me === p ? " selected" : ""}>${p}</option>`).join("")}</select>` : ""}</div>
       <div class="seg" role="group" aria-label="Tavlevisning"><button class="${UI.boardMode === "status" ? "on" : ""}" data-act="mode" data-m="status">Tavle etter status</button><button class="${UI.boardMode === "owner" ? "on" : ""}" data-act="mode" data-m="owner">Tavle etter ansvarlig</button><button class="${UI.boardMode === "list" ? "on" : ""}" data-act="mode" data-m="list">Prioritert liste</button></div>
     </div>
@@ -1813,7 +1869,7 @@ VIEWS.oppgaver = function () {
 
 /* ----- MILEPÆLER ----- */
 VIEWS.milepaeler = function () {
-  const ms = milestones(), dated = ms.filter(m => m.date), undated = ms.filter(m => !m.date);
+  const ms = milestones(), dated = ms.filter(m => m.date && m.status !== "Ikke aktuell"), undated = ms.filter(m => !m.date && !msClosed(m));
   const firstIso = dated.length ? dated.reduce((a, m) => toUTC(m.date) < toUTC(a) ? m.date : a, todayISO()) : todayISO();
   const lastIso = dated.reduce((a, m) => toUTC(m.end || m.date) > toUTC(a) ? (m.end || m.date) : a, todayISO());
   const start = mondayOf(firstIso), weeks = Math.ceil((toUTC(lastIso) - toUTC(start)) / 864e5 / 7) + 1, end = addDays(start, weeks * 7), span = weeks * 7;
@@ -1824,7 +1880,7 @@ VIEWS.milepaeler = function () {
   const today = todayISO();
   const rows = dated.map(m => {
     const x = pos(m.date), right = x > 68;
-    const shape = m.end ? `<div class="tl-range" style="left:${x}%;width:${pos(m.end) - x}%"></div>` : `<div class="tl-mark" style="left:${x}%;${m.status === "Levert" ? "background:var(--green);box-shadow:0 0 0 1.5px var(--green)" : ""}"></div>`;
+    const shape = m.end ? `<div class="tl-range" style="left:${x}%;width:${pos(m.end) - x}%"></div>` : `<div class="tl-mark" style="left:${x}%;${msDone(m) ? "background:var(--green);box-shadow:0 0 0 1.5px var(--green)" : ""}"></div>`;
     const lx = right ? `right:${100 - x + 1.6}%` : `left:${(m.end ? pos(m.end) : x) + 1.6}%`;
     return `<div class="tl-row">${shape}<div class="tl-label" style="${lx}">${esc(m.title)}<small>${m.end ? fmtRange(m.date, m.end) : fmtDate(m.date, false)}</small></div></div>`;
   }).join("");
@@ -1833,20 +1889,32 @@ VIEWS.milepaeler = function () {
     <div class="tl-scroll"><div class="tl" style="min-width:${Math.max(760, weeks * 38)}px"><div class="tl-axis">${axis}</div>${grid}${showToday ? `<div class="tl-today" style="left:${pos(today)}%"><span>I dag</span></div>` : ""}${rows}</div></div>
     ${undated.length ? `<p class="sub" style="margin-top:12px">Uten dato: ${undated.map(m => `${esc(m.title)} ${ph(m.dateText)}`).join(" · ")}</p>` : ""}</div>`;
   const nd = nextDeadline();
-  const list = ms.map(m => {
+  const list = ms.filter(m => !msClosed(m)).map(m => {
     const p = msProgress(m), tone = msTone(m);
     let cd = "Dato mangler";
-    if (m.status === "Levert") cd = "Levert";
+    if (msClosed(m)) cd = m.status;
     else if (m.date) { const d = daysUntil(m.date); cd = m.end && d < 0 && daysUntil(m.end) >= 0 ? "Pågår nå" : d === 0 ? "I dag" : d > 0 ? `Om ${d} ${d === 1 ? "dag" : "dager"}` : `For ${-d} dager siden`; }
     return `<div class="msitem"><div class="msrow${nd && nd.id === m.id ? " next" : ""}" data-act="editMs" data-id="${m.id}">
       <div class="msdate">${m.date ? `<b>${fmtDate(m.date, false)}</b><small>${WD[dOf(m.date).getUTCDay()]} · uke ${isoWeek(m.date)}</small>` : `<span class="ph">FYLL INN</span>`}</div>
       <div style="min-width:0"><b style="font-size:15px">${esc(m.title)}</b>${m.subtitle ? ` <span class="muted">– ${esc(m.subtitle)}</span>` : ""}
         <div class="msmeta"><span class="pill">${esc(m.type)}</span><span class="pill s-${esc(m.status)}">${esc(m.status)}</span><span class="badge t-${tone}">${cd}</span>${m.end ? `<span class="muted mono" style="font-size:12px">${fmtRange(m.date, m.end)}</span>` : ""}${!m.date ? ph(m.dateText) : ""}</div>
-        ${m.note ? `<div class="muted" style="font-size:13px;margin-top:6px">${ph(m.note)}</div>` : ""}</div>
-      <div class="msprog">${m.type === "Hendelse" ? "" : `<div class="mh"><span>Oppgaver</span><span class="mono">${p.total ? `${p.done}/${p.total} · ${p.pct} %` : m.status === "Levert" ? "100 %" : "ingen koblet"}</span></div>${bar(p.pct, p.pct === 100 ? "green" : "")}`}</div></div>${msTree(m)}</div>`;
+        ${m.note ? `<div class="muted" style="font-size:13px;margin-top:6px">${ph(m.note)}</div>` : ""}
+        ${msActions(m)}</div>
+      <div class="msprog">${m.type === "Hendelse" ? "" : `<div class="mh"><span>Oppgaver</span><span class="mono">${p.total ? `${p.done}/${p.total} · ${p.pct} %` : msDone(m) ? "100 %" : "ingen koblet"}</span></div>${bar(p.pct, p.pct === 100 ? "green" : "")}`}</div></div>${msTree(m)}</div>`;
   }).join("");
-  return tl + `<div class="mslist">${list}</div>`;
+  return tl + `<div class="mslist">${list || '<div class="empty" style="background:var(--card)">Alle milepæler er avsluttet.</div>'}</div>` + closedMs(ms);
 };
+/* Knapper for å avslutte en milepæl, og listen over avsluttede */
+function msActions(m) {
+  return `<div class="ms-actions"><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button><button class="mini ghosty" data-act="msDrop" data-id="${m.id}">Ikke aktuell</button></div>`;
+}
+function closedMs(list) {
+  const done = list.filter(msClosed).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  if (!done.length) return "";
+  return `<details class="closed-list"${keepOpen("ms-avsluttet")}><summary>Levert og avsluttet (${done.length})</summary><div class="mini-list">
+    ${done.map(m => `<div class="lrow" data-act="editMs" data-id="${m.id}"><span class="lt"><b class="${m.status === "Ikke aktuell" ? "wdone" : ""}">${esc(m.title)}</b><small>${m.date ? `<span class="mono">${fmtDate(m.date, false)}</span> · ` : ""}${esc(m.type)}</small></span>
+      <span class="badge ${msDone(m) ? "t-green" : "t-none"}">${esc(m.status)}</span><button class="mini ghosty" data-act="msUndo" data-id="${m.id}">Angre</button></div>`).join("")}</div></details>`;
+}
 
 /* ----- SALG ----- */
 VIEWS.salg = function () {
@@ -2151,7 +2219,7 @@ function areaFacts(id) {
     f.push([`${iv.filter(i => i.findings && !hasPh(i.findings)).length}/${iv.length}`, "intervjuer utfylt"]);
     f.push([`${hs.filter(h => h.status && h.status !== "Ikke testet").length}/${hs.length}`, "hypoteser testet"]);
   }
-  if (id === "kurs") { const m = milestones().find(m => m.type === "Innlevering" && m.status !== "Levert" && m.date); if (m) { const d = daysUntil(m.date); f.push([d + " d", "til " + m.title, d <= 7 ? "orange" : ""]); } }
+  if (id === "kurs") { const m = milestones().find(m => m.type === "Innlevering" && !msClosed(m) && m.date); if (m) { const d = daysUntil(m.date); f.push([d + " d", "til " + m.title, d <= 7 ? "orange" : ""]); } }
   if (id !== "kurs") { const cs = contactsIn(id).length; f.push([cs, cs === 1 ? "kontakt" : "kontakter"]); }
   return f;
 }
@@ -2228,7 +2296,7 @@ function extrasCard(id) {
   const ds = arr("decisions").filter(d => d.area === id).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const docs = arr("docs").filter(d => d.area === id).sort((a, b) => (b.added || "").localeCompare(a.added || ""));
   const parts = [];
-  if (cs.length) parts.push(`<div><span class="eyebrow">Kontakter</span><div class="mini-list">${cs.map(c => `<div class="lrow" data-act="editContact" data-id="${c.id}"><span class="lt"><b>${esc(c.name)}</b><small>${esc([c.org, c.role].filter(Boolean).join(" · "))}${c.next ? ` · Neste: ${esc(c.next)}` : ""}</small></span><span class="badge ${CONTACT_TONE[c.status] || "t-none"}">${esc(c.status || "–")}</span></div>`).join("")}</div></div>`);
+  if (cs.length) parts.push(`<div><span class="eyebrow">Kontakter</span><div class="mini-list">${cs.map(c => `<div class="lrow" data-act="editContact" data-id="${c.id}">${orgLogo(c, "sm")}<span class="lt"><b>${esc(c.name)}</b><small>${esc([c.org, c.role].filter(Boolean).join(" · "))}${c.next ? ` · Neste: ${esc(c.next)}` : ""}</small></span><span class="badge ${CONTACT_TONE[c.status] || "t-none"}">${esc(c.status || "–")}</span></div>`).join("")}</div></div>`);
   if (ds.length) parts.push(`<div><span class="eyebrow">Beslutninger</span><div class="mini-list">${ds.map(d => `<div class="drow" data-act="editDecision" data-id="${d.id}"><span class="mono muted">${d.date ? fmtDate(d.date, false) : "–"}</span><div><b>${esc(d.text)}</b>${d.why ? `<small>${esc(d.why)}</small>` : ""}</div></div>`).join("")}</div></div>`);
   if (docs.length) parts.push(`<div><span class="eyebrow">Dokumenter</span><div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("")}</div></div>`);
   return parts.length ? `<div class="card"><div class="extras" style="--n:${parts.length}">${parts.join("")}</div></div>` : "";
@@ -2236,22 +2304,30 @@ function extrasCard(id) {
 
 /* Produkt & Tech: funksjonsoversikt */
 function featuresView() {
-  const it = arr("items").filter(i => i.kind === "funksjon");
-  const unplaced = it.filter(i => !FEATURE_STATUS.includes(i.status));
-  const cols = [...(unplaced.length ? [["", "Må plasseres"]] : []), ...FEATURE_STATUS.map(s => [s, s])];
-  const help = { "": "Dra til riktig kolonne", "I løsningen": "Finnes og virker i dag", "Under utvikling": "Vi bygger det nå", "Vurderes": "Ideer og mulige løsninger", "Droppet": "Bevisst valgt bort" };
-  const stripe = { "": "var(--ph)", "I løsningen": "var(--green)", "Under utvikling": "var(--orange)", "Vurderes": "#C9AE6B", "Droppet": "#B9A691" };
-  const board = cols.map(([key, label]) => {
-    const list = key ? it.filter(i => i.status === key) : unplaced;
-    return `<div class="col" data-drop="item" data-field="status" data-key="${esc(key)}"><div class="col-head"><b>${esc(label)}</b><span class="mono">${list.length}</span></div>
-      <p class="col-help">${help[key]}</p>
-      ${list.map(i => `<div class="kc${key === "Droppet" ? " isdone" : ""}" style="--stripe:${stripe[key]}" draggable="true" data-drag="item" data-id="${i.id}" data-act="editItem" tabindex="0">
-        <div class="kt">${esc(i.title)}</div>${i.summary ? `<div class="muted" style="font-size:12.5px">${ph(i.summary)}</div>` : ""}${i.note ? `<div class="kown">${ph(i.note)}</div>` : ""}</div>`).join("")}
-      <button class="addcard" data-act="newItem" data-kind="funksjon" data-status="${esc(key)}">+ Legg til</button></div>`;
-  }).join("");
-  return `<div class="card feat-card"><div class="card-head"><div><h2>Funksjoner</h2><p class="sub">Hva løsningen gjør i dag, hva vi bygger, ideer vi vurderer, og hva vi har droppet. Dra kortene når statusen endrer seg.</p></div></div>
-    <div class="board-scroll"><div class="board" style="--cols:${cols.length};grid-template-columns:repeat(${cols.length},minmax(200px,1fr))">${board}</div></div></div>`;
+  const it = arr("items").filter(i => i.kind === "funksjon").sort((a, b) => (a.title || "").localeCompare(b.title || "", "nb"));
+  const st = i => FEATURE_STATUS.includes(i.status) ? i.status : "";
+  const groups = [["I løsningen", "I løsningen", "Finnes og virker i dag"], ["Under utvikling", "Under utvikling", "Vi bygger det nå"], ["Vurderes", "Vurderes", "Ideer og mulige løsninger"], ["", "Må plasseres", "Ikke vurdert ennå"]];
+  const live = it.filter(i => st(i) !== "Droppet"), tot = Math.max(1, live.length), cnt = s => it.filter(i => st(i) === s).length;
+  const row = i => {
+    const open = xpOpen(i.id), s = st(i);
+    return `<div class="fx${open ? " open" : ""}">
+      <button class="fx-h" data-act="toggleXp" data-id="${i.id}" aria-expanded="${open}"><span class="fx-dot" style="background:${FEAT_COLOR[s]}"></span><span class="fx-t">${esc(i.title)}</span>${i.owner ? avatar(i.owner, true) : ""}<span class="fx-chev">${ico("down", 2)}</span></button>
+      ${open ? `<div class="fx-b">${i.summary ? `<p>${ph(i.summary)}</p>` : '<p class="muted">Ingen beskrivelse ennå.</p>'}${i.note ? `<p class="fx-note">${ph(i.note)}</p>` : ""}${isUrl(i.link) ? `<a class="linkout" href="${esc(i.link)}" target="_blank" rel="noopener">Åpne lenke ↗</a>` : ""}
+        <div class="fx-move"><div class="seg2" role="group" aria-label="Status">${FEATURE_STATUS.map(x => `<button class="${s === x ? "on" : ""}" data-act="setFeat" data-id="${i.id}" data-s="${x}">${x}</button>`).join("")}</div>${miniBtn("editItem", "Rediger", `data-id="${i.id}"`)}</div></div>` : ""}</div>`;
+  };
+  const section = ([s, label, help]) => { const list = it.filter(i => st(i) === s); if (!list.length) return "";
+    return `<section class="fx-sec"><div class="fx-sec-h"><b>${label}</b><span class="muted">${help}</span><span class="mono muted">${list.length}</span></div><div class="fx-list">${list.map(row).join("")}</div></section>`; };
+  const dropped = it.filter(i => st(i) === "Droppet");
+  return `<div class="card feat-card"><div class="card-head"><div><h2>Funksjoner</h2><p class="sub">Trykk på en funksjon for å se beskrivelsen og endre status.</p></div>${miniBtn("newItem", "+ Funksjon", 'data-kind="funksjon" data-status="Vurderes"')}</div>
+    <div class="fx-sum"><div class="stack-bar">${groups.map(([s, l]) => cnt(s) ? `<i style="width:${cnt(s) / tot * 100}%;background:${FEAT_COLOR[s]}" title="${l}: ${cnt(s)}"></i>` : "").join("")}</div>
+      <div class="legend">${groups.filter(([s]) => cnt(s)).map(([s, l]) => `<span><i style="background:${FEAT_COLOR[s]}"></i>${l} <b class="mono">${cnt(s)}</b></span>`).join("")}</div></div>
+    ${groups.map(section).join("") || '<div class="empty">Ingen funksjoner ennå.</div>'}
+    ${dropped.length ? `<details class="closed-list"${keepOpen("droppet")}><summary>Droppet (${dropped.length})</summary><div class="fx-list">${dropped.map(row).join("")}</div></details>` : ""}</div>`;
 }
+const FEAT_COLOR = { "I løsningen": "var(--green)", "Under utvikling": "var(--orange)", "Vurderes": "#C9AE6B", "Droppet": "#B9A691", "": "var(--ph)" };
+/* Utvidbare kort: bare overskriften vises til man trykker på den */
+const xpOpen = id => !!(UI.xp && UI.xp[id]);
+const keepOpen = key => ` data-keep="${key}"${UI.keep && UI.keep[key] ? " open" : ""}`;
 
 /* Marked & Salg: grafer */
 function marketCharts() {
@@ -2299,8 +2375,9 @@ function knowCard() {
 
 /* Kurs & innleveringer */
 function kursCard() {
-  const ms = milestones().filter(m => ["Innlevering", "Vurdering"].includes(m.type));
-  return cardBox("Innleveringer og vurdering", "STR466, høst 2026", `<div class="mini-list">${ms.map(m => { const p = msProgress(m); return `<div class="lrow" data-act="editMs" data-id="${m.id}"><span class="lt"><b>${esc(m.title)}</b><small>${m.date ? `<span class="mono">${fmtDate(m.date)}</span>` : ph(m.dateText)}${p.total ? ` · ${p.done}/${p.total} oppgaver` : ""}</small></span><span class="badge t-${msTone(m)}">${m.status === "Levert" ? "Levert" : m.date ? relText(daysUntil(m.date)) : esc(m.status)}</span></div>`; }).join("")}</div>`, miniBtn("go", "Åpne milepæler", 'data-p="milepaeler"'));
+  const all = milestones().filter(m => ["Innlevering", "Vurdering"].includes(m.type)), open = all.filter(m => !msClosed(m));
+  const rows = open.map(m => { const p = msProgress(m); return `<div class="lrow" data-act="editMs" data-id="${m.id}"><span class="lt"><b>${esc(m.title)}</b><small>${m.date ? `<span class="mono">${fmtDate(m.date)}</span>` : ph(m.dateText)}${p.total ? ` · ${p.done}/${p.total} oppgaver` : ""}</small></span><span class="badge t-${msTone(m)}">${m.date ? relText(daysUntil(m.date)) : esc(m.status)}</span><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button></div>`; }).join("");
+  return cardBox("Innleveringer og vurdering", "STR466, høst 2026", `<div class="mini-list">${rows || '<div class="empty">Alt er levert.</div>'}</div>${closedMs(all)}`, miniBtn("go", "Åpne milepæler", 'data-p="milepaeler"'));
 }
 
 /* Research & Innsikt: kunnskapsbase */
@@ -2310,12 +2387,15 @@ function knowledgeView() {
   const tags = Object.keys(tc).sort((a, b) => tc[b] - tc[a] || a.localeCompare(b));
   const list = UI.kbTag ? kb.filter(k => (k.tags || []).includes(UI.kbTag)) : kb;
   const hName = id => { const h = S.hypotheses[id]; return h ? "H" + h.n : ""; };
-  const cards = list.map(k => `<div class="card kb" data-search="${searchKey(k.title, k.summary, k.learned, k.tags, k.kind, areaName(k.area))}" data-act="editKb" data-id="${k.id}" tabindex="0">
+  const cards = list.map(k => { const open = xpOpen(k.id);
+    return `<div class="card kb xp${open ? " open" : ""}" data-search="${searchKey(k.title, k.summary, k.learned, k.tags, k.kind, areaName(k.area))}" data-act="toggleXp" data-id="${k.id}" tabindex="0" aria-expanded="${open}">
     <div class="kb-top"><span class="tag">${esc(k.kind || "Notat")}</span>${areaTag(k.area)}${(k.hyps || []).map(h => `<span class="tag">${hName(h)}</span>`).join("")}<span class="mono muted" style="margin-left:auto;font-size:11.5px">${k.added ? fmtDate(k.added, false) : ""}${k.by ? " · " + esc(k.by) : ""}</span></div>
-    <h2>${ph(k.title)}</h2>${k.summary ? `<p class="kb-sum">${ph(k.summary)}</p>` : ""}
+    <div class="xp-h"><h2>${ph(k.title)}</h2><span class="fx-chev">${ico("down", 2)}</span></div>
+    ${open ? `${k.summary ? `<p class="kb-sum">${ph(k.summary)}</p>` : ""}
     ${k.learned ? `<div class="learned"><span class="eyebrow">Det vi lærte</span><span>${ph(k.learned)}</span></div>` : ""}
     <div class="kb-foot"><div class="kb-tags">${(k.tags || []).map(t => `<span class="hash">#${esc(t)}</span>`).join("")}</div>
-      ${(k.files || []).length || isUrl(k.url) ? `<div class="files">${(k.files || []).map(f => fileLink(f.id, f.name)).join("")}${isUrl(k.url) ? `<a class="linkout" href="${esc(k.url)}" target="_blank" rel="noopener">Åpne original ↗</a>` : ""}</div>` : '<span class="ph">[FYLL INN: fil eller lenke]</span>'}</div></div>`).join("");
+      ${(k.files || []).length || isUrl(k.url) ? `<div class="files">${(k.files || []).map(f => fileLink(f.id, f.name)).join("")}${isUrl(k.url) ? `<a class="linkout" href="${esc(k.url)}" target="_blank" rel="noopener">Åpne original ↗</a>` : ""}</div>` : '<span class="ph">[FYLL INN: fil eller lenke]</span>'}</div>
+    <div class="card-foot" style="margin-top:0">${miniBtn("editKb", "Rediger", `data-id="${k.id}"`)}</div>` : `<div class="kb-tags">${(k.tags || []).map(t => `<span class="hash">#${esc(t)}</span>`).join("")}</div>`}</div>`; }).join("");
   return `<div class="toolbar"><div class="filterbar"><input class="search" id="kb-search" type="search" placeholder="Søk i tittel, sammendrag og tags" value="${esc(UI.kbQ || "")}" aria-label="Søk i kunnskapsbasen">
       <button class="chip${!UI.kbTag ? " on" : ""}" data-act="kbTag" data-t="">Alle</button>${tags.map(t => `<button class="chip${UI.kbTag === t ? " on" : ""}" data-act="kbTag" data-t="${esc(t)}">#${esc(t)} <b>${tc[t]}</b></button>`).join("")}</div></div>
     ${kb.length ? `<div class="kb-grid">${cards}</div><div class="empty" id="search-empty" hidden style="background:var(--card)">Ingen treff. Prøv et annet ord eller fjern tag-filteret.</div>`
@@ -2323,6 +2403,13 @@ function knowledgeView() {
 }
 
 /* Kontakter */
+// Logo fra organisasjonens nettside (bare domenet sendes til Googles ikontjeneste). Uten nettside vises forbokstaver.
+const cleanDomain = u => String(u || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split(/[\/?#]/)[0].replace(/[^a-z0-9.-]/g, "");
+function orgLogo(c, cls) {
+  const dom = cleanDomain(c.website), words = String(c.org || c.name || "?").split(/\s+/).filter(Boolean);
+  const ini = (words.length > 1 ? words.slice(0, 2).map(w => w[0]).join("") : (words[0] || "?").slice(0, 2)).toUpperCase();
+  return `<span class="clogo${cls ? " " + cls : ""}" aria-hidden="true"><span>${esc(ini)}</span>${dom.includes(".") ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(dom)}&sz=128" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}</span>`;
+}
 VIEWS.kontakter = function () {
   const all = arr("contacts");
   const openFor = c => tasks().filter(t => !isDone(t) && (t.contacts || []).includes(c.id));
@@ -2330,15 +2417,18 @@ VIEWS.kontakter = function () {
     .sort((a, b) => openFor(b).length - openFor(a).length || CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status) || (a.name || "").localeCompare(b.name || ""));
   const cards = list.map(c => {
     const ts = openFor(c);
-    return `<div class="card ccard" data-search="${searchKey(c.name, c.org, c.role, c.notes, c.next, (c.areas || []).map(areaName))}">
-      <div class="cc-head"><div style="min-width:0"><h2>${esc(c.name)}</h2><p class="sub">${esc([c.org, c.role].filter(Boolean).join(" · ")) || "&nbsp;"}</p></div><span class="badge ${CONTACT_TONE[c.status] || "t-none"}">${esc(c.status || "–")}</span></div>
-      <div class="kb-tags">${(c.areas || []).map(areaTag).join("")}</div>
+    const open = xpOpen(c.id);
+    return `<div class="card ccard xp${open ? " open" : ""}" data-search="${searchKey(c.name, c.org, c.role, c.notes, c.next, (c.areas || []).map(areaName))}" data-act="toggleXp" data-id="${c.id}" tabindex="0" aria-expanded="${open}">
+      <div class="cc-head">${orgLogo(c)}<div style="min-width:0;flex:1"><h2>${esc(c.name)}</h2><p class="sub">${esc([c.org !== c.name ? c.org : "", c.role].filter(Boolean).join(" · ")) || "&nbsp;"}</p></div><span class="badge ${CONTACT_TONE[c.status] || "t-none"}">${esc(c.status || "–")}</span></div>
+      <div class="cc-tags"><div class="kb-tags">${(c.areas || []).map(areaTag).join("")}</div>${ts.length ? `<span class="muted" style="font-size:12px">${ts.length} ${ts.length === 1 ? "oppgave" : "oppgaver"}</span>` : ""}<span class="fx-chev">${ico("down", 2)}</span></div>
+      ${open ? `
       ${c.owner ? `<p class="cc-line"><span class="muted">Vår kontakt</span>${avatar(c.owner, true)} ${esc(c.owner)}</p>` : ""}
       ${c.next ? `<p class="cc-line"><span class="muted">Neste steg</span>${esc(c.next)}</p>` : ""}
       ${c.email || c.phone ? `<div class="cc-info">${c.email ? `<span class="mono selectable">${esc(c.email)}</span>` : ""}${c.phone ? `<span class="mono selectable">${esc(c.phone)}</span>` : ""}</div>` : ""}
       ${c.notes ? `<p class="muted" style="font-size:13px;margin:0">${esc(c.notes)}</p>` : ""}
       ${ts.length ? `<div class="mini-list">${ts.map(t => `<div class="lrow" data-act="editTask" data-id="${t.id}"><span class="lt"><b>${ph(t.title)}</b><small>${t.due ? fmtDate(t.due) + " · " : ""}${ownersText(t)}</small></span></div>`).join("")}</div>` : ""}
-      <div class="card-foot">${miniBtn("contactTask", "+ Oppgave", `data-id="${c.id}"`)}${miniBtn("editContact", "Rediger", `data-id="${c.id}"`)}</div></div>`;
+      ${isUrl("https://" + cleanDomain(c.website)) && cleanDomain(c.website).includes(".") ? `<a class="linkout" href="https://${esc(cleanDomain(c.website))}" target="_blank" rel="noopener">${esc(cleanDomain(c.website))} ↗</a>` : ""}
+      <div class="card-foot">${miniBtn("contactTask", "+ Oppgave", `data-id="${c.id}"`)}${miniBtn("editContact", "Rediger", `data-id="${c.id}"`)}</div>` : ""}</div>`;
   }).join("");
   return `<div class="toolbar"><div class="filterbar"><input class="search" id="contact-search" type="search" placeholder="Søk etter navn, organisasjon eller notat" value="${esc(UI.cQ || "")}" aria-label="Søk i kontakter">
       <button class="chip${!UI.cArea ? " on" : ""}" data-act="cArea" data-a="">Alle</button>${AREAS.map(a => `<button class="chip${UI.cArea === a.id ? " on" : ""}" data-act="cArea" data-a="${a.id}">${esc(a.short)}</button>`).join("")}</div></div>
@@ -2395,6 +2485,7 @@ function contactForm(c, isNew) {
     fields: [{ k: "name", label: "Navn" }, { k: "org", label: "Organisasjon" }, { k: "role", label: "Rolle", ph: "F.eks. arverettsadvokat" },
       { k: "status", label: "Status", type: "select", opts: CONTACT_STATUS }, { k: "owner", label: "Vår kontakt", type: "select", opts: personOpts() },
       { k: "next", label: "Neste steg" }, { k: "email", label: "E-post" }, { k: "phone", label: "Telefon" },
+      { k: "website", label: "Nettside (gir logo)", ph: "f.eks. finn.no" },
       { k: "areas", label: "Områder", type: "multi", full: true, opts: AREAS.map(a => [a.id, a.name]) },
       { k: "notes", label: "Notater", type: "textarea", full: true }],
     onSave: v => { if (!v.name) return formError("Kontakten trenger et navn."); put("contacts", Object.assign(clone(c), v)); closeModal(); toast(isNew ? `${v.name} er lagt til.` : "Kontakten er oppdatert."); },
@@ -2486,7 +2577,7 @@ function waitOpts(t) {
   const cur = waitIds(t);
   const ts = tasks().filter(x => x.id !== t.id && !waitsOnDeep(x.id, t.id) && (!isDone(x) || cur.includes(x.id)))
     .sort((a, b) => (a.title || "").localeCompare(b.title || "")).map(x => [x.id, x.title + (isDone(x) ? " (ferdig)" : ""), x.area || ""]);
-  const ms = milestones().filter(m => m.status !== "Levert" || cur.includes(m.id)).map(m => [m.id, "Milepæl: " + m.title, msArea(m)]);
+  const ms = milestones().filter(m => !msClosed(m) || cur.includes(m.id)).map(m => [m.id, "Milepæl: " + m.title, msArea(m)]);
   return [...ts, ...ms];
 }
 function taskForm(t, isNew) {
@@ -2580,7 +2671,7 @@ function msForm(m, isNew) {
       { k: "end", label: "Sluttdato (for perioder)", type: "date" },
       { k: "type", label: "Type", type: "select", opts: MS_TYPES },
       { k: "area", label: "Område", type: "select", opts: [["", "Ut fra typen"], ...AREAS.map(a => [a.id, a.name])], hint: "Brukes for å vise riktige milepæler når dere lager oppgaver." },
-      { k: "status", label: "Status", type: "select", opts: MS_STATUS, hint: "«Levert» flytter nedtellingen til neste milepæl." },
+      { k: "status", label: "Status", type: "select", opts: MS_STATUS, hint: "«Levert», «Gjennomført», «Fullført» og «Ikke aktuell» flytter milepælen til avsluttede, og nedtellingen går videre til neste." },
       { k: "note", label: "Notat", type: "textarea", full: true }
     ],
     onSave: v => {
@@ -2588,7 +2679,7 @@ function msForm(m, isNew) {
       const o = Object.assign(clone(m), v); if (o.date) o.dateText = "";
       if (o.end && o.date && toUTC(o.end) < toUTC(o.date)) return formError("Sluttdatoen kan ikke være før startdatoen.");
       put("milestones", o); closeModal();
-      if (v.status === "Levert" && m.status !== "Levert") { toast(`${o.title} er levert. Godt jobbet!`); releaseWaiting(o.id); }
+      if (msClosed(o) && !msClosed(m)) { toast(msDone(o) ? `${o.title}: ${o.status.toLowerCase()}. Godt jobbet!` : `${o.title} er satt som ikke aktuell.`); releaseWaiting(o.id); }
     },
     onDelete: isNew ? null : () => { del("milestones", m.id); closeModal(); }
   });
@@ -2915,6 +3006,11 @@ const A = {
   cancelDelete: () => { document.getElementById("delrow").innerHTML = `<button class="btn danger" data-act="askDelete">Slett</button>`; },
   confirmDelete: () => { if (modalCtx && modalCtx.onDelete) modalCtx.onDelete(); },
   exportData, importData, checkImport, doImport,
+  toggleXp: (el, ev) => { if (ev && ev.target.closest && ev.target.closest(".selectable") && UI.xp && UI.xp[el.dataset.id]) return; UI.xp = UI.xp || {}; UI.xp[el.dataset.id] = !UI.xp[el.dataset.id]; render(true); },
+  setFeat: el => { const i = clone(S.items[el.dataset.id]); if (!i || i.status === el.dataset.s) return; i.status = el.dataset.s; put("items", i); toast(`«${i.title}» er flyttet til ${i.status.toLowerCase()}.`); },
+  msDone: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; m.prevStatus = m.status; m.status = msDoneLabel(m); put("milestones", m); toast(`${m.title}: ${m.status.toLowerCase()}. Godt jobbet! Den ligger nå under «Levert og avsluttet».`); releaseWaiting(m.id); },
+  msDrop: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; m.prevStatus = m.status; m.status = "Ikke aktuell"; put("milestones", m); toast(`${m.title} er satt som ikke aktuell. Du kan angre under «Levert og avsluttet».`); releaseWaiting(m.id); },
+  msUndo: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; const back = m.prevStatus && !["Levert", "Gjennomført", "Fullført", "Ikke aktuell"].includes(m.prevStatus) ? m.prevStatus : "Ikke startet"; m.status = back; delete m.prevStatus; put("milestones", m); toast(`${m.title} er åpen igjen.`); },
   toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
   aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
   aiClear: () => { if (CHAT.busy) return; CHAT.log = []; renderChat(); document.getElementById("ai-input").focus(); },
@@ -2947,17 +3043,19 @@ document.addEventListener("click", ev => {
 document.addEventListener("keydown", ev => {
   if (ev.key === "Escape") { if (modalEl.innerHTML) closeModal(); else if (CHAT.open) { CHAT.open = false; renderChat(); document.getElementById("ai-fab").focus(); } else if (UI.addingCol) { UI.addingCol = null; render(true); } }
   if (ev.target.id === "add-input" && ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); A.addCardSave(); }
-  if (ev.key === "Enter" && ev.target.matches && ev.target.matches(".kc,.lrow,.msrow,.stair,.hyp")) ev.target.click();
+  if (ev.key === "Enter" && ev.target.matches && ev.target.matches(".kc,.lrow,.msrow,.stair,.hyp,.xp")) ev.target.click();
   if (ev.key === "Enter" && modalCtx && ev.target.tagName === "INPUT" && ev.target.type !== "checkbox") { ev.preventDefault(); A.saveModal(); }
 });
-main.addEventListener("change", ev => { if (ev.target.id === "area-filter") { UI.areaFilter = ev.target.value; ev.target.blur(); render(true); return; } if (ev.target.id === "me-select") { UI.me = ev.target.value; savePref(); ev.target.blur(); render(true); } });
+main.addEventListener("change", ev => {
+  if (ev.target.id === "area-filter") { UI.areaFilter = ev.target.value; ev.target.blur(); render(true); return; }
+  if (ev.target.id === "sub-filter") { const fa = (UI.areaFilter || "").split(".")[0]; UI.areaFilter = fa + (ev.target.value ? "." + ev.target.value : ""); ev.target.blur(); render(true); return; } if (ev.target.id === "me-select") { UI.me = ev.target.value; savePref(); ev.target.blur(); render(true); } });
 main.addEventListener("input", ev => {
   if (ev.target.id === "win-text") UI.winDraft = ev.target.value;
   if (ev.target.id === "kb-search") { UI.kbQ = ev.target.value; applySearch(UI.kbQ); }
   if (ev.target.id === "contact-search") { UI.cQ = ev.target.value; applySearch(UI.cQ); }
 });
 main.addEventListener("submit", ev => ev.preventDefault());
-main.addEventListener("toggle", ev => { const d = ev.target; if (d.classList && d.classList.contains("mstree")) { UI.openTree = UI.openTree || {}; UI.openTree[d.dataset.ms] = d.open; } }, true);
+main.addEventListener("toggle", ev => { const d = ev.target; if (d.classList && d.classList.contains("mstree")) { UI.openTree = UI.openTree || {}; UI.openTree[d.dataset.ms] = d.open; } if (d.dataset && d.dataset.keep) { UI.keep = UI.keep || {}; UI.keep[d.dataset.keep] = d.open; } }, true);
 main.addEventListener("mousemove", incomeHover);
 main.addEventListener("mouseout", ev => { if (ev.target.classList && ev.target.classList.contains("inc-hit")) incomeLeave(ev); });
 

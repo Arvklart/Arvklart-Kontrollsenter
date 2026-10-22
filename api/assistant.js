@@ -17,7 +17,7 @@ const FIELDS = {
     waitsOn: "venter på: id-er for oppgaver eller milepæler fra oversikten som må bli ferdige først, kommaseparert" } },
   contacts: { label: "kontakt", fields: {
     name: "navn", org: "organisasjon", role: "rolle", status: "én av {contactStatus}", owner: "vår kontakt: ett navn fra teamet",
-    email: "e-post", phone: "telefon", next: "neste steg", areas: "område-id-er, kommaseparert", notes: "notater" } },
+    email: "e-post", phone: "telefon", website: "organisasjonens nettside, f.eks. finn.no (gir logo). Bare hvis du vet den sikkert", next: "neste steg", areas: "område-id-er, kommaseparert", notes: "notater" } },
   knowledge: { label: "kunnskapsnotat", fields: {
     title: "tittel", kind: "én av {kbKinds}", area: "område-id", summary: "kort sammendrag, 2–4 setninger, anonymisert",
     learned: "det vi lærte, 1–2 setninger, anonymisert", url: "lenke", tags: "tags, kommaseparert", hyps: "hypotese-id-er, kommaseparert" } },

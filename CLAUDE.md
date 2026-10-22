@@ -34,6 +34,9 @@ Brukerne er ikke tekniske. Forklar kort og med enkle ord på norsk hva du gjør 
 - Oppgaver: status «Må gjøres», «Venter», «Pågår», «Ferdig». Må ha minst én ansvarlig før «Pågår» eller «Ferdig». Alle oppgavelister bruker `taskRows()`.
 - «Venter på»: `waitsOn` på en oppgave er en liste med id-er for oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og `releaseWaiting()` flytter den tilbake til «Må gjøres» når alt den venter på er ferdig (oppgave «Ferdig» eller milepæl «Levert»). Ring-avhengigheter stoppes i `waitOpts()`.
 - Milepæler har et valgfritt `area`. Uten det brukes typen (`msArea()` / `MS_TYPE_AREA`). I oppgaveskjemaet viser «Milepæl» og «Venter på» bare valg fra området som er valgt (`applyAreaFilter()`), med «Vis alle» for resten.
+- Avsluttede milepæler (`msClosed()`): «Levert», «Gjennomført», «Fullført» (ferdig, `msDone()`) eller «Ikke aktuell» (droppet). De vises i en sammenleggbar liste nederst (`closedMs()`), med «Angre». Knappene for å avslutte lages i `msActions()`, og teksten følger typen (`MS_DONE_LABEL`).
+- Utvidbare kort: bare overskriften vises til man trykker (`toggleXp`, `xpOpen()`). Brukes for funksjoner, kunnskapsbasen og kontakter. `keepOpen(nøkkel)` husker åpne `<details>` når siden tegnes på nytt.
+- Kontakter har `website`. Logoen hentes fra Googles ikontjeneste med bare domenet (`orgLogo()`), ellers vises forbokstaver.
 - Milepæler: oppgaver kobles via `ms`. Kjeden av det de venter på blir underoppgaver (`msTaskIds()`, `msTree()`), og teller med i fremdriften.
 - Vedlegg: `attachFields(rec)` + `applyAttach(o, v)` i skjemaene, og `filesHtml(rec)`/`fileLink()` for visning. Filer lagres som `{ id: sti i bøtta, name }`.
 - Grafer er håndlaget SVG. Datoer regnes i Europe/Oslo og vises på norsk.
