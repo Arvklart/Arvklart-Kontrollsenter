@@ -1028,7 +1028,7 @@ const AREAS = [
   { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { drift: [["milepaeler", "Milepæler"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"]], jus: [["jus", "Jus"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
+const SUBS = { drift: [["milepaeler", "Milepæler"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["finansiering", "Finansiering"]], jus: [["jus", "Jus"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "finans", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -1716,7 +1716,7 @@ function headRight(id) {
   const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
   if (AREA[id]) {
     return { funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
-      milepaeler: btn("newMs", "Ny milepæl"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
+      milepaeler: btn("newMs", "Ny milepæl"), partnere: btn("newContact", "Ny partner", 'data-area="marked"'), finansiering: btn("newFund", "Nytt trinn"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
   return { hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
     okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: `<div class="row-btns" style="align-items:center"><select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>` }[id] || "";
@@ -2241,14 +2241,7 @@ VIEWS.okonomi = function () {
     <tfoot><tr><td>Sum</td><td class="num">${kr(sb)}${missing ? ' <span class="ph">+ [FYLL INN]</span>' : ""}</td><td class="num">${kr(sa)}</td><td class="num">${missing ? "–" : kr(sb - sa)}</td><td></td></tr>
     ${totalSpent() - sa > 0 ? `<tr><td>Forbruk uten budsjettpost</td><td></td><td class="num">${kr(totalSpent() - sa)}</td><td></td><td></td></tr>` : ""}
     <tr><td>Ufordelt av ramme</td><td class="num">${kr(set.totalBudget - sb)}</td><td></td><td class="num">${kr(set.totalBudget - totalSpent())}</td><td class="muted" style="font-weight:400">igjen av ramme</td></tr></tfoot></table></div></div>`;
-  const steps = arr("funding").sort((a, b) => a.step - b.step || a.n - b.n);
-  const maxStep = Math.max(0, ...steps.map(s => s.step));
-  const stairs = steps.map(f => `<div class="stair" data-act="editFund" data-id="${f.id}" style="margin-bottom:${f.step * 22}px">
-    <span class="eyebrow">Trinn ${f.step}</span><b>${esc(f.name)}</b><div class="amt">${f.amount ? ph(f.amount) : '<span class="muted">Beløp ikke oppgitt</span>'}</div>
-    <div><span class="pill s-${esc(f.status)}">${esc(f.status)}</span></div>
-    <dl><dt>Frist</dt><dd>${f.deadline ? ph(f.deadline) : "–"}</dd><dt>Ansvarlig</dt><dd>${ownerText(f.owner)}</dd>${f.req ? `<dt>Krav</dt><dd>${ph(f.req)}</dd>` : ""}</dl></div>`).join("");
-  return walletView() + table + `<div class="card"><div class="card-head"><div><h2>Finansieringsstigen</h2></div><button class="btn ghost" data-act="newFund">${ico("plus")}Nytt trinn</button></div>
-    <div class="stairs" style="padding-top:${maxStep * 4}px">${stairs}</div></div>`;
+  return walletView() + table;
 };
 
 function walletView() {
@@ -2443,7 +2436,7 @@ function areaView(id) {
   const tabHtml = tabs.length > 1 ? `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab${sub === k ? " on" : ""}" data-act="tab" data-t="${k}" role="tab" aria-selected="${sub === k}">${l}</button>`).join("")}</div>` : "";
   if (sub === "oversikt") return tabHtml + areaOverview(id);
   if (sub === "milepaeler") return tabHtml + VIEWS.milepaeler();
-  const body = { salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
+  const body = { partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
   return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : subTasks(id, sub) + body);
 }
 function cardBox(title, sub, inner, foot) {
@@ -2624,12 +2617,11 @@ function orgLogo(c, cls) {
   const ini = (words.length > 1 ? words.slice(0, 2).map(w => w[0]).join("") : (words[0] || "?").slice(0, 2)).toUpperCase();
   return `<span class="clogo${cls ? " " + cls : ""}" aria-hidden="true"><span>${esc(ini)}</span>${dom.includes(".") ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(dom)}&sz=128" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ""}</span>`;
 }
-VIEWS.kontakter = function () {
-  const all = arr("contacts");
-  const openFor = c => tasks().filter(t => !isDone(t) && (t.contacts || []).includes(c.id));
-  const list = (UI.cArea ? all.filter(c => (c.areas || []).includes(UI.cArea)) : all)
-    .sort((a, b) => openFor(b).length - openFor(a).length || CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status) || (a.name || "").localeCompare(b.name || ""));
-  const cards = list.map(c => {
+/* Kontaktkort (brukes på Kontakter og under Salg og partnere → Partnernettverk) */
+const openTasksFor = c => tasks().filter(t => !isDone(t) && (t.contacts || []).includes(c.id));
+function contactCards(list) {
+  const openFor = openTasksFor;
+  return list.map(c => {
     const ts = openFor(c);
     const open = xpOpen(c.id);
     return `<div class="card ccard xp${open ? " open" : ""}" data-search="${searchKey(c.name, c.org, c.role, c.notes, c.next, (c.areas || []).map(areaName))}" data-act="toggleXp" data-id="${c.id}" tabindex="0" aria-expanded="${open}">
@@ -2644,6 +2636,31 @@ VIEWS.kontakter = function () {
       ${isUrl("https://" + cleanDomain(c.website)) && cleanDomain(c.website).includes(".") ? `<a class="linkout" href="https://${esc(cleanDomain(c.website))}" target="_blank" rel="noopener">${esc(cleanDomain(c.website))} ↗</a>` : ""}
       <div class="card-foot">${miniBtn("contactTask", "+ Oppgave", `data-id="${c.id}"`)}${miniBtn("editContact", "Rediger", `data-id="${c.id}"`)}</div>` : ""}</div>`;
   }).join("");
+}
+/* Salg og partnere → Partnernettverk: kontakter i området */
+function partnerView() {
+  const list = arr("contacts").filter(c => (c.areas || []).includes("marked"))
+    .sort((a, b) => openTasksFor(b).length - openTasksFor(a).length || CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status) || (a.name || "").localeCompare(b.name || ""));
+  return list.length ? `<div class="c-grid">${contactCards(list)}</div>` : '<div class="empty" style="background:var(--card)">Ingen partnere ennå.</div>';
+}
+/* Finansieringsstigen: søknader og tilskudd, trinn for trinn */
+function fundingView() {
+  const steps = arr("funding").sort((a, b) => a.step - b.step || a.n - b.n);
+  const maxStep = Math.max(0, ...steps.map(s => s.step));
+  const stairs = steps.map(f => `<div class="stair" data-act="editFund" data-id="${f.id}" style="margin-bottom:${f.step * 22}px">
+    <span class="eyebrow">Trinn ${f.step}</span><b>${esc(f.name)}</b><div class="amt">${f.amount ? ph(f.amount) : '<span class="muted">Beløp ikke oppgitt</span>'}</div>
+    <div><span class="pill s-${esc(f.status)}">${esc(f.status)}</span></div>
+    <dl><dt>Frist</dt><dd>${f.deadline ? ph(f.deadline) : "–"}</dd><dt>Ansvarlig</dt><dd>${ownerText(f.owner)}</dd>${f.req ? `<dt>Krav</dt><dd>${ph(f.req)}</dd>` : ""}</dl></div>`).join("");
+  return `<div class="card"><div class="card-head"><div><h2>Finansieringsstigen</h2></div><button class="btn ghost" data-act="newFund">${ico("plus")}Nytt trinn</button></div>
+    <div class="stairs" style="padding-top:${maxStep * 4}px">${stairs}</div></div>`;
+};
+
+VIEWS.kontakter = function () {
+  const all = arr("contacts");
+  const openFor = c => tasks().filter(t => !isDone(t) && (t.contacts || []).includes(c.id));
+  const list = (UI.cArea ? all.filter(c => (c.areas || []).includes(UI.cArea)) : all)
+    .sort((a, b) => openFor(b).length - openFor(a).length || CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status) || (a.name || "").localeCompare(b.name || ""));
+  const cards = contactCards(list);
   return `<div class="toolbar"><div class="filterbar"><input class="search" id="contact-search" type="search" placeholder="Søk etter navn, organisasjon eller notat" value="${esc(UI.cQ || "")}" aria-label="Søk i kontakter">
       <button class="chip${!UI.cArea ? " on" : ""}" data-act="cArea" data-a="">Alle</button>${AREAS.map(a => `<button class="chip${UI.cArea === a.id ? " on" : ""}" data-act="cArea" data-a="${a.id}">${esc(a.short)}</button>`).join("")}</div></div>
     ${all.length ? (list.length ? `<div class="c-grid">${cards}</div><div class="empty" id="search-empty" hidden style="background:var(--card)">Ingen treff.</div>` : `<div class="empty" style="background:var(--card)">Ingen kontakter i dette området ennå.</div>`)
