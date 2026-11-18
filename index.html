@@ -650,6 +650,23 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .checks-empty{font-weight:400;font-size:13px}
 .form .hint .mini{margin-left:4px;font-size:11.5px;padding:2px 9px}
 
+/* Møter: kompakte, utvidbare linjer */
+.mt-list{padding:6px 18px}
+.mt-item{border-bottom:1px solid var(--line)}
+.mt-item:last-child{border-bottom:0}
+.mt-h{width:100%;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:14px 2px;background:none;border:0;text-align:left;color:var(--ink)}
+.mt-h:hover .mt-title{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.mt-title{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.25}
+.mt-date{font-style:italic;font-size:13px;color:var(--muted)}
+.mt-meta{margin-left:auto;font-size:12px;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
+.mt-h .fx-chev{align-self:center}
+.mt-item.open .fx-chev{transform:rotate(180deg)}
+.mt-b{display:flex;flex-direction:column;gap:12px;padding:0 2px 16px}
+.mt-b ul{margin:4px 0 0;padding-left:18px}
+.mt-who{display:flex;gap:4px;align-items:center;font-size:12.5px}
+.mt-who .muted{margin-left:4px}
+@media (max-width:640px){.mt-meta{margin-left:0;width:100%}}
+
 /* Funksjoner (produktoversikt) */
 .fx-sum{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
 .fx-sec{margin-top:18px}
@@ -2259,16 +2276,24 @@ VIEWS.intervjuer = function () {
 /* ----- MØTER ----- */
 VIEWS.moter = function () {
   const ms = arr("meetings").sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-  if (!ms.length) return `<div class="card"><div class="empty">Ingen møter registrert ennå. Legg inn det første møtet med beslutninger og actionpunkter – actionpunktene kan gjøres om til oppgaver med ett klikk.</div><div style="margin-top:14px"><button class="btn" data-act="newMeeting">${ico("plus")}Nytt møte</button></div></div>`;
-  return ms.map(m => {
-    const dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean);
-    return `<div class="card meeting"><div class="card-head" style="margin-bottom:0"><div><span class="eyebrow">${m.date ? fmtDate(m.date) + " · uke " + isoWeek(m.date) : "Uten dato"}</span><h2 style="margin-top:3px">${esc(m.title || "Teammøte")}</h2>
-      <div style="display:flex;gap:4px;margin-top:8px">${(m.attendees || []).map(a => avatar(a, true)).join("")}${(m.attendees || []).length ? `<span class="muted" style="font-size:12.5px;margin-left:4px">${(m.attendees || []).map(esc).join(", ")}</span>` : ""}</div></div>
-      <button class="btn ghost" data-act="editMeeting" data-id="${m.id}">Rediger</button></div>
-      ${m.fileId || isUrl(m.link) ? `<div class="refrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}
-      <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
-      <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${(m.actions || []).map(a => `<div class="action"><span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}</div>`).join("") || '<p class="muted">Ingen.</p>'}</div></div></div></div>`;
+  if (!ms.length) return `<div class="card"><div class="empty">Ingen møter registrert ennå.</div></div>`;
+  // Kompakte linjer: tittel og dato. Trykk for å se deltakere, referat, beslutninger og actionpunkter.
+  const rows = ms.map(m => {
+    const open = xpOpen(m.id), dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean), acts = m.actions || [];
+    const openActs = acts.filter(a => !(a.taskId && S.tasks[a.taskId])).length;
+    const meta = [dec.length ? `${dec.length} ${dec.length === 1 ? "beslutning" : "beslutninger"}` : "", acts.length ? `${acts.length} actionpunkt${acts.length === 1 ? "" : "er"}` : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
+    return `<div class="mt-item${open ? " open" : ""}">
+      <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
+        <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}</em>
+        <span class="mt-meta">${esc(meta)}${openActs ? ` <span class="badge t-orange">${openActs} uten oppgave</span>` : ""}</span><span class="fx-chev">${ico("down", 2)}</span></button>
+      ${open ? `<div class="mt-b">
+        ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
+        ${m.fileId || isUrl(m.link) ? `<div class="refrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}
+        <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
+        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action"><span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}</div>`).join("") || '<p class="muted">Ingen.</p>'}</div></div></div>
+        <div class="card-foot" style="margin-top:0">${miniBtn("editMeeting", "Rediger", `data-id="${m.id}"`)}</div></div>` : ""}</div>`;
   }).join("");
+  return `<div class="card mt-list">${rows}</div>`;
 };
 
 /* =====================================================================
