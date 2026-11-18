@@ -975,6 +975,7 @@ const FIXED_NOTES = [
 const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company"];
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
+  { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
   { id: "produkt", name: "Produkt & Tech", short: "Produkt", icon: "cpu", desc: "Hva løsningen gjør i dag, hva vi bygger, hva vi vurderer og hva vi har droppet." },
   { id: "marked", name: "Marked & Salg", short: "Marked", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
   { id: "jus", name: "Jus & Selskap", short: "Jus", icon: "scale", desc: "Arverett, avtaler, selskapsform og personvern." },
@@ -982,7 +983,7 @@ const AREAS = [
   { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { marked: [["salg", "Salg"], ["pilot", "Pilot"]], jus: [["jus", "Jus"], ["selskap", "Selskap"]], finans: [["okonomi", "Lommebok og budsjett"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
+const SUBS = { drift: [["milepaeler", "Milepæler"]], marked: [["salg", "Salg"], ["pilot", "Pilot"]], jus: [["jus", "Jus"], ["selskap", "Selskap"]], finans: [["okonomi", "Lommebok og budsjett"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "finans", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -1004,7 +1005,7 @@ const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "
 const PRIOS = ["Kritisk","Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
-const MS_TYPE_AREA = { Innlevering: "", Vurdering: "", Hendelse: "", Finansiering: "finans", Salg: "marked" };
+const MS_TYPE_AREA = { Innlevering: "drift", Vurdering: "drift", Hendelse: "drift", Finansiering: "finans", Salg: "marked" };
 const msArea = m => (m && (m.area || MS_TYPE_AREA[m.type])) || "";
 const MS_STATUS = ["Ikke startet","Pågår","Levert","Gjennomført","Fullført","Ikke aktuell","Avklares","Obligatorisk","Valgfritt"];
 /* Avsluttede milepæler: ferdige (Levert/Gjennomført/Fullført) eller droppet (Ikke aktuell). De legges i en sammenleggbar liste nederst. */
@@ -1041,6 +1042,7 @@ const I = {
   compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
   cpu:'<rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/>',
   scale:'<path d="M12 3v18M5 21h14M5 7h14M7 7l-3 7a3 3 0 0 0 6 0zM17 7l-3 7a3 3 0 0 0 6 0z"/>',
+  gear:'<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>',
   book:'<path d="M4 4h6a3 3 0 0 1 3 3v13a2 2 0 0 0-2-2H4zM20 4h-6a3 3 0 0 0-3 3v13a2 2 0 0 1 2-2h7z"/>',
   users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c1-3.5 3.6-5 6.5-5s5.5 1.5 6.5 5M16 4.5a3.5 3.5 0 0 1 0 7M18 15c2 .6 3.2 2.2 3.5 5"/>',
   down:'<path d="M6 9l6 6 6-6"/>',
@@ -1058,12 +1060,12 @@ const PAGES = [
   { id: "kontakter", name: "Kontakter", icon: "users", sub: "Folk og organisasjoner vi bør snakke med. Koble oppgaver til kontaktene, f.eks. «Kontakt advokaten»." }
 ];
 const NAV = [
-  { items: ["hjem", "oppgaver", "milepaeler", "moter"] },
+  { items: ["hjem", "oppgaver", "moter"] },
   { label: "Områder", items: AREAS.map(a => a.id) },
   { label: "Nettverk", items: ["kontakter"] }
 ];
 /* Gamle lenker og snarveier peker til fanene på områdesidene */
-const ALIAS = { salg: "marked.salg", pilot: "marked.pilot", okonomi: "finans.okonomi", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
+const ALIAS = { milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "finans.okonomi", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
 
 /* ---------- Dato (Europe/Oslo) ---------- */
 const TZ = "Europe/Oslo";
@@ -1634,7 +1636,7 @@ function renderSide() {
         || '<p class="w-none">Ingen flere frister denne uken.</p>'}
       ${dl.length > shown.length ? `<button class="w-more" data-act="go" data-p="oppgaver">+ ${dl.length - shown.length} til</button>` : ""}</div>`;
   const openCount = tasks().filter(t => !isDone(t)).length;
-  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["oppgaver", `Oppgaver (${openCount})`], ["milepaeler", "Milepæler"], ["moter", "Møter"]]
+  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["oppgaver", `Oppgaver (${openCount})`], ["drift", "Drift"], ["moter", "Møter"]]
     .map(([id, l]) => `<a href="#${id}" class="${UI.page === id ? "on" : ""}"${UI.page === id ? ' aria-current="page"' : ""}>${l}</a>`).join("") + `<button type="button" data-act="aiToggle">Assistent</button>`;
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
   AREAS.forEach(a => { counts[a.id] = areaTasks(a.id).length; });
@@ -1669,7 +1671,7 @@ function headRight(id) {
   const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
   if (AREA[id]) {
     return { funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
-      kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
+      milepaeler: btn("newMs", "Ny milepæl"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
   return { hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
     okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: `<div class="row-btns" style="align-items:center"><select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>` }[id] || "";
@@ -2380,6 +2382,7 @@ function areaView(id) {
   const tabs = AREA_TABS[id], sub = tabs.some(t => t[0] === UI.sub) ? UI.sub : "oversikt";
   const tabHtml = tabs.length > 1 ? `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab${sub === k ? " on" : ""}" data-act="tab" data-t="${k}" role="tab" aria-selected="${sub === k}">${l}</button>`).join("")}</div>` : "";
   if (sub === "oversikt") return tabHtml + areaOverview(id);
+  if (sub === "milepaeler") return tabHtml + VIEWS.milepaeler();
   const body = { salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
   return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : subTasks(id, sub) + body);
 }
@@ -2397,7 +2400,7 @@ function areaOverview(id) {
       <p class="status-text">${st.text ? ph(st.text) : '<span class="muted">Skriv to–tre setninger om hvor dere står.</span>'}</p></div>
       <div class="row-btns">${miniBtn("editArea", "Oppdater status", `data-id="${id}"`)}${miniBtn("areaAdd", "+ Legg til", `data-area="${id}"`)}</div></div></div>`;
 
-  const main = { produkt: featuresView, marked: marketCharts, finans: moneyCard, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
+  const main = { drift: driftCard, produkt: featuresView, marked: marketCharts, finans: moneyCard, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
 
   const allArea = tasks().filter(t => t.area === id);
   const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
@@ -2492,6 +2495,13 @@ function knowCard() {
     <section class="gt"><span class="eyebrow">Hypoteser</span><div class="mini-list">${hs.map(h => `<div class="mrow" data-act="editHyp" data-id="${h.id}"><span class="mnum">H${h.n}</span><span class="mt">${ph(h.title)}<small>${esc(h.status)}${h.decision ? " · " + esc(h.decision) : ""}</small></span>${evi(h.evidence)}</div>`).join("")}</div></section>
     <section class="gt center"><span class="eyebrow">Intervjuer med funn</span>${ringSvg(iv.length ? filled / iv.length * 100 : 0, `${filled}/${iv.length}`, "utfylt", "var(--green)")}${miniBtn("go", "Åpne intervjuene", 'data-p="research.int"')}</section>
   </div></div>`;
+}
+
+/* Drift: kommende milepæler med rask avslutning, avsluttede nederst */
+function driftCard() {
+  const all = milestones(), open = all.filter(m => !msClosed(m));
+  const rows = open.map(m => { const p = msProgress(m); return `<div class="lrow" data-act="editMs" data-id="${m.id}"><span class="lt"><b>${esc(m.title)}</b><small>${m.date ? `<span class="mono">${m.end ? fmtRange(m.date, m.end) : fmtDate(m.date)}</span>` : ph(m.dateText)} · ${esc(m.type)}${p.total ? ` · ${p.done}/${p.total} oppgaver` : ""}</small></span><span class="badge t-${msTone(m)}">${m.date ? relText(daysUntil(m.date)) : esc(m.status)}</span><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button></div>`; }).join("");
+  return cardBox("Milepæler fremover", "", `<div class="mini-list">${rows || '<div class="empty">Alle milepæler er avsluttet.</div>'}</div>${closedMs(all)}`, miniBtn("go", "Tidslinje og alle milepæler", 'data-p="drift.milepaeler"'));
 }
 
 /* Kurs & innleveringer */
