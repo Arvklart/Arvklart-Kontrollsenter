@@ -2280,12 +2280,11 @@ VIEWS.moter = function () {
   // Kompakte linjer: tittel og dato. Trykk for å se deltakere, referat, beslutninger og actionpunkter.
   const rows = ms.map(m => {
     const open = xpOpen(m.id), dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean), acts = m.actions || [];
-    const openActs = acts.filter(a => !(a.taskId && S.tasks[a.taskId])).length;
     const meta = [dec.length ? `${dec.length} ${dec.length === 1 ? "beslutning" : "beslutninger"}` : "", acts.length ? `${acts.length} actionpunkt${acts.length === 1 ? "" : "er"}` : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
         <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}</em>
-        <span class="mt-meta">${esc(meta)}${openActs ? ` <span class="badge t-orange">${openActs} uten oppgave</span>` : ""}</span><span class="fx-chev">${ico("down", 2)}</span></button>
+        <span class="mt-meta">${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
       ${open ? `<div class="mt-b">
         ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
         ${m.fileId || isUrl(m.link) ? `<div class="refrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}
