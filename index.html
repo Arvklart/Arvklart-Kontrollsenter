@@ -12,7 +12,7 @@
 /* Layout: mørk grønnsvart topplinje og venstre marg, lys flate med hvite bobler i rutenett. Ett bevisst lyst tema. */
 :root{
   color-scheme: light;
-  --bg:#EEEBE4; --bg-deep:#E4E0D7; --side:#1E211D; --side-hi:#2A2E28;
+  --bg:#EEEBE4; --bg-deep:#E4E0D7; --side:#1B2B22; --side-hi:#26392D;
   --card:#FCFBF8; --card-hi:#F5F3ED; --line:#E3DFD6; --track:#E6E2D9;
   --ink:#22231F; --muted:#6E6A61; --on-bg:#22231F; --on-bg-muted:#6E6A61;
   --rose:#B39752; --rose-soft:#EFE6CF; --mustard:#F1ECDF; --bar:#22231F;
@@ -788,7 +788,6 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 <div class="app" id="app" hidden>
   <header class="topbar"><a class="tb-brand" href="#hjem" aria-label="Arvklart, til oversikten"><span class="logo-mark" aria-hidden="true"></span><span>ARVKLART</span></a><nav class="tb-links" id="tblinks" aria-label="Snarveier"></nav></header>
   <aside class="side">
-    <div class="widget" id="widget"></div>
     <nav class="nav" id="nav" aria-label="Hovedmeny"></nav>
     <div class="side-foot" id="sidefoot"></div>
   </aside>
@@ -1606,7 +1605,8 @@ function renderSide() {
   const dl = weekDeadlines(), shown = dl.slice(0, 6);
   const tone = { red: "var(--red)", orange: "var(--orange)", green: "var(--green)", none: "#CDBBA4" };
   lastTiles = [h, m];
-  document.getElementById("widget").innerHTML = `
+  const widget = document.getElementById("widget");
+  if (widget) widget.innerHTML = `
     <div class="clock" role="img" aria-label="Klokken er ${h}:${m}">
       <div class="tile"><span class="mono">${h}</span><label class="tl-l">${WDL[td.getUTCDay()]}</label></div>
       <div class="tile"><span class="mono">${m}</span><label class="tl-r">${td.getUTCDate()}. ${MON[td.getUTCMonth()]}</label></div>
