@@ -2528,12 +2528,12 @@ function marketCharts() {
       <section class="gt"><span class="eyebrow">Pilotmål</span>${pilotDots(pay)}<div class="gt-big"><b class="mono">${pay}</b> av ${PILOT_GOAL} betaler</div><p class="sub">${kr(rev)} i omsetning${pay ? ` · snitt ${kr(rev / pay)}` : ""}</p></section>
       <section class="gt"><span class="eyebrow">Salgstrakt</span><div class="funnel">${funnel}</div></section>
       <section class="gt"><span class="eyebrow">Leads per kilde</span><div class="hbars">${sources}</div></section>
-    </div></div>`;
+    </div></div>` + `<div class="card">${incomeSection()}</div>`;
 }
 
 /* Finansiering & Admin */
 function moneyCard() {
-  return `<div class="card">${incomeSection()}</div>` + moneyTiles();
+  return moneyTiles();
 }
 function moneyTiles() {
   const set = S.meta.settings || { totalBudget: 0, totalNote: "" }, spent = totalSpent(), owed = outstanding();
@@ -2561,7 +2561,7 @@ function knowCard() {
 function driftCard() {
   const all = milestones(), open = all.filter(m => !msClosed(m));
   const rows = open.map(m => { const p = msProgress(m); return `<div class="lrow" data-act="editMs" data-id="${m.id}"><span class="lt"><b>${esc(m.title)}</b><small>${m.date ? `<span class="mono">${m.end ? fmtRange(m.date, m.end) : fmtDate(m.date)}</span>` : ph(m.dateText)} · ${esc(m.type)}${p.total ? ` · ${p.done}/${p.total} oppgaver` : ""}</small></span><span class="badge t-${msTone(m)}">${m.date ? relText(daysUntil(m.date)) : esc(m.status)}</span><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button></div>`; }).join("");
-  return cardBox("Milepæler fremover", "", `<div class="mini-list">${rows || '<div class="empty">Alle milepæler er avsluttet.</div>'}</div>${closedMs(all)}`, miniBtn("go", "Tidslinje og alle milepæler", 'data-p="drift.milepaeler"'));
+  return cardBox("Milepæler fremover", "", `<div class="mini-list">${rows || '<div class="empty">Alle milepæler er avsluttet.</div>'}</div>${closedMs(all)}`, miniBtn("go", "Tidslinje og alle milepæler", 'data-p="drift.milepaeler"')) + `<div class="card">${incomeSection()}</div>`;
 }
 
 /* Kurs & innleveringer */
