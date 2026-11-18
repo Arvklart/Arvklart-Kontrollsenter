@@ -1038,7 +1038,7 @@ const AREAS = [
   { id: "research", name: "Marked og data", short: "Marked", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser, intervjuer og juridiske avklaringer." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { drift: [["milepaeler", "Milepæler"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["finansiering", "Finansiering"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
+const SUBS = { drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["finansiering", "Finansiering"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "marked", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -1115,12 +1115,12 @@ const PAGES = [
   { id: "kontakter", name: "Kontakter", icon: "users", sub: "Folk og organisasjoner vi bør snakke med. Koble oppgaver til kontaktene, f.eks. «Kontakt advokaten»." }
 ];
 const NAV = [
-  { items: ["hjem", "oppgaver", "moter"] },
+  { items: ["hjem"] },
   { label: "Områder", items: AREAS.map(a => a.id) },
   { label: "Nettverk", items: ["kontakter"] }
 ];
 /* Gamle lenker og snarveier peker til fanene på områdesidene */
-const ALIAS = { jus: "research.juridisk", "jus.jus": "research.juridisk", finans: "marked.finansiering", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
+const ALIAS = { oppgaver: "drift.oppgaver", moter: "drift.moter", jus: "research.juridisk", "jus.jus": "research.juridisk", finans: "marked.finansiering", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
 
 /* ---------- Dato (Europe/Oslo) ---------- */
 const TZ = "Europe/Oslo";
@@ -1707,7 +1707,7 @@ function renderSide() {
         || '<p class="w-none">Ingen flere frister denne uken.</p>'}
       ${dl.length > shown.length ? `<button class="w-more" data-act="go" data-p="oppgaver">+ ${dl.length - shown.length} til</button>` : ""}</div>`;
   const openCount = tasks().filter(t => !isDone(t)).length;
-  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["oppgaver", `Oppgaver (${openCount})`], ["drift", "Drift"], ["moter", "Møter"]]
+  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["drift", "Drift"]]
     .map(([id, l]) => `<a href="#${id}" class="${UI.page === id ? "on" : ""}"${UI.page === id ? ' aria-current="page"' : ""}>${l}</a>`).join("") + `<button type="button" data-act="aiToggle">Assistent</button>`;
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
   AREAS.forEach(a => { counts[a.id] = areaTasks(a.id).length; });
@@ -1738,14 +1738,18 @@ function renderMain() {
   const ai = document.getElementById("add-input"); if (ai) ai.focus();
   if (UI.lastDone) { const el = main.querySelector(`[data-id="${UI.lastDone}"]`); if (el) el.classList.add("pop"); UI.lastDone = null; }
 }
+function meetingsHead() {
+  const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
+  return `<div class="row-btns" style="align-items:center"><select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>`;
+}
 function headRight(id) {
   const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
   if (AREA[id]) {
-    return { funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), juridisk: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
+    return { oppgaver: btn("newTask", "Ny oppgave"), moter: meetingsHead(), funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), juridisk: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
       milepaeler: btn("newMs", "Ny milepæl"), partnere: btn("newContact", "Ny partner", 'data-area="marked"'), finansiering: btn("newFund", "Nytt trinn"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
   return { hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
-    okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: `<div class="row-btns" style="align-items:center"><select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>` }[id] || "";
+    okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: meetingsHead() }[id] || "";
 }
 
 const VIEWS = {};
@@ -2467,6 +2471,8 @@ function areaView(id) {
   const tabHtml = tabs.length > 1 ? `<div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab${sub === k ? " on" : ""}" data-act="tab" data-t="${k}" role="tab" aria-selected="${sub === k}">${l}</button>`).join("")}</div>` : "";
   if (sub === "oversikt") return tabHtml + areaOverview(id);
   if (sub === "milepaeler") return tabHtml + VIEWS.milepaeler();
+  if (sub === "oppgaver") return tabHtml + VIEWS.oppgaver();
+  if (sub === "moter") return tabHtml + VIEWS.moter();
   const body = { juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
   return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : subTasks(id, sub) + body);
 }
