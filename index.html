@@ -112,29 +112,21 @@ button{cursor:pointer}
 .grid-top3 .scroll-list{max-height:330px}
 .grid-top3 .weeklabel{margin:-4px 0 8px}
 .grid-top3.two{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
-/* Ukeplan: to uker, mandag–fredag */
-.wp-card{padding:16px}
-.wp-card h2{font-size:18px}
-.wp-week + .wp-week{margin-top:14px}
-.wp-wl{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin:0 0 6px 2px}
-.wp-days{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-.wp-day{background:var(--card-hi);border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:118px;min-width:0}
-.wp-day.today{background:#fff;border-color:var(--bar);box-shadow:inset 0 0 0 1px var(--bar)}
-.wp-day.past{opacity:.6}
-.wp-dh{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
-.wp-dh b{font-size:12.5px}
-.wp-dh .mono{font-size:11px;color:var(--muted)}
-.wp-day.today .wp-dh b{color:var(--ink)}
-.wp-it{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-left:3px solid var(--wpc,#C8C3B8);border-radius:8px;padding:5px 7px;font-size:12px;line-height:1.3;color:var(--ink)}
-.wp-it:hover{background:#fff}
-.wp-it b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-weight:600;overflow-wrap:anywhere}
-.wp-it small{display:block;color:var(--muted);font-size:11px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wp-add{margin-top:auto;align-self:flex-start;background:none;border:0;padding:2px 2px;font-size:11.5px;font-weight:600;color:var(--muted)}
-.wp-add:hover{color:var(--ink)}
-.wp-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted)}
-.wp-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
-@media (max-width:980px){.wp-days{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.wp-days{grid-template-columns:minmax(0,1fr)}.wp-day{min-height:0}}
+/* Avtaler: kompakt liste over de neste to ukene (man–fre) */
+.av-week + .av-week{margin-top:10px}
+.av-wl{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 0 4px;letter-spacing:.04em}
+.av-day{display:flex;gap:10px;align-items:flex-start;padding:5px 0;border-top:1px solid var(--line)}
+.av-d{flex:none;width:48px;font-size:11.5px;color:var(--muted);padding-top:3px;white-space:nowrap}
+.av-day.today .av-d{color:var(--ink);font-weight:700}
+.av-day.past{opacity:.55}
+.av-items{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.av-it{display:block;width:100%;text-align:left;background:var(--card-hi);border:1px solid var(--line);border-left:3px solid var(--wpc);border-radius:8px;padding:4px 8px;font-size:12.5px;line-height:1.3;color:var(--ink)}
+.av-it:hover{background:#fff}
+.av-it b{display:block;font-weight:600;overflow-wrap:anywhere}
+.av-it small{display:block;font-size:11px;color:var(--muted)}
+.av-none{color:#C8C3B8;font-size:12px;padding-top:2px}
+.av-day.av-empty{padding:3px 0}.av-day.av-empty .av-d{padding-top:0}
+.av-day.today{background:var(--card-hi);border-radius:8px;padding-inline:6px;margin-inline:-6px}
 .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;text-align:center}
 .cal-h{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 0 4px}
 .cal-d{position:relative;aspect-ratio:1;max-width:100%;border:0;background:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;color:var(--ink);display:grid;place-items:center;padding:0}
@@ -1822,39 +1814,33 @@ VIEWS.hjem = function () {
         <span class="snext">${nt ? `<span class="muted">Neste:</span> ${ph(nt.title)}` : '<span class="muted">Ingen åpne oppgaver</span>'}</span></div>`;
     }).join("")}</div></div>`;
 
-  return `<div class="grid-top3 two">${topCard}${fristCard}</div>${weekPlan()}
+  return `<div class="grid-top3">${topCard}${fristCard}${avtalerCard()}</div>
     ${goalsCard()}
     ${statusCard}
     ${followUpCard()}`;
 };
 
-/* ---------- Ukeplan på forsiden: de neste to ukene, mandag–fredag ---------- */
-const WP_COL = { meeting: "var(--rose)", ms: "var(--green)", red: "var(--red)", orange: "var(--orange)", green: "#8FB07F", none: "#C8C3B8" };
-function wpItems(iso) {
+/* ---------- Avtaler på forsiden: møter, vurderinger, innleveringer og arrangementer de neste to ukene (man–fre) ---------- */
+function avtaler(iso) {
   const out = [];
-  arr("meetings").filter(m => m.date === iso).forEach(m => out.push({ act: "editMeeting", id: m.id, title: m.title || "Møte", meta: "Møte · " + meetingWith(m), col: WP_COL.meeting, o: 0 }));
+  arr("meetings").filter(m => m.date === iso).forEach(m => out.push({ act: "editMeeting", id: m.id, title: m.title || "Møte", kind: "Møte", col: "var(--rose)" }));
   milestones().filter(m => !msClosed(m) && m.date && (m.date === iso || (m.end && toUTC(m.date) <= toUTC(iso) && toUTC(iso) <= toUTC(m.end))))
-    .forEach(m => out.push({ act: "editMs", id: m.id, title: m.title, meta: "Milepæl · " + m.type, col: WP_COL.ms, o: 1 }));
-  tasks().filter(t => !isDone(t) && t.due === iso).sort(byPrioDue)
-    .forEach(t => out.push({ act: "editTask", id: t.id, title: t.title, meta: joinNames(ownersOf(t)) || "Ikke fordelt", col: WP_COL[taskTone(t)] || WP_COL.none, o: 2 }));
-  return out.sort((a, b) => a.o - b.o);
+    .forEach(m => out.push({ act: "editMs", id: m.id, title: m.title, kind: m.type, col: m.type === "Innlevering" || m.type === "Vurdering" ? "var(--red)" : "var(--green)" }));
+  return out;
 }
-function weekPlan() {
+function avtalerCard() {
   const today = todayISO(), start = addDays(mondayOf(today), (UI.wpOffset || 0) * 7);
   const week = w => {
     const mon = addDays(start, w * 7);
-    const days = [0, 1, 2, 3, 4].map(i => {
-      const iso = addDays(mon, i), d = dOf(iso), it = wpItems(iso), past = toUTC(iso) < toUTC(today);
-      return `<div class="wp-day${iso === today ? " today" : ""}${past ? " past" : ""}"><div class="wp-dh"><b>${iso === today ? "I dag" : WDL[d.getUTCDay()][0].toUpperCase() + WDL[d.getUTCDay()].slice(1)}</b><span class="mono">${d.getUTCDate()}. ${MON[d.getUTCMonth()]}</span></div>
-        ${it.map(x => `<button class="wp-it" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><b>${esc(x.title)}</b><small>${esc(x.meta)}</small></button>`).join("")}
-        <button class="wp-add" data-act="newMeeting" data-d="${iso}">+ Møte</button></div>`;
-    }).join("");
-    return `<div class="wp-week"><p class="wp-wl">Uke ${isoWeek(mon)} · ${fmtRange(mon, addDays(mon, 4))}</p><div class="wp-days">${days}</div></div>`;
+    return `<div class="av-week"><p class="av-wl">Uke ${isoWeek(mon)}</p>${[0, 1, 2, 3, 4].map(i => {
+      const iso = addDays(mon, i), d = dOf(iso), it = avtaler(iso), past = toUTC(iso) < toUTC(today);
+      return `<div class="av-day${iso === today ? " today" : ""}${past ? " past" : ""}${it.length ? "" : " av-empty"}"><span class="av-d mono">${iso === today ? "I dag" : WD[d.getUTCDay()] + " " + d.getUTCDate() + "."}</span>
+        <span class="av-items">${it.map(x => `<button class="av-it" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><b>${esc(x.title)}</b><small>${esc(x.kind)}</small></button>`).join("") || '<span class="av-none">–</span>'}</span></div>`;
+    }).join("")}</div>`;
   };
-  return `<div class="card wp-card"><div class="card-head"><div><h2>Ukeplan</h2></div>
-      <div class="row-btns" style="align-items:center"><div class="wp-legend"><span><i style="background:${WP_COL.meeting}"></i>Møte</span><span><i style="background:${WP_COL.ms}"></i>Milepæl</span><span><i style="background:${WP_COL.orange}"></i>Oppgave</span></div>
-      ${UI.wpOffset ? `<button class="mini" data-act="wpNav" data-d="0">I dag</button>` : ""}<div class="weeknav"><button class="iconbtn" data-act="wpNav" data-d="-1" aria-label="Forrige uke">${ico("left", 2.2)}</button><button class="iconbtn" data-act="wpNav" data-d="1" aria-label="Neste uke">${ico("right", 2.2)}</button></div></div></div>
-    ${week(0)}${week(1)}</div>`;
+  return `<div class="card av-card"><div class="card-head"><div><h2>Avtaler</h2><p class="sub">Neste to uker</p></div>
+      <div class="weeknav"><button class="iconbtn" data-act="wpNav" data-d="-1" aria-label="Forrige uke">${ico("left", 2.2)}</button><button class="iconbtn" data-act="wpNav" data-d="1" aria-label="Neste uke">${ico("right", 2.2)}</button></div></div>
+    ${UI.wpOffset ? `<button class="mini" data-act="wpNav" data-d="0" style="margin:-4px 0 8px">Tilbake til i dag</button>` : ""}${week(0)}${week(1)}</div>`;
 }
 
 /* ---------- Liten kalender på forsiden ---------- */
