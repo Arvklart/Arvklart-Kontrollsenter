@@ -41,7 +41,7 @@ function del(c, id) {
   render();
 }
 function setSync(text, cls) { UI.sync = text; UI.syncCls = cls; const el = document.getElementById("syncline"); if (el) { el.className = "sync " + (cls || ""); el.lastChild.textContent = " " + text; } }
-const docOf = (c, id, data) => { const d = Object.assign(clone(data || {}), { id }); if (c === "tasks") normTask(d); return d; };
+const docOf = (c, id, data) => normDoc(c, Object.assign(clone(data || {}), { id }));
 let renderQueued = false;
 function scheduleRender() { if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; render(); }); }
 function subscribe() {

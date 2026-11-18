@@ -1024,13 +1024,12 @@ const AREAS = [
   { id: "produkt", name: "Produkt & Tech", short: "Produkt", icon: "cpu", desc: "Hva løsningen gjør i dag, hva vi bygger, hva vi vurderer og hva vi har droppet." },
   { id: "marked", name: "Salg og partnere", short: "Salg", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
   { id: "jus", name: "Jus & Selskap", short: "Jus", icon: "scale", desc: "Arverett, avtaler, selskapsform og personvern." },
-  { id: "finans", name: "Finansiering & Admin", short: "Finans", icon: "coins", desc: "Lommebok, utlegg, budsjett, søknader og tilskudd." },
   { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
 const SUBS = { drift: [["milepaeler", "Milepæler"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["finansiering", "Finansiering"]], jus: [["jus", "Jus"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
-const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "finans", Research: "research", Admin: "" };
+const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "marked", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
 const FEATURE_STATUS = ["I løsningen", "Under utvikling", "Vurderes", "Droppet"];
 const SAK_STATUS = ["Ikke startet", "Pågår", "Venter på svar", "Ferdig"];
@@ -1050,7 +1049,7 @@ const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "
 const PRIOS = ["Kritisk","Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
-const MS_TYPE_AREA = { Innlevering: "drift", Vurdering: "drift", Hendelse: "drift", Finansiering: "finans", Salg: "marked" };
+const MS_TYPE_AREA = { Innlevering: "drift", Vurdering: "drift", Hendelse: "drift", Finansiering: "marked", Salg: "marked" };
 const msArea = m => (m && (m.area || MS_TYPE_AREA[m.type])) || "";
 const MS_STATUS = ["Ikke startet","Pågår","Levert","Gjennomført","Fullført","Ikke aktuell","Avklares","Obligatorisk","Valgfritt"];
 /* Avsluttede milepæler: ferdige (Levert/Gjennomført/Fullført) eller droppet (Ikke aktuell). De legges i en sammenleggbar liste nederst. */
@@ -1110,7 +1109,7 @@ const NAV = [
   { label: "Nettverk", items: ["kontakter"] }
 ];
 /* Gamle lenker og snarveier peker til fanene på områdesidene */
-const ALIAS = { "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
+const ALIAS = { finans: "marked.finansiering", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
 
 /* ---------- Dato (Europe/Oslo) ---------- */
 const TZ = "Europe/Oslo";
@@ -1155,9 +1154,21 @@ const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const clone = o => JSON.parse(JSON.stringify(o));
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
+/* Områder som er slått sammen: gamle data tolkes inn i nytt område (og delfane), uten å skrive om databasen */
+const AREA_MOVED = { finans: ["marked", "finansiering"] };
+function normDoc(c, d) {
+  const mv = AREA_MOVED[d.area];
+  if (mv && ["tasks", "items", "decisions", "docs", "knowledge", "milestones"].includes(c)) {
+    d.area = mv[0];
+    if ((c === "tasks" || c === "items") && !(SUBS[mv[0]] || []).some(x => x[0] === d.sub)) d.sub = mv[1];
+  }
+  if (c === "contacts" && Array.isArray(d.areas)) d.areas = [...new Set(d.areas.map(a => AREA_MOVED[a] ? AREA_MOVED[a][0] : a))];
+  if (c === "tasks") normTask(d);
+  return d;
+}
 function loadFromArrays(src) {
   for (const c of COLLS) { S[c] = {}; for (const it of (src[c] || [])) S[c][it.id] = clone(it); }
-  for (const t of Object.values(S.tasks)) normTask(t);
+  for (const c of COLLS) for (const d of Object.values(S[c])) normDoc(c, d);
 }
 function toArrays() { const o = {}; for (const c of COLLS) o[c] = Object.values(S[c] || {}); return o; }
 
@@ -1203,7 +1214,7 @@ function del(c, id) {
 function setSync(text, cls) { UI.sync = text; UI.syncCls = cls; const el = document.getElementById("syncline"); if (el) { el.className = "sync " + (cls || ""); el.lastChild.textContent = " " + text; } }
 
 /* Hent alle data én gang, og hold dem oppdatert i sanntid */
-const docOf = r => { const d = Object.assign(clone(r.data || {}), { id: r.id }); if (r.coll === "tasks") normTask(d); return d; };
+const docOf = r => normDoc(r.coll, Object.assign(clone(r.data || {}), { id: r.id }));
 const skipRow = r => !COLLS.includes(r.coll) || (r.coll === "meta" && r.id === "seed");
 async function loadAll() {
   const rows = [];
@@ -2645,6 +2656,12 @@ function partnerView() {
 }
 /* Finansieringsstigen: søknader og tilskudd, trinn for trinn */
 function fundingView() {
+  const saker = arr("items").filter(i => i.kind === "sak" && i.area === "marked" && i.sub === "finansiering").sort((a, b) => (a.status === "Ferdig") - (b.status === "Ferdig") || (a.title || "").localeCompare(b.title || ""));
+  const sakerBox = cardBox("Søknader, tilskudd og saker", "", `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || '<div class="empty">Ingen saker ennå.</div>'}</div>`,
+    miniBtn("newItem", "+ Sak", 'data-kind="sak" data-area="marked" data-sub="finansiering"'));
+  return sakerBox + fundingStairs();
+}
+function fundingStairs() {
   const steps = arr("funding").sort((a, b) => a.step - b.step || a.n - b.n);
   const maxStep = Math.max(0, ...steps.map(s => s.step));
   const stairs = steps.map(f => `<div class="stair" data-act="editFund" data-id="${f.id}" style="margin-bottom:${f.step * 22}px">
@@ -3121,7 +3138,7 @@ const A = {
   newTaskIn: el => taskForm(newTask({ area: el.dataset.area || (UI.areaFilter || "").split(".")[0], sub: el.dataset.sub || "" }), true),
   areaTasks: el => { UI.areaFilter = el.dataset.area; UI.filter = "all"; location.hash = "oppgaver"; },
   editItem: el => { const i = S.items[el.dataset.id]; if (i) itemForm(clone(i), false); },
-  newItem: el => { const kind = el.dataset.kind || "sak"; itemForm({ id: uid(kind === "funksjon" ? "fx" : "s"), kind, area: kind === "funksjon" ? "produkt" : (el.dataset.area || ""), title: "", status: el.dataset.status != null ? el.dataset.status : (kind === "funksjon" ? "Vurderes" : "Ikke startet"), owner: "", summary: "", next: "", note: "", link: "" }, true); },
+  newItem: el => { const kind = el.dataset.kind || "sak"; itemForm({ id: uid(kind === "funksjon" ? "fx" : "s"), kind, area: kind === "funksjon" ? "produkt" : (el.dataset.area || ""), sub: el.dataset.sub || "", title: "", status: el.dataset.status != null ? el.dataset.status : (kind === "funksjon" ? "Vurderes" : "Ikke startet"), owner: "", summary: "", next: "", note: "", link: "" }, true); },
   editDecision: el => { const d = S.decisions[el.dataset.id]; if (d) decisionForm(clone(d), false); },
   newDecision: el => decisionForm({ id: uid("d"), area: el.dataset.area || "", date: todayISO(), text: "", why: "", by: UI.me || "" }, true),
   editDoc: el => { const d = S.docs[el.dataset.id]; if (d) docForm(clone(d), false); },
