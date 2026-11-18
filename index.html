@@ -1022,7 +1022,7 @@ const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","inte
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
   { id: "produkt", name: "Produkt & Tech", short: "Produkt", icon: "cpu", desc: "Hva løsningen gjør i dag, hva vi bygger, hva vi vurderer og hva vi har droppet." },
-  { id: "marked", name: "Marked & Salg", short: "Marked", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
+  { id: "marked", name: "Salg og partnere", short: "Salg", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
   { id: "jus", name: "Jus & Selskap", short: "Jus", icon: "scale", desc: "Arverett, avtaler, selskapsform og personvern." },
   { id: "finans", name: "Finansiering & Admin", short: "Finans", icon: "coins", desc: "Lommebok, utlegg, budsjett, søknader og tilskudd." },
   { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." }
@@ -2513,7 +2513,7 @@ const FEAT_COLOR = { "I løsningen": "var(--green)", "Under utvikling": "var(--o
 const xpOpen = id => !!(UI.xp && UI.xp[id]);
 const keepOpen = key => ` data-keep="${key}"${UI.keep && UI.keep[key] ? " open" : ""}`;
 
-/* Marked & Salg: grafer */
+/* Salg og partnere: grafer */
 function marketCharts() {
   const leads = arr("leads"), active = leads.filter(l => l.stage !== "Tapt"), pay = paying().length;
   const rev = paying().reduce((s, l) => s + num(l.price), 0);
