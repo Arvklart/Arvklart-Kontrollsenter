@@ -650,6 +650,20 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .checks-empty{font-weight:400;font-size:13px}
 .form .hint .mini{margin-left:4px;font-size:11.5px;padding:2px 9px}
 
+/* Kunnskapsbase: hovedtemaer */
+.kb-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
+.kb-theme{display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--ink);font:inherit}
+.kb-theme:hover{border-color:#CFC9BC}
+.kb-theme-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.kb-theme h2{font-size:18px}
+.kb-count{font-size:13px;color:var(--muted)}
+.kb-theme p{margin:0;font-size:12.5px}
+.kb-theme ul{margin:6px 0 0;padding-left:16px;font-size:13px;display:flex;flex-direction:column;gap:3px}
+.kb-crumb{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.kb-crumb h2{font-family:var(--serif);font-weight:600;font-size:20px;margin:0}
+.kb-crumb .mini{display:inline-flex;align-items:center;gap:4px}
+.kb-crumb .mini svg{width:11px;height:11px}
+
 /* Møter: kompakte, utvidbare linjer */
 .mt-list{padding:6px 18px}
 .head-select{border-radius:999px;border:1px solid var(--line);background:var(--card);padding:7px 12px;font-size:13px;color:var(--ink);max-width:220px}
@@ -2512,25 +2526,48 @@ function kursCard() {
 }
 
 /* Research & Innsikt: kunnskapsbase */
+/* Kunnskapsbasen er delt i noen få hovedtemaer. Uten valgt tema utledes det av type, tags og område. */
+const KB_THEMES = [["konkurrenter", "Konkurrenter og alternativer", "Andre løsninger og substitutter"], ["kunder", "Kunder og kundereise", "Brukere, personas, tester og reisen"],
+  ["produkt", "Produkt og strategi", "Løsningen, status og retning"], ["jus", "Jus og arverett", "Regelverk og juridiske rammer"], ["annet", "Annet", "Det som ikke passer andre steder"]];
+function kbTheme(k) {
+  if (KB_THEMES.some(t => t[0] === k.theme)) return k.theme;
+  const tags = (k.tags || []).join(" ").toLowerCase();
+  if (k.kind === "Konkurrent" || /konkurrent|substitutt/.test(tags)) return "konkurrenter";
+  if (k.kind === "Juridisk" || /arverett|jus|skifte/.test(tags)) return "jus";
+  if (k.kind === "Intervjufunn" || /kundereise|brukertest|persona|kunde|ux/.test(tags)) return "kunder";
+  if (k.area === "produkt" || /produkt|strategi|funksjon|beta/.test(tags)) return "produkt";
+  return "annet";
+}
 function knowledgeView() {
   const kb = arr("knowledge").sort((a, b) => (b.added || "").localeCompare(a.added || ""));
-  const tc = {}; kb.forEach(k => (k.tags || []).forEach(t => { tc[t] = (tc[t] || 0) + 1; }));
-  const tags = Object.keys(tc).sort((a, b) => tc[b] - tc[a] || a.localeCompare(b));
-  const list = UI.kbTag ? kb.filter(k => (k.tags || []).includes(UI.kbTag)) : kb;
   const hName = id => { const h = S.hypotheses[id]; return h ? "H" + h.n : ""; };
-  const cards = list.map(k => { const open = xpOpen(k.id);
+  const q = (UI.kbQ || "").trim(), theme = KB_THEMES.find(t => t[0] === UI.kbTheme);
+  const card = k => { const open = xpOpen(k.id);
     return `<div class="card kb xp${open ? " open" : ""}" data-search="${searchKey(k.title, k.summary, k.learned, k.tags, k.kind, areaName(k.area))}" data-act="toggleXp" data-id="${k.id}" tabindex="0" aria-expanded="${open}">
-    <div class="kb-top"><span class="tag">${esc(k.kind || "Notat")}</span>${areaTag(k.area)}${(k.hyps || []).map(h => `<span class="tag">${hName(h)}</span>`).join("")}<span class="mono muted" style="margin-left:auto;font-size:11.5px">${k.added ? fmtDate(k.added, false) : ""}${k.by ? " · " + esc(k.by) : ""}</span></div>
+    <div class="kb-top"><span class="tag">${esc(k.kind || "Notat")}</span>${(k.hyps || []).map(h => `<span class="tag">${hName(h)}</span>`).join("")}<span class="mono muted" style="margin-left:auto;font-size:11.5px">${k.added ? fmtDate(k.added, false) : ""}${k.by ? " · " + esc(k.by) : ""}</span></div>
     <div class="xp-h"><h2>${ph(k.title)}</h2><span class="fx-chev">${ico("down", 2)}</span></div>
     ${open ? `${k.summary ? `<p class="kb-sum">${ph(k.summary)}</p>` : ""}
     ${k.learned ? `<div class="learned"><span class="eyebrow">Det vi lærte</span><span>${ph(k.learned)}</span></div>` : ""}
-    <div class="kb-foot"><div class="kb-tags">${(k.tags || []).map(t => `<span class="hash">#${esc(t)}</span>`).join("")}</div>
-      ${(k.files || []).length || isUrl(k.url) ? `<div class="files">${(k.files || []).map(f => fileLink(f.id, f.name)).join("")}${isUrl(k.url) ? `<a class="linkout" href="${esc(k.url)}" target="_blank" rel="noopener">Åpne original ↗</a>` : ""}</div>` : '<span class="ph">[FYLL INN: fil eller lenke]</span>'}</div>
-    <div class="card-foot" style="margin-top:0">${miniBtn("editKb", "Rediger", `data-id="${k.id}"`)}</div>` : `<div class="kb-tags">${(k.tags || []).map(t => `<span class="hash">#${esc(t)}</span>`).join("")}</div>`}</div>`; }).join("");
-  return `<div class="toolbar"><div class="filterbar"><input class="search" id="kb-search" type="search" placeholder="Søk i tittel, sammendrag og tags" value="${esc(UI.kbQ || "")}" aria-label="Søk i kunnskapsbasen">
-      <button class="chip${!UI.kbTag ? " on" : ""}" data-act="kbTag" data-t="">Alle</button>${tags.map(t => `<button class="chip${UI.kbTag === t ? " on" : ""}" data-act="kbTag" data-t="${esc(t)}">#${esc(t)} <b>${tc[t]}</b></button>`).join("")}</div></div>
-    ${kb.length ? `<div class="kb-grid">${cards}</div><div class="empty" id="search-empty" hidden style="background:var(--card)">Ingen treff. Prøv et annet ord eller fjern tag-filteret.</div>`
-      : `<div class="empty" style="background:var(--card)">Ingen notater ennå. Legg inn rapporter, statistikk, juridisk research og intervjufunn med et kort sammendrag, og legg ved filen eller en lenke til den i Drive.</div>`}`;
+    ${(k.files || []).length || isUrl(k.url) ? `<div class="files">${(k.files || []).map(f => fileLink(f.id, f.name)).join("")}${isUrl(k.url) ? `<a class="linkout" href="${esc(k.url)}" target="_blank" rel="noopener">Åpne original ↗</a>` : ""}</div>` : ""}
+    <div class="card-foot" style="margin-top:0">${miniBtn("editKb", "Rediger", `data-id="${k.id}"`)}</div>` : ""}</div>`; };
+  const search = `<div class="toolbar"><div class="filterbar"><input class="search" id="kb-search" type="search" placeholder="Søk i hele kunnskapsbasen" value="${esc(UI.kbQ || "")}" aria-label="Søk i kunnskapsbasen"></div></div>`;
+  if (!kb.length) return search + `<div class="empty" style="background:var(--card)">Ingen notater ennå.</div>`;
+  const empty = `<div class="empty" id="search-empty" hidden style="background:var(--card)">Ingen treff. Prøv et annet ord.</div>`;
+  // Søk: alle notater, filtrert av søket
+  if (q) return search + `<div class="kb-grid">${kb.map(card).join("")}</div>${empty}`;
+  // Ett tema åpnet
+  if (theme) {
+    const list = kb.filter(k => kbTheme(k) === theme[0]);
+    return search + `<div class="kb-crumb"><button class="mini" data-act="kbTheme" data-t="">${ico("left", 2.2)}Alle temaer</button><h2>${esc(theme[1])}</h2><span class="mono muted">${list.length}</span></div>
+      ${list.length ? `<div class="kb-grid">${list.map(card).join("")}</div>` : '<div class="empty" style="background:var(--card)">Ingen notater i dette temaet ennå.</div>'}`;
+  }
+  // Oversikt: ett kort per tema
+  const tiles = KB_THEMES.map(([id, name, help]) => {
+    const list = kb.filter(k => kbTheme(k) === id); if (!list.length && id === "annet") return "";
+    return `<button class="card kb-theme" data-act="kbTheme" data-t="${id}"><div class="kb-theme-h"><h2>${esc(name)}</h2><span class="kb-count mono">${list.length}</span></div><p class="muted">${esc(help)}</p>
+      ${list.length ? `<ul>${list.slice(0, 3).map(k => `<li>${esc(k.title)}</li>`).join("")}${list.length > 3 ? `<li class="muted">+ ${list.length - 3} til</li>` : ""}</ul>` : '<p class="muted" style="font-size:12.5px">Ingen notater ennå.</p>'}</button>`;
+  }).join("");
+  return search + `<div class="kb-themes">${tiles}</div>`;
 }
 
 /* Kontakter */
@@ -2627,7 +2664,7 @@ function contactForm(c, isNew) {
 function kbForm(k, isNew) {
   openForm({ title: isNew ? "Nytt kunnskapsnotat" : "Rediger notat", value: Object.assign({}, k, { tagsText: (k.tags || []).join(", ") }),
     fields: [...attachFields(k, { noLink: true, ai: true }), { k: "aiStatus", type: "html", html: '<div id="ai-status" class="ai-status full" role="status" hidden></div>' },
-      { k: "title", label: "Tittel", full: true }, { k: "kind", label: "Type", type: "select", opts: KB_KINDS }, { k: "area", label: "Område", type: "select", opts: areaOpts() },
+      { k: "title", label: "Tittel", full: true }, { k: "theme", label: "Tema", type: "select", opts: [["", "Velg automatisk"], ...KB_THEMES.map(t => [t[0], t[1]])] }, { k: "kind", label: "Type", type: "select", opts: KB_KINDS }, { k: "area", label: "Område", type: "select", opts: areaOpts() },
       { k: "summary", label: "Kort sammendrag", type: "textarea", full: true }, { k: "learned", label: "Det vi lærte (én–to setninger)", type: "textarea", full: true },
       { k: "url", label: "Lenke til originalfilen", full: true, ph: "https://drive.google.com/…" }, { k: "tagsText", label: "Tags (skill med komma)", full: true, ph: "pris, konkurrenter, arverett" },
       { k: "by", label: "Lagt inn av", type: "select", opts: personOpts() },
@@ -3030,7 +3067,7 @@ const A = {
   contactTask: el => { const c = S.contacts[el.dataset.id]; if (c) taskForm(newTask({ title: "Kontakt " + c.name, area: (c.areas || [])[0] || "", contacts: [c.id] }), true); },
   editKb: el => { const k = S.knowledge[el.dataset.id]; if (k) kbForm(clone(k), false); },
   newKb: () => kbForm({ id: uid("k"), title: "", kind: "Rapport", area: "research", tags: [], summary: "", learned: "", url: "", hyps: [], added: todayISO(), by: UI.me || "" }, true),
-  kbTag: el => { UI.kbTag = el.dataset.t; render(true); },
+  kbTheme: el => { UI.kbTheme = el.dataset.t; window.scrollTo(0, 0); render(true); },
   cArea: el => { UI.cArea = el.dataset.a; render(true); },
   quickAdd: () => {
     const opts = [["newTask", "Oppgave", "board"], ["newContact", "Kontakt", "users"], ["newKb", "Kunnskapsnotat", "book"], ["newDecision", "Beslutning", "check"], ["newDoc", "Dokument eller lenke", "link"], ["newExpense", "Utlegg", "coins"]];
@@ -3202,7 +3239,12 @@ main.addEventListener("change", ev => {
   if (ev.target.id === "sub-filter") { const fa = (UI.areaFilter || "").split(".")[0]; UI.areaFilter = fa + (ev.target.value ? "." + ev.target.value : ""); ev.target.blur(); render(true); return; } if (ev.target.id === "me-select") { UI.me = ev.target.value; savePref(); ev.target.blur(); render(true); } });
 main.addEventListener("input", ev => {
   if (ev.target.id === "win-text") UI.winDraft = ev.target.value;
-  if (ev.target.id === "kb-search") { UI.kbQ = ev.target.value; applySearch(UI.kbQ); }
+  if (ev.target.id === "kb-search") {
+    const had = !!(UI.kbQ || "").trim(); UI.kbQ = ev.target.value;
+    // Når søket starter eller tømmes, byttes visningen mellom temaer og alle notater
+    if (had !== !!UI.kbQ.trim()) { const pos = ev.target.selectionStart; render(true); const inp = document.getElementById("kb-search"); if (inp) { inp.focus(); inp.setSelectionRange(pos, pos); } }
+    applySearch(UI.kbQ);
+  }
   if (ev.target.id === "contact-search") { UI.cQ = ev.target.value; applySearch(UI.cQ); }
 });
 main.addEventListener("submit", ev => ev.preventDefault());
