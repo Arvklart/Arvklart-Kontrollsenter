@@ -677,6 +677,10 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
   .hy-b{padding-left:2px}
 }
 
+.iv-row{grid-template-columns:minmax(0,1fr) 110px 120px 90px 150px 18px}
+.iv-mark{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:760px){.iv-row{grid-template-columns:minmax(0,1fr) 18px}.iv-mark{justify-content:flex-start}}
+
 /* Kunnskapsbase: hovedtemaer */
 .kb-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
 .kb-theme{display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--ink);font:inherit}
@@ -2314,13 +2318,21 @@ VIEWS.hypoteser = function () {
 /* ----- INTERVJUER ----- */
 VIEWS.intervjuer = function () {
   const iv = arr("interviews").sort((a, b) => (a.nr || 0) - (b.nr || 0));
-  const hName = id => { const h = S.hypotheses[id]; return h ? "H" + h.n : ""; };
-  const rows = iv.map(i => `<tr data-act="editInterview" data-id="${i.id}"><td class="num">${String(i.nr).padStart(2, "0")}</td>
-    <td style="min-width:150px">${ph(i.title)}</td><td class="mono" style="white-space:nowrap">${i.date ? fmtDate(i.date) : '<span class="muted">–</span>'}</td>
-    <td>${esc(i.segment) || '<span class="muted">–</span>'}</td><td style="min-width:220px">${ph(i.findings) || '<span class="muted">–</span>'}</td>
-    <td>${i.owner ? esc(i.owner) : '<span class="muted">–</span>'}</td><td>${(i.hyps || []).map(h => `<span class="tag">${hName(h)}</span>`).join(" ") || '<span class="muted">–</span>'}</td><td style="min-width:130px">${filesHtml(i)}</td></tr>`).join("");
-  return `<div class="card"><div class="card-head"><div><h2>${iv.length} intervjuer</h2></div><button class="btn" data-act="newInterview">${ico("plus")}Nytt intervju</button></div>
-    <div class="tablewrap"><table><thead><tr><th class="num">Nr</th><th>Intervju</th><th>Dato</th><th>Segment</th><th>Nøkkelfunn</th><th>Ansvarlig</th><th>Hypoteser</th><th>Vedlegg</th></tr></thead><tbody>${rows || `<tr><td colspan="8" class="muted">Ingen intervjuer ennå.</td></tr>`}</tbody></table></div></div>`;
+  if (!iv.length) return `<div class="card"><div class="empty">Ingen intervjuer ennå.</div></div>`;
+  // Én linje per intervju. Nøkkelfunn, hypoteser og vedlegg vises når man trykker på det.
+  const rows = iv.map(i => { const open = xpOpen(i.id), hs = (i.hyps || []).map(id => S.hypotheses[id]).filter(Boolean), nf = (i.files || []).length + (isUrl(i.link) ? 1 : 0);
+    return `<div class="hy-item${open ? " open" : ""}"><button class="hy-row iv-row" data-act="toggleXp" data-id="${i.id}" aria-expanded="${open}">
+      <span class="hy-name"><b class="mono">${String(i.nr).padStart(2, "0")}</b><span>${ph(i.title)}</span></span>
+      <span class="hy-c mono" data-l="Dato">${i.date ? fmtDate(i.date) : '<span class="muted">–</span>'}</span>
+      <span class="hy-c" data-l="Segment">${i.segment ? esc(i.segment) : '<span class="muted">–</span>'}</span>
+      <span class="hy-c" data-l="Ansvarlig">${i.owner ? esc(i.owner) : '<span class="muted">–</span>'}</span>
+      <span class="hy-c iv-mark" data-l="Innhold">${i.findings && !hasPh(i.findings) ? '<span class="tag">Funn</span>' : ""}${hs.length ? `<span class="tag">${hs.length} hyp.</span>` : ""}${nf ? `<span class="tag">${nf} vedl.</span>` : ""}</span>
+      <span class="fx-chev">${ico("down", 2)}</span></button>
+      ${open ? `<div class="hy-b"><dl><div><dt>Nøkkelfunn</dt><dd style="white-space:pre-line">${i.findings ? ph(i.findings) : '<span class="muted">Ikke fylt inn ennå.</span>'}</dd></div>
+        <div><dt>Hypoteser</dt><dd>${hs.length ? hs.map(h => `<div><a href="#" class="wlink" data-act="editHyp" data-id="${h.id}"><b class="mono">H${h.n}</b> ${esc(h.title)}</a></div>`).join("") : '<span class="muted">Ingen koblet.</span>'}</dd></div>
+        ${nf ? `<div><dt>Vedlegg</dt><dd>${filesHtml(i)}</dd></div>` : ""}</dl>
+        <div class="card-foot" style="margin-top:0">${miniBtn("editInterview", "Rediger", `data-id="${i.id}"`)}</div></div>` : ""}</div>`; }).join("");
+  return `<div class="card hy-list"><div class="hy-row iv-row hy-head" aria-hidden="true"><span>${iv.length} intervjuer</span><span>Dato</span><span>Segment</span><span>Ansvarlig</span><span></span><span></span></div>${rows}</div>`;
 };
 
 /* ----- MØTER ----- */
