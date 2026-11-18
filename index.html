@@ -42,20 +42,29 @@ button{cursor:pointer}
 
 /* ---------- Sidekolonne ---------- */
 .side{display:flex;flex-direction:column;gap:18px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px));align-self:start}
-.widget{border-radius:var(--r);padding:20px;background:linear-gradient(155deg,#EDB1A9 0%,#DE8C86 55%,#CF7474 100%);box-shadow:var(--shadow);color:#3A2420}
-.widget .eyebrow{color:#5B302B;opacity:.85}
-.flips{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.flip{display:flex;flex-direction:column;align-items:center;gap:6px}
-.tile{position:relative;width:100%;height:88px;border-radius:12px;background:linear-gradient(180deg,#45372E 0%,#3A2E26 50%,#30261F 50%,#2B221C 100%);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 6px 14px rgba(58,30,25,.35);perspective:400px;overflow:hidden}
+.widget{border-radius:var(--r);padding:18px;background:linear-gradient(160deg,#F7F1E7 0%,#F3E7DB 55%,#EED5CE 100%);border:1px solid #DDB3AC;box-shadow:var(--shadow);color:var(--ink)}
+.widget .eyebrow{color:var(--muted)}
+.w-brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.06em;font-size:19px;color:var(--ink)}
+.w-brand .logo-mark{width:34px;height:27px}
+.clock{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.tile{position:relative;width:100%;height:104px;border-radius:14px;background:linear-gradient(180deg,#45372E 0%,#3A2E26 50%,#30261F 50%,#2B221C 100%);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 6px 14px rgba(58,30,25,.28);perspective:400px;overflow:hidden}
 .tile::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.45);box-shadow:0 1px 0 rgba(255,255,255,.06)}
-.tile span{font-family:var(--mono);font-weight:700;font-size:46px;color:#FFFFFF;letter-spacing:-.02em;line-height:1}
-.tile.small span{font-size:34px}
+.tile span{font-family:var(--mono);font-weight:700;font-size:50px;color:#F3EBDD;letter-spacing:-.02em;line-height:1}
 .tile.flipping span{animation:flip .5s ease-out}
 @keyframes flip{0%{transform:rotateX(80deg);opacity:.2}100%{transform:rotateX(0);opacity:1}}
-.flip label{font-size:10.5px;letter-spacing:.16em;font-weight:700;color:#4A2622;text-transform:uppercase}
-.widget-name{font-family:var(--serif);font-size:22px;font-weight:600;margin-top:14px;line-height:1.15;text-wrap:balance}
-.widget-sub{font-size:12.5px;color:#4E2C27;margin-top:4px}
-.widget-today{display:flex;justify-content:space-between;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(70,30,25,.18);font-size:12px;color:#4E2C27}
+.tile label{position:absolute;bottom:9px;font-size:9.5px;letter-spacing:.14em;font-weight:700;color:rgba(243,235,221,.72);text-transform:uppercase}
+.tile .tl-l{left:11px}.tile .tl-r{right:11px}
+.w-date{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:12px}
+.w-date b{font-weight:600;font-size:15.5px;color:#6B5A4C}
+.w-date span{font-size:12px;letter-spacing:.14em;color:var(--muted)}
+.w-dl{display:flex;flex-direction:column;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(59,47,39,.16)}
+.w-row{display:flex;gap:9px;align-items:center;width:100%;background:rgba(255,255,255,.55);border:1px solid rgba(59,47,39,.10);border-radius:10px;padding:7px 10px;text-align:left;font-size:13px;color:var(--ink)}
+.w-row:hover{background:#fff}
+.w-d{flex:none;min-width:46px;white-space:nowrap;font-size:11.5px;color:var(--muted);align-self:flex-start;padding-top:1px}
+.w-t{flex:1;min-width:0;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.w-row i{width:7px;height:7px;border-radius:50%;flex:none}
+.w-none{margin:0;font-size:12.5px;color:var(--muted)}
+.w-more{align-self:flex-start;background:none;border:0;padding:2px 4px;font-size:12px;font-weight:600;color:var(--muted)}
 .nav{display:flex;flex-direction:column;gap:4px}
 .nav a{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--r-sm);color:var(--on-bg);text-decoration:none;font-weight:500;opacity:.86;transition:background .15s,opacity .15s}
 .nav a:hover{background:rgba(240,232,220,.10);opacity:1}
@@ -77,7 +86,6 @@ button{cursor:pointer}
 /* Logoen er en maske, så den får samme farge som teksten rundt (hvit på brunt, mørk i valgt menypunkt) */
 .logo-mark{display:inline-block;flex:none;background:currentColor;-webkit-mask:url(data:image/png;base64,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) center/contain no-repeat;mask:url(data:image/png;base64,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) center/contain no-repeat}
 .head h1.brand .logo-mark{width:58px;height:46px}
-.nav a[href="#hjem"]{font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
 .nav a[href="#hjem"] .logo-mark{width:24px;height:19px}
 .head h1{font-family:var(--serif);font-weight:600;font-size:32px;line-height:1.1;margin:2px 0 0;text-wrap:balance}
 .head p{margin:4px 0 0;color:var(--on-bg-muted);max-width:62ch}
@@ -594,7 +602,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
   .form{grid-template-columns:minmax(0,1fr)}
   .head h1{font-size:26px}
   .widget{padding:16px}
-  .tile{height:72px}.tile span{font-size:38px}.tile.small span{font-size:28px}
+  .tile{height:84px}.tile span{font-size:42px}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
@@ -736,7 +744,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 <div class="login" id="login" hidden>
   <div class="login-card">
     <h1 class="brand" aria-label="Arvklart"><span class="logo-mark" aria-hidden="true"></span><span>ARVKLART</span></h1>
-    <p class="eyebrow">Kontrollsenter · STR466 · Gruppe 6</p>
+    <p class="eyebrow">Kontrollsenter</p>
     <p>Skriv inn e-postadressen din, så får du en innloggingslenke på e-post. Bare teamet har tilgang.</p>
     <form class="login-form" id="login-form" novalidate>
       <label for="login-email">E-post</label>
@@ -995,7 +1003,7 @@ const I = {
 const ico = (n, sw = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
 const PAGES = [
-  { id: "hjem", name: "Arvklart", icon: "logo", sub: "Ukens viktigste oppgaver, frister, mål og hvor vi står." },
+  { id: "hjem", name: "Hjem", icon: "home", sub: "Ukens viktigste oppgaver, frister, mål og hvor vi står." },
   { id: "oppgaver", name: "Oppgaver", icon: "board", sub: "Alle oppgaver starter i «Må gjøres». Den som tar en oppgave, setter navnet sitt på og flytter den til «Pågår». Flere kan dele en oppgave." },
   { id: "milepaeler", name: "Milepæler", icon: "flag", sub: "Innleveringer og hendelser i STR466, høst 2026." },
   { id: "moter", name: "Møter", icon: "cal", sub: "Beslutninger og actionpunkter fra teammøtene." },
@@ -1539,28 +1547,45 @@ function render(force) {
 main.addEventListener("focusout", () => setTimeout(() => { if (renderPending && !editingInMain()) render(); }, 0));
 
 let lastTiles = ["", ""];
+// Klokkeslett i Europe/Oslo
+function clockParts() {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("nb-NO", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date()).map(x => [x.type, x.value]));
+  return [p.hour, p.minute];
+}
+// Frister fra i dag og ut uken (forfalte vises ikke)
+function weekDeadlines() {
+  const today = todayISO(), sun = addDays(mondayOf(today), 6), inWeek = iso => iso && toUTC(iso) >= toUTC(today) && toUTC(iso) <= toUTC(sun);
+  const out = [];
+  tasks().forEach(t => { if (!isDone(t) && inWeek(t.due)) out.push({ date: t.due, title: t.title, act: "editTask", id: t.id, tone: taskTone(t) }); });
+  milestones().forEach(m => { if (!msClosed(m) && inWeek(m.date)) out.push({ date: m.date, title: m.title, act: "editMs", id: m.id, tone: msTone(m) }); });
+  return out.sort((x, y) => toUTC(x.date) - toUTC(y.date));
+}
+function updateClock() {
+  const [h, m] = clockParts(), tiles = document.querySelectorAll("#widget .clock .tile");
+  if (tiles.length !== 2) return;
+  [h, m].forEach((v, i) => {
+    if (lastTiles[i] === v) return;
+    const span = tiles[i].querySelector("span"); span.textContent = v;
+    if (lastTiles[i]) { tiles[i].classList.remove("flipping"); void tiles[i].offsetWidth; tiles[i].classList.add("flipping"); }
+    lastTiles[i] = v;
+  });
+}
 function renderSide() {
-  const today = todayISO();
-  const nd = nextDeadline();
-  let t1 = "–", t2 = "–", l1 = "DAGER", l2 = "", name = "Alle milepæler er nådd", sub = "Godt jobbet, Gruppe 6.";
-  if (nd) {
-    const d = daysUntil(nd.date), ongoing = d < 0 && nd.end && daysUntil(nd.end) >= 0;
-    t1 = ongoing ? "NÅ" : String(Math.abs(d)); l1 = ongoing ? "PÅGÅR" : d < 0 ? "DAGER OVER" : d === 1 ? "DAG" : "DAGER";
-    const dd = dOf(nd.date); t2 = String(dd.getUTCDate()) + "."; l2 = MON[dd.getUTCMonth()].toUpperCase() + " · " + WD[dd.getUTCDay()].toUpperCase();
-    name = nd.title; sub = nd.subtitle || nd.note || "";
-  }
-  const fl1 = lastTiles[0] && lastTiles[0] !== t1 ? " flipping" : "", fl2 = lastTiles[1] && lastTiles[1] !== t2 ? " flipping" : "";
-  lastTiles = [t1, t2];
-  const td = dOf(today);
+  const today = todayISO(), td = dOf(today), [h, m] = clockParts();
+  const dl = weekDeadlines(), shown = dl.slice(0, 6);
+  const tone = { red: "var(--red)", orange: "var(--orange)", green: "var(--green)", none: "#CDBBA4" };
+  lastTiles = [h, m];
   document.getElementById("widget").innerHTML = `
-    <span class="eyebrow">Neste milepæl${nd ? " · " + esc(nd.type) : ""}</span>
-    <div class="flips">
-      <div class="flip"><div class="tile${fl1}"><span class="mono">${esc(t1)}</span></div><label>${l1}</label></div>
-      <div class="flip"><div class="tile small${fl2}"><span class="mono">${esc(t2)}</span></div><label>${esc(l2 || "DATO")}</label></div>
+    <div class="w-brand" aria-label="Arvklart"><span class="logo-mark" aria-hidden="true"></span><span>ARVKLART</span></div>
+    <div class="clock" role="img" aria-label="Klokken er ${h}:${m}">
+      <div class="tile"><span class="mono">${h}</span><label class="tl-l">${WDL[td.getUTCDay()]}</label></div>
+      <div class="tile"><span class="mono">${m}</span><label class="tl-r">${td.getUTCDate()}. ${MON[td.getUTCMonth()]}</label></div>
     </div>
-    <div class="widget-name">${esc(name)}</div>
-    <div class="widget-sub">${esc(sub)}</div>
-    <div class="widget-today"><span>${WDL[td.getUTCDay()][0].toUpperCase() + WDL[td.getUTCDay()].slice(1)} ${td.getUTCDate()}. ${MONL[td.getUTCMonth()]}</span><span class="mono">Uke ${isoWeek(today)}</span></div>`;
+    <div class="w-date"><b>${WDL[td.getUTCDay()][0].toUpperCase() + WDL[td.getUTCDay()].slice(1)} ${td.getUTCDate()}. ${MONL[td.getUTCMonth()]}</b><span>UKE ${isoWeek(today)}</span></div>
+    <div class="w-dl"><span class="eyebrow">Frister denne uken</span>
+      ${shown.map(x => { const d = dOf(x.date); return `<button class="w-row" data-act="${x.act}" data-id="${esc(x.id)}"><span class="w-d mono">${x.date === today ? "I dag" : WD[d.getUTCDay()] + " " + d.getUTCDate() + "."}</span><span class="w-t">${esc(x.title)}</span><i style="background:${tone[x.tone] || tone.none}"></i></button>`; }).join("")
+        || '<p class="w-none">Ingen flere frister denne uken.</p>'}
+      ${dl.length > shown.length ? `<button class="w-more" data-act="go" data-p="oppgaver">+ ${dl.length - shown.length} til</button>` : ""}</div>`;
   const openCount = tasks().filter(t => !isDone(t)).length;
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
   AREAS.forEach(a => { counts[a.id] = areaTasks(a.id).length; });
@@ -1577,8 +1602,8 @@ function renderSide() {
 }
 
 function head(p, right = "") {
-  if (p.id === "hjem") return `<div class="head"><div><span class="eyebrow">STR466 · Gruppe 6</span><h1 class="brand" aria-label="Arvklart"><span class="logo-mark" aria-hidden="true"></span><span>ARVKLART</span></h1><p>${p.sub}</p></div>${right}</div>`;
-  return `<div class="head"><div><span class="eyebrow">Arvklart · STR466 · Gruppe 6</span><h1>${p.name}</h1><p>${p.sub}</p></div>${right}</div>`;
+  if (p.id === "hjem") return "";
+  return `<div class="head"><div><h1>${p.name}</h1></div>${right}</div>`;
 }
 
 function renderMain() {
@@ -1611,7 +1636,7 @@ VIEWS.hjem = function () {
   const openAll = tasks().filter(t => !isDone(t) && t.status !== "Venter");
   const top = openAll.slice().sort((a, b) => over(b) - over(a) || byPrioDue(a, b)).slice(0, 5);
   const topHtml = taskRows(top);
-  const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2><p class="sub">Regnes ut fra prioritet og frist. Forfalte øverst.</p></div><span class="mono muted">${top.length}/${openAll.length}</span></div>
+  const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2></div><div class="row-btns" style="align-items:center"><span class="mono muted">${top.length}/${openAll.length}</span><button class="mini" data-act="quickAdd">+ Legg til</button></div></div>
     <div class="scroll-list">${topHtml || `<div class="empty">Ingen åpne oppgaver. Godt jobbet!</div>`}</div>
     ${openAll.length > top.length ? `<div class="card-foot">${miniBtn("go", `Se alle oppgaver (${openAll.length})`, 'data-p="oppgaver"')}</div>` : ""}</div>`;
 
@@ -1633,13 +1658,13 @@ VIEWS.hjem = function () {
     const tone = taskTone(t), edge = tone === "red" ? "var(--red)" : tone === "orange" ? "var(--orange)" : "var(--green)";
     return `<div class="lrow" data-act="editTask" data-id="${t.id}" style="border-left:3px solid ${edge}"><span class="lt"><b>${ph(t.title)}</b><small><span class="mono">${fmtDate(t.due)}</span> · ${ownersText(t)}</small></span><span class="badge t-${tone}">${d < 0 ? "Forfalt " + (-d) + " d" : relText(d)}</span></div>`;
   }).join("");
-  const fristCard = `<div class="card"><div class="card-head"><div><h2>Frister</h2><p class="sub">${UI.weekOffset === 0 ? "Denne uken, med forfalte øverst" : UI.weekOffset === 1 ? "Neste uke" : UI.weekOffset === -1 ? "Forrige uke" : (UI.weekOffset > 0 ? "Om " + UI.weekOffset + " uker" : "For " + (-UI.weekOffset) + " uker siden")}</p></div>
+  const fristCard = `<div class="card"><div class="card-head"><div><h2>Frister</h2><p class="sub">${UI.weekOffset === 0 ? "Denne uken" : UI.weekOffset === 1 ? "Neste uke" : UI.weekOffset === -1 ? "Forrige uke" : (UI.weekOffset > 0 ? "Om " + UI.weekOffset + " uker" : "For " + (-UI.weekOffset) + " uker siden")}</p></div>
     <div class="weeknav"><button class="iconbtn" data-act="week" data-d="-1" aria-label="Forrige uke">${ico("left", 2.2)}</button><button class="iconbtn" data-act="week" data-d="1" aria-label="Neste uke">${ico("right", 2.2)}</button></div></div>
     <div class="weeklabel">Uke ${isoWeek(mon)} · ${fmtRange(mon, sun)}</div>
     <div class="scroll-list">${fristHtml || `<div class="empty">Ingen frister denne uken.</div>`}</div></div>`;
 
   // Hvor står vi: én linje per område
-  const statusCard = `<div class="card"><div class="card-head"><div><h2>Hvor står vi?</h2><p class="sub">Én linje per område. Klikk for detaljer, og oppdater statusen der.</p></div></div>
+  const statusCard = `<div class="card"><div class="card-head"><div><h2>Hvor står vi?</h2></div></div>
     <div class="srows">${AREAS.map(a => {
       const st = S.areas[a.id] || {}, nt = areaTasks(a.id)[0];
       return `<div class="srow" data-act="go" data-p="${a.id}" tabindex="0"><span class="sname">${ico(a.icon)}${esc(a.name)}</span>${lightPill(st.light)}
@@ -1720,7 +1745,7 @@ function goalsCard() {
   const team = `<section class="gt"><span class="eyebrow">Team</span>
     <svg viewBox="0 0 200 104" class="team-svg" role="img" aria-label="Oppgaver per person"><line x1="6" y1="84.5" x2="194" y2="84.5" stroke="var(--line)"/>${cols}</svg>
     <div class="legend"><span><i style="background:var(--bar)"></i>Pågår</span><span><i style="background:var(--green)"></i>Ferdig</span><span>${unas} ikke tatt</span></div></section>`;
-  return `<div class="card"><div class="card-head"><div><h2>Mål og fremdrift</h2><p class="sub">De viktigste målene for semesteret</p></div></div>
+  return `<div class="card"><div class="card-head"><div><h2>Mål og fremdrift</h2></div></div>
     <div class="tiles home3">${team}${incomeSection(true)}${timeline}</div></div>`;
 }
 
@@ -1757,7 +1782,7 @@ function incomeSection(compact) {
   const dots = inR.map(e => { const d = Math.round((toUTC(e.date) - toUTC(start)) / 864e5); return `<circle cx="${X(d)}" cy="${Y(pts[d][1])}" r="3" fill="var(--inc)" opacity=".55"><title>${esc(e.label)}: ${kr(e.amount)}</title></circle>`; }).join("");
   const chg = gain > 0 ? `<span class="inc-chg up">↗ ${kr(gain)}${pct != null ? ` (${pct.toLocaleString("nb-NO", { maximumFractionDigits: 1 })} %)` : ""}</span>` : `<span class="inc-chg">Ingen nye inntekter</span>`;
   return `<section class="gt${compact ? "" : " span-2"} inc"><div class="inc-head"><div><span class="eyebrow">Totale inntekter</span><div class="inc-big">${kr(cum)}</div><div class="inc-sub">${chg} <span class="muted">${esc(r[1].toLowerCase())}</span></div></div>
-      ${compact ? "" : '<p class="sub" style="max-width:30ch;text-align:right;font-size:12px">Innbetalinger og salg, summert over tid</p>'}</div>
+      ${compact ? "" : ''}</div>
     <div class="inc-chart"><svg viewBox="0 0 ${W} ${H}" class="inc-svg" role="img" aria-label="Totale inntekter ${kr(cum)}">
       <defs><linearGradient id="incfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--inc)" stop-opacity=".28"/><stop offset="1" stop-color="var(--inc)" stop-opacity="0"/></linearGradient></defs>
       ${grid}<path d="${area}" fill="url(#incfill)"/><path d="${line}" fill="none" stroke="var(--inc)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${dots}
@@ -1806,7 +1831,7 @@ function followUpCard() {
   if (arr("hypotheses").some(h => hasPh(h.falsifier))) miss.push(["Terskler for hypotesene", "hypoteser"]);
   const ivMiss = arr("interviews").filter(i => hasPh(i.title) && !i.findings).length; if (ivMiss) miss.push([`${ivMiss} intervjuer uten funn`, "intervjuer"]);
   const list = rows.map(a => `<div class="alert ${a.tone}" data-act="${a.act}" data-id="${a.id || ""}" data-p="${a.p || ""}"><span class="ak">${esc(a.k)}</span>${a.html}${a.sub ? `<small>${esc(a.sub)}</small>` : ""}</div>`).join("");
-  return `<div class="card"><div class="card-head"><div><h2>Trenger oppfølging</h2><p class="sub">Forfalte frister, oppgaver ingen har tatt, utlegg som venter og informasjon som mangler</p></div></div>
+  return `<div class="card"><div class="card-head"><div><h2>Trenger oppfølging</h2></div></div>
     ${list ? `<div class="alerts">${list}</div>` : `<p class="ok-line">${ico("check", 2.4)} Ingenting haster akkurat nå.</p>`}
     ${miss.length ? `<div class="miss"><span class="eyebrow">Mangler info</span>${miss.map(([l, p]) => `<button class="chip" data-act="go" data-p="${esc(p)}"><span class="dot" style="background:var(--ph)"></span>${esc(l)}</button>`).join("")}</div>` : ""}</div>`;
 }
@@ -1929,7 +1954,7 @@ VIEWS.salg = function () {
   const conv = leads.length ? Math.round(n / leads.length * 100) + " %" : "–";
   const avg = n ? kr(rev / n) : "–";
   const kpi = (l, v) => `<div class="kpi"><span class="eyebrow">${l}</span><div class="v">${v}</div></div>`;
-  const hero = `<div class="card"><div class="card-head"><div><h2>Salgstrakt</h2><p class="sub">Fra første kontakt til betalende familie. Dra kortene mellom stegene. Betalende familier blir pilotfamilier under «Pilot».</p></div></div>
+  const hero = `<div class="card"><div class="card-head"><div><h2>Salgstrakt</h2></div></div>
     <div class="kpis k6">${kpi("Leads", leads.length)}${kpi("I dialog", dialog)}${kpi("Demoer", demos)}${kpi("Betalende", n)}${kpi("Konvertering", conv)}${kpi("Snittpris", avg)}</div></div>`;
   const board = STAGES.map(st => {
     const list = leads.filter(l => l.stage === st);
@@ -1957,7 +1982,7 @@ function pilotView() {
   const rows = fam.map(l => `<tr data-act="editLead" data-id="${l.id}"><td style="font-weight:600">${esc(l.family || "Uten navn")}</td><td>${l.owner ? esc(l.owner) : '<span class="muted">–</span>'}</td>
     <td>${l.pilotStatus ? `<span class="badge ${{ "Fullført": "t-green", "I gang": "t-orange", "Avbrutt": "t-red" }[l.pilotStatus] || "t-none"}">${esc(l.pilotStatus)}</span>` : '<span class="muted">Ikke satt</span>'}</td>
     <td class="mono">${l.pilotStart ? fmtDate(l.pilotStart) : "–"}</td><td class="num">${l.price ? kr(l.price) : "–"}</td><td style="min-width:220px">${l.learned ? esc(l.learned) : '<span class="muted">–</span>'}</td></tr>`).join("");
-  const table = `<div class="card"><div class="card-head"><div><h2>Pilotfamilier</h2><p class="sub">Familier som har betalt. Klikk en rad for å oppdatere status og det dere har lært.</p></div></div>
+  const table = `<div class="card"><div class="card-head"><div><h2>Pilotfamilier</h2></div></div>
     ${n ? `<div class="tablewrap"><table><thead><tr><th>Familie</th><th>Ansvarlig</th><th>Pilotstatus</th><th>Start</th><th class="num">Pris</th><th>Hva vi lærte</th></tr></thead><tbody>${rows}</tbody></table></div>`
       : `<div class="empty">Ingen pilotfamilier ennå. Når en lead under «Salg» flyttes til «Betalende», dukker den opp her.</div>`}</div>`;
   return hero + table;
@@ -2002,7 +2027,7 @@ function legalView() {
     <td><span class="badge ${LEGAL_TONE[l.status] || "t-none"}">${esc(l.status || "–")}</span></td>
     <td style="min-width:260px">${l.findings ? esc(l.findings) : '<span class="muted">Ingenting ennå</span>'}</td>
     <td style="min-width:140px">${filesHtml(l)}</td><td>${l.owner ? esc(l.owner) : '<span class="muted">–</span>'}</td></tr>`).join("");
-  return `<div class="card"><div class="card-head"><div><h2>Juridiske spørsmål</h2><p class="sub">Usikkerhetsmomenter, status og det vi har funnet ut. Klikk en rad for å oppdatere eller legge ved filer.</p></div>
+  return `<div class="card"><div class="card-head"><div><h2>Juridiske spørsmål</h2></div>
       <div class="legend">${cnt.map(([s, c]) => `<span><span class="badge ${LEGAL_TONE[s]}">${c}</span>${s}</span>`).join("")}</div></div>
     ${ls.length ? `<div class="tablewrap"><table><thead><tr><th>Usikkerhetsmoment</th><th>Status</th><th>Hva vi har funnet ut</th><th>Vedlegg</th><th>Ansvarlig</th></tr></thead><tbody>${rows}</tbody></table></div>`
       : '<div class="empty">Ingen juridiske spørsmål ennå. Legg inn det dere er usikre på med «Nytt spørsmål».</div>'}</div>`;
@@ -2010,14 +2035,14 @@ function legalView() {
 
 function selskapView() {
   const info = (S.company || {}).info || {};
-  const infoCard = `<div class="card"><div class="card-head"><div><h2>Selskapsinformasjon</h2><p class="sub">Det vi trenger å ha samlet om selskapet.</p></div>${miniBtn("editCompany", "Rediger")}</div>
+  const infoCard = `<div class="card"><div class="card-head"><div><h2>Selskapsinformasjon</h2></div>${miniBtn("editCompany", "Rediger")}</div>
     <dl class="infogrid">${COMPANY_FIELDS.map(([k, l]) => `<div><dt>${l}</dt><dd>${info[k] ? esc(info[k]) : '<span class="muted">Ikke fylt inn</span>'}</dd></div>`).join("")}</dl></div>`;
   const ds = arr("companyDocs").sort((a, b) => CDOC_STATUS.indexOf(a.status) - CDOC_STATUS.indexOf(b.status) || (a.title || "").localeCompare(b.title || ""));
   const rows = ds.map(d => `<tr data-act="editCdoc" data-id="${d.id}"><td style="min-width:180px;font-weight:600">${esc(d.title)}${d.note ? `<div class="muted" style="font-size:12px;font-weight:400">${ph(d.note)}</div>` : ""}</td>
     <td>${esc(d.kind || "–")}</td><td>${d.status ? `<span class="badge ${CDOC_TONE[d.status] || "t-none"}">${esc(d.status)}</span>` : '<span class="ph">[BEKREFT status]</span>'}</td>
     <td>${d.parties ? esc(d.parties) : '<span class="muted">–</span>'}</td><td class="mono" style="white-space:nowrap">${d.date ? fmtDate(d.date, false) : "–"}</td>
     <td style="min-width:140px">${filesHtml(d)}</td><td>${d.owner ? esc(d.owner) : '<span class="muted">–</span>'}</td></tr>`).join("");
-  const docCard = `<div class="card"><div class="card-head"><div><h2>Kontrakter og dokumenter</h2><p class="sub">Avtaler, vedtekter, registreringer og annet selskapet trenger. Bruk status «Mangler» for det dere må skaffe.</p></div>${miniBtn("newCdoc", "+ Dokument")}</div>
+  const docCard = `<div class="card"><div class="card-head"><div><h2>Kontrakter og dokumenter</h2></div>${miniBtn("newCdoc", "+ Dokument")}</div>
     ${ds.length ? `<div class="tablewrap"><table><thead><tr><th>Dokument</th><th>Type</th><th>Status</th><th>Parter</th><th>Dato</th><th>Fil</th><th>Ansvarlig</th></tr></thead><tbody>${rows}</tbody></table></div>`
       : '<div class="empty">Ingen dokumenter ennå.</div>'}</div>`;
   return docCard + infoCard;
@@ -2099,7 +2124,7 @@ VIEWS.okonomi = function () {
     <span class="eyebrow">Trinn ${f.step}</span><b>${esc(f.name)}</b><div class="amt">${f.amount ? ph(f.amount) : '<span class="muted">Beløp ikke oppgitt</span>'}</div>
     <div><span class="pill s-${esc(f.status)}">${esc(f.status)}</span></div>
     <dl><dt>Frist</dt><dd>${f.deadline ? ph(f.deadline) : "–"}</dd><dt>Ansvarlig</dt><dd>${ownerText(f.owner)}</dd>${f.req ? `<dt>Krav</dt><dd>${ph(f.req)}</dd>` : ""}</dl></div>`).join("");
-  return walletView() + table + `<div class="card"><div class="card-head"><div><h2>Finansieringsstigen</h2><p class="sub">Fra små lokale midler til Innovasjon Norge. Hvert trinn bygger på det forrige.</p></div><button class="btn ghost" data-act="newFund">${ico("plus")}Nytt trinn</button></div>
+  return walletView() + table + `<div class="card"><div class="card-head"><div><h2>Finansieringsstigen</h2></div><button class="btn ghost" data-act="newFund">${ico("plus")}Nytt trinn</button></div>
     <div class="stairs" style="padding-top:${maxStep * 4}px">${stairs}</div></div>`;
 };
 
@@ -2119,14 +2144,14 @@ function walletView() {
     return `<div class="trow">${avatar(p)}<span class="tn">${p}<small class="muted" style="display:block;font-size:12px">Lagt ut ${kr(paid)} · refundert ${kr(back)}</small></span>
       <span class="badge ${due > 0 ? "t-orange" : paid ? "t-green" : "t-none"}">${due > 0 ? "Til gode " + kr(due) : paid ? "Gjort opp" : "Ingen utlegg"}</span></div>`;
   }).join("");
-  const whoCard = `<div class="card"><div class="card-head"><div><h2>Hvem har lagt ut</h2><p class="sub">Det hver enkelt har betalt selv, og hva de har til gode.</p></div><button class="btn" data-act="newExpense">${ico("plus")}Nytt utlegg</button></div><div class="team">${people}</div></div>`;
+  const whoCard = `<div class="card"><div class="card-head"><div><h2>Hvem har lagt ut</h2></div><button class="btn" data-act="newExpense">${ico("plus")}Nytt utlegg</button></div><div class="team">${people}</div></div>`;
   const exRows = ex.map(e => `<tr data-act="editExpense" data-id="${e.id}"><td class="mono" style="white-space:nowrap">${e.date ? fmtDate(e.date) : "–"}</td>
     <td><span style="display:inline-flex;gap:8px;align-items:center">${avatar(e.person, true)}${esc(e.person || "–")}</span></td>
     <td style="min-width:180px">${esc(e.what)}${e.note ? `<div class="muted" style="font-size:12px">${esc(e.note)}</div>` : ""}</td>
     <td>${e.post ? `<span class="tag">${esc(postName(e.post))}</span>` : '<span class="muted">–</span>'}</td>
     <td class="num">${kr(e.amount)}</td>
     <td>${e.status === "Refundert" ? '<span class="pill s-Refundert">Refundert</span>' : `<button class="mini" data-act="refundExpense" data-id="${e.id}">Refunder fra lommeboka</button>`}</td></tr>`).join("");
-  const exCard = `<div class="card"><div class="card-head"><div><h2>Utlegg</h2><p class="sub">Kjøp noen i teamet har betalt selv. «Refunder» trekker beløpet fra lommeboka og merker utlegget som gjort opp.</p></div></div>
+  const exCard = `<div class="card"><div class="card-head"><div><h2>Utlegg</h2></div></div>
     ${ex.length ? `<div class="tablewrap"><table><thead><tr><th>Dato</th><th>Hvem</th><th>Hva</th><th>Budsjettpost</th><th class="num">Beløp</th><th>Status</th></tr></thead><tbody>${exRows}</tbody>
       <tfoot><tr><td colspan="4">Sum utlegg</td><td class="num">${kr(ex.reduce((s, e) => s + num(e.amount), 0))}</td><td>${owed ? kr(owed) + " utestående" : "Alt refundert"}</td></tr></tfoot></table></div>`
       : `<div class="empty">Ingen utlegg ennå. Har noen betalt noe selv, registrer det med «Nytt utlegg».</div>`}</div>`;
@@ -2137,7 +2162,7 @@ function walletView() {
     <td style="min-width:200px">${esc(w.text)}${w.expenseId ? ' <span class="tag">Refusjon</span>' : ""}</td><td>${esc(w.by || "–")}</td>
     <td>${w.post ? `<span class="tag">${esc(postName(w.post))}</span>` : '<span class="muted">–</span>'}</td>
     <td class="num" style="color:var(--green-ink)">${w.type === "Inn" ? "+" + kr(w.amount) : ""}</td><td class="num" style="color:var(--red-ink)">${w.type !== "Inn" ? "−" + kr(w.amount) : ""}</td><td class="num">${kr(run)}</td></tr>`).join("");
-  const txCard = `<div class="card"><div class="card-head"><div><h2>Bevegelser i lommeboka</h2><p class="sub">Innbetalinger (f.eks. tilskudd) og utbetalinger. Nyeste øverst.</p></div></div>
+  const txCard = `<div class="card"><div class="card-head"><div><h2>Bevegelser i lommeboka</h2></div></div>
     ${txs.length ? `<div class="tablewrap"><table><thead><tr><th>Dato</th><th>Beskrivelse</th><th>Registrert av</th><th>Budsjettpost</th><th class="num">Inn</th><th class="num">Ut</th><th class="num">Saldo</th></tr></thead><tbody>${txRows}</tbody></table></div>`
       : `<div class="empty">Ingen bevegelser ennå. Legg inn startsaldo eller første innbetaling med «Innbetaling».</div>`}</div>`;
   return `<div class="grid-wallet">${balCard}${whoCard}</div>${exCard}${txCard}`;
@@ -2147,7 +2172,7 @@ function walletView() {
 function evi(e) { const i = Math.max(0, EVIDENCE.indexOf(e)); return `<span class="evi" title="Evidensstyrke: ${esc(e)}">${[0, 1, 2].map(k => `<i class="${k <= i ? "on" : ""}"></i>`).join("")}<span>${esc(e)}</span></span>`; }
 VIEWS.hypoteser = function () {
   const hs = arr("hypotheses").sort((a, b) => (a.n || 99) - (b.n || 99));
-  const method = `<div class="card"><h2>Slik tester vi</h2><p class="sub">Kursmetoden: vi bestemmer på forhånd hva som skal til for å ta feil, så evidensen får avgjøre.</p>
+  const method = `<div class="card"><h2>Slik tester vi</h2>
     <div class="method"><div><b>1</b>Formuler hypotesen</div><div><b>2</b>Definer på forhånd hva som motbeviser den</div><div><b>3</b>Test med ekte familier og partnere</div><div><b>4</b>La evidensen avgjøre: fortsett, pivot eller parker</div></div></div>`;
   const cards = hs.map(h => `<div class="card hyp" data-act="editHyp" data-id="${h.id}">
     <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><span class="eyebrow">Hypotese ${h.n}</span><h2 style="margin-top:3px">${ph(h.title)}</h2></div><span class="pill s-${esc(h.status)}">${esc(h.status)}</span></div>
@@ -2168,7 +2193,7 @@ VIEWS.intervjuer = function () {
     <td style="min-width:150px">${ph(i.title)}</td><td class="mono" style="white-space:nowrap">${i.date ? fmtDate(i.date) : '<span class="muted">–</span>'}</td>
     <td>${esc(i.segment) || '<span class="muted">–</span>'}</td><td style="min-width:220px">${ph(i.findings) || '<span class="muted">–</span>'}</td>
     <td>${i.owner ? esc(i.owner) : '<span class="muted">–</span>'}</td><td>${(i.hyps || []).map(h => `<span class="tag">${hName(h)}</span>`).join(" ") || '<span class="muted">–</span>'}</td><td style="min-width:130px">${filesHtml(i)}</td></tr>`).join("");
-  return `<div class="card"><div class="card-head"><div><h2>${iv.length} intervjuer</h2><p class="sub">Klikk en rad for å fylle inn funn og legge ved notater eller opptak. H1–H4 viser til hypotesene.</p></div><button class="btn" data-act="newInterview">${ico("plus")}Nytt intervju</button></div>
+  return `<div class="card"><div class="card-head"><div><h2>${iv.length} intervjuer</h2></div><button class="btn" data-act="newInterview">${ico("plus")}Nytt intervju</button></div>
     <div class="tablewrap"><table><thead><tr><th class="num">Nr</th><th>Intervju</th><th>Dato</th><th>Segment</th><th>Nøkkelfunn</th><th>Ansvarlig</th><th>Hypoteser</th><th>Vedlegg</th></tr></thead><tbody>${rows || `<tr><td colspan="8" class="muted">Ingen intervjuer ennå.</td></tr>`}</tbody></table></div></div>`;
 };
 
@@ -2248,7 +2273,7 @@ function taskRows(list, opts = {}) {
 }
 function tasksBlock(all, opts) {
   const open = all.filter(t => !isDone(t)).sort(byPrioDue), done = all.filter(isDone);
-  return `<div class="card"><div class="card-head"><div><h2>${opts.title || "Oppgaver"}</h2><p class="sub">${open.length} åpne${done.length ? ` · ${done.length} ferdig` : ""}. Endringer her gjelder alle steder oppgaven vises.</p></div>
+  return `<div class="card"><div class="card-head"><div><h2>${opts.title || "Oppgaver"}</h2><p class="sub">${open.length} åpne${done.length ? ` · ${done.length} ferdig` : ""}</p></div>
       ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${opts.area || ""}" data-sub="${opts.sub || ""}"`)}</div>
     <div class="mini-list">${taskRows(open, opts) || '<div class="empty">Ingen åpne oppgaver.</div>'}</div>
     ${done.length ? `<details class="done-list"><summary>Ferdige oppgaver (${done.length})</summary><div class="mini-list">${taskRows(done, opts)}</div></details>` : ""}</div>`;
@@ -2285,7 +2310,7 @@ function areaOverview(id) {
   const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
 
   const saker = arr("items").filter(i => i.kind === "sak" && i.area === id).sort((a, b) => (a.status === "Ferdig") - (b.status === "Ferdig") || (a.title || "").localeCompare(b.title || ""));
-  const sakerBox = saker.length ? cardBox("Saker", "Avtaler, søknader og avklaringer med status",
+  const sakerBox = saker.length ? cardBox("Saker", "",
     `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || '<div class="empty">Ingen saker ennå.</div>'}</div>`,
     miniBtn("newItem", "+ Sak", `data-kind="sak" data-area="${id}"`)) : "";
 
@@ -2321,7 +2346,7 @@ function featuresView() {
   const section = ([s, label, help]) => { const list = it.filter(i => st(i) === s); if (!list.length) return "";
     return `<section class="fx-sec"><div class="fx-sec-h"><b>${label}</b><span class="muted">${help}</span><span class="mono muted">${list.length}</span></div><div class="fx-list">${list.map(row).join("")}</div></section>`; };
   const dropped = it.filter(i => st(i) === "Droppet");
-  return `<div class="card feat-card"><div class="card-head"><div><h2>Funksjoner</h2><p class="sub">Trykk på en funksjon for å se beskrivelsen og endre status.</p></div>${miniBtn("newItem", "+ Funksjon", 'data-kind="funksjon" data-status="Vurderes"')}</div>
+  return `<div class="card feat-card"><div class="card-head"><div><h2>Funksjoner</h2></div>${miniBtn("newItem", "+ Funksjon", 'data-kind="funksjon" data-status="Vurderes"')}</div>
     <div class="fx-sum"><div class="stack-bar">${groups.map(([s, l]) => cnt(s) ? `<i style="width:${cnt(s) / tot * 100}%;background:${FEAT_COLOR[s]}" title="${l}: ${cnt(s)}"></i>` : "").join("")}</div>
       <div class="legend">${groups.filter(([s]) => cnt(s)).map(([s, l]) => `<span><i style="background:${FEAT_COLOR[s]}"></i>${l} <b class="mono">${cnt(s)}</b></span>`).join("")}</div></div>
     ${groups.map(section).join("") || '<div class="empty">Ingen funksjoner ennå.</div>'}
@@ -2345,7 +2370,7 @@ function marketCharts() {
   return `<div class="card"><div class="card-head"><div><h2>Salg i tall</h2><p class="sub">${leads.length ? `${leads.length} leads totalt${lost ? `, ${lost} tapt` : ""}` : "Grafene fylles når dere legger inn den første leaden under «Salg»."}</p></div><div class="row-btns">${miniBtn("go", "Salg", 'data-p="marked.salg"')}${miniBtn("go", "Pilot", 'data-p="marked.pilot"')}</div></div>
     <div class="tiles t3">
       <section class="gt"><span class="eyebrow">Pilotmål</span>${pilotDots(pay)}<div class="gt-big"><b class="mono">${pay}</b> av ${PILOT_GOAL} betaler</div><p class="sub">${kr(rev)} i omsetning${pay ? ` · snitt ${kr(rev / pay)}` : ""}</p></section>
-      <section class="gt"><span class="eyebrow">Salgstrakt</span><div class="funnel">${funnel}</div><p class="sub">Hvor mange som har nådd hvert steg, og andel som gikk videre.</p></section>
+      <section class="gt"><span class="eyebrow">Salgstrakt</span><div class="funnel">${funnel}</div></section>
       <section class="gt"><span class="eyebrow">Leads per kilde</span><div class="hbars">${sources}</div></section>
     </div></div>`;
 }
@@ -2380,7 +2405,7 @@ function knowCard() {
 function kursCard() {
   const all = milestones().filter(m => ["Innlevering", "Vurdering"].includes(m.type)), open = all.filter(m => !msClosed(m));
   const rows = open.map(m => { const p = msProgress(m); return `<div class="lrow" data-act="editMs" data-id="${m.id}"><span class="lt"><b>${esc(m.title)}</b><small>${m.date ? `<span class="mono">${fmtDate(m.date)}</span>` : ph(m.dateText)}${p.total ? ` · ${p.done}/${p.total} oppgaver` : ""}</small></span><span class="badge t-${msTone(m)}">${m.date ? relText(daysUntil(m.date)) : esc(m.status)}</span><button class="mini ok" data-act="msDone" data-id="${m.id}">${ico("check", 2.4)}${esc(msDoneLabel(m))}</button></div>`; }).join("");
-  return cardBox("Innleveringer og vurdering", "STR466, høst 2026", `<div class="mini-list">${rows || '<div class="empty">Alt er levert.</div>'}</div>${closedMs(all)}`, miniBtn("go", "Åpne milepæler", 'data-p="milepaeler"'));
+  return cardBox("Innleveringer og vurdering", "", `<div class="mini-list">${rows || '<div class="empty">Alt er levert.</div>'}</div>${closedMs(all)}`, miniBtn("go", "Åpne milepæler", 'data-p="milepaeler"'));
 }
 
 /* Research & Innsikt: kunnskapsbase */
@@ -3126,7 +3151,7 @@ window.addEventListener("hashchange", route);
 
 /* Ny dag: regn om nedtellingen ved midnatt */
 let lastDay = todayISO();
-setInterval(() => { const d = todayISO(); if (d !== lastDay) { lastDay = d; render(); } }, 60000);
+setInterval(() => { const d = todayISO(); if (d !== lastDay) { lastDay = d; render(); } else updateClock(); }, 5000);
 
 boot();
 </script>
