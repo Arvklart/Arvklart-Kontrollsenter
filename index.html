@@ -979,13 +979,12 @@ const AREAS = [
   { id: "marked", name: "Marked & Salg", short: "Marked", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
   { id: "jus", name: "Jus & Selskap", short: "Jus", icon: "scale", desc: "Arverett, avtaler, selskapsform og personvern." },
   { id: "finans", name: "Finansiering & Admin", short: "Finans", icon: "coins", desc: "Lommebok, utlegg, budsjett, søknader og tilskudd." },
-  { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." },
-  { id: "kurs", name: "Kurs & innleveringer", short: "Kurs", icon: "book", desc: "STR466: dokumentene, dossieret, pitchen og AI-loggen." }
+  { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
 const SUBS = { marked: [["salg", "Salg"], ["pilot", "Pilot"]], jus: [["jus", "Jus"], ["selskap", "Selskap"]], finans: [["okonomi", "Lommebok og budsjett"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
-const CAT_TO_AREA = { Rapport: "kurs", Pitch: "kurs", Salg: "marked", Produkt: "produkt", "Økonomi": "finans", Research: "research", Admin: "kurs" };
+const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "finans", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
 const FEATURE_STATUS = ["I løsningen", "Under utvikling", "Vurderes", "Droppet"];
 const SAK_STATUS = ["Ikke startet", "Pågår", "Venter på svar", "Ferdig"];
@@ -1005,7 +1004,7 @@ const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "
 const PRIOS = ["Kritisk","Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
-const MS_TYPE_AREA = { Innlevering: "kurs", Vurdering: "kurs", Hendelse: "kurs", Finansiering: "finans", Salg: "marked" };
+const MS_TYPE_AREA = { Innlevering: "", Vurdering: "", Hendelse: "", Finansiering: "finans", Salg: "marked" };
 const msArea = m => (m && (m.area || MS_TYPE_AREA[m.type])) || "";
 const MS_STATUS = ["Ikke startet","Pågår","Levert","Gjennomført","Fullført","Ikke aktuell","Avklares","Obligatorisk","Valgfritt"];
 /* Avsluttede milepæler: ferdige (Levert/Gjennomført/Fullført) eller droppet (Ikke aktuell). De legges i en sammenleggbar liste nederst. */
