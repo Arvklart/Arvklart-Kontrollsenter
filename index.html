@@ -1174,7 +1174,10 @@ function normDoc(c, d) {
     if ((c === "tasks" || c === "items") && !(SUBS[mv[0]] || []).some(x => x[0] === d.sub)) d.sub = mv[1];
     if (c === "decisions" || c === "docs") d.sub = mv[1];
   }
-  if (c === "contacts" && Array.isArray(d.areas)) d.areas = [...new Set(d.areas.map(a => AREA_MOVED[a] ? AREA_MOVED[a][0] : a))];
+  if (c === "contacts" && Array.isArray(d.areas)) {
+    d.areas.forEach(a => { if (AREA_MOVED[a]) { const tab = AREA_MOVED[a].join("."); d.areaTabs = [...new Set([...(d.areaTabs || []), tab])]; } });
+    d.areas = [...new Set(d.areas.map(a => AREA_MOVED[a] ? AREA_MOVED[a][0] : a))];
+  }
   if (c === "tasks") normTask(d);
   return d;
 }
@@ -2492,12 +2495,15 @@ function areaOverview(id) {
     miniBtn("newItem", "+ Sak", `data-kind="sak" data-area="${id}"`)) : "";
 
   const noTasks = !allArea.length ? `<p class="quiet">Ingen oppgaver i området ennå. ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${id}"`)}</p>` : "";
+  if (id === "research") return tasksBox + noTasks + statusCard + main + sakerBox + extrasCard(id);
   return statusCard + main + tasksBox + noTasks + sakerBox + extrasCard(id);
 }
 
 /* Kontakter, beslutninger og dokumenter i ett kort, bare de delene som har innhold */
 function extrasCard(id, sub) {
-  const cs = sub ? [] : contactsIn(id).sort((a, b) => CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status));
+  // Kontakter med egen delfane vises i den fanen, de andre på oversikten
+  const tabOf = c => (c.areaTabs || []).find(t => t.startsWith(id + ".")) || "";
+  const cs = contactsIn(id).filter(c => sub ? tabOf(c) === id + "." + sub : !tabOf(c)).sort((a, b) => CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status));
   const inTab = d => d.area === id && (d.sub || "") === (sub || "");
   const ds = arr("decisions").filter(inTab).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const docs = arr("docs").filter(inTab).sort((a, b) => (b.added || "").localeCompare(a.added || ""));
@@ -2574,7 +2580,7 @@ function knowCard() {
   const filled = iv.filter(i => i.findings && !hasPh(i.findings)).length;
   return `<div class="card"><div class="tiles t3">
     <section class="gt"><span class="eyebrow">Siste i kunnskapsbasen</span><div class="mini-list">${kb.map(k => `<div class="mrow" data-act="editKb" data-id="${k.id}"><span class="mt">${ph(k.title)}<small>${ph(k.learned || k.summary || "")}</small></span></div>`).join("") || '<p class="sub">Ingen notater ennå.</p>'}</div>${miniBtn("go", "Åpne kunnskapsbasen", 'data-p="research.kunnskap"')}</section>
-    <section class="gt"><span class="eyebrow">Hypoteser</span><div class="mini-list">${hs.map(h => `<div class="mrow" data-act="editHyp" data-id="${h.id}"><span class="mnum">H${h.n}</span><span class="mt">${ph(h.title)}<small>${esc(h.status)}${h.decision ? " · " + esc(h.decision) : ""}</small></span>${evi(h.evidence)}</div>`).join("")}</div></section>
+    <section class="gt"><span class="eyebrow">Hypoteser</span><div class="mini-list">${hs.slice(0, 4).map(h => `<div class="mrow" data-act="editHyp" data-id="${h.id}"><span class="mnum">H${h.n}</span><span class="mt">${ph(h.title)}<small>${esc(h.status)}${h.decision ? " · " + esc(h.decision) : ""}</small></span>${evi(h.evidence)}</div>`).join("")}</div>${hs.length > 4 ? miniBtn("go", `Se alle (${hs.length})`, 'data-p="research.hyp"') : ""}</section>
     <section class="gt center"><span class="eyebrow">Intervjuer med funn</span>${ringSvg(iv.length ? filled / iv.length * 100 : 0, `${filled}/${iv.length}`, "utfylt", "var(--green)")}${miniBtn("go", "Åpne intervjuene", 'data-p="research.int"')}</section>
   </div></div>`;
 }
