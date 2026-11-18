@@ -305,6 +305,7 @@ button{cursor:pointer}
 .msmeta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center}
 .pill{font-size:11.5px;font-weight:600;border-radius:999px;padding:2px 9px;border:1px solid var(--line);background:var(--card)}
 .pill.s-Levert,.pill.s-Gjennomført,.pill.s-Fullført,.pill.s-Ferdig,.pill.s-Betalt,.pill.s-Innvilget{background:var(--green-soft);color:var(--green-ink);border-color:transparent}
+.pill.s-Testet{background:var(--green-soft);color:var(--green-ink);border-color:transparent}
 .pill.s-Pågår,.pill.s-Testes,.pill.s-Undersøkes,.pill.s-Bestilt,.pill.s-Søkt{background:var(--orange-soft);color:var(--orange-ink);border-color:transparent}
 .pill.s-Obligatorisk{background:var(--red-soft);color:var(--red-ink);border-color:transparent}
 .msprog{display:flex;flex-direction:column;gap:6px}
@@ -649,6 +650,32 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .checks label[hidden]{display:none}
 .checks-empty{font-weight:400;font-size:13px}
 .form .hint .mini{margin-left:4px;font-size:11.5px;padding:2px 9px}
+
+/* Hypoteser: linjer */
+.hy-list{padding:4px 18px}
+.hy-row{display:grid;grid-template-columns:minmax(0,1fr) 150px 110px 110px 18px;gap:14px;align-items:center;width:100%;padding:12px 2px;background:none;border:0;text-align:left;color:var(--ink);font-size:13.5px}
+.hy-head{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted);border-bottom:1px solid var(--line);padding:10px 2px}
+.hy-item{border-bottom:1px solid var(--line)}
+.hy-item:last-child{border-bottom:0}
+.hy-item .hy-row:hover{background:var(--card-hi)}
+.hy-name{display:flex;gap:10px;align-items:baseline;font-weight:600;line-height:1.35;min-width:0}
+.hy-name b{font-size:12px;color:var(--muted);flex:none;width:28px}
+.hy-name span:not(.badge){flex:1;min-width:0;overflow-wrap:anywhere}
+.hy-name .badge{flex:none}
+.hy-item.open .fx-chev{transform:rotate(180deg)}
+.hy-b{padding:0 2px 14px 34px;display:flex;flex-direction:column;gap:10px}
+.hy-b dl{margin:0;display:grid;gap:8px}
+.hy-b dt{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.hy-b dd{margin:2px 0 0;font-size:13.5px;max-width:80ch}
+@media (max-width:760px){
+  .hy-head{display:none}
+  .hy-row{grid-template-columns:minmax(0,1fr) 18px;row-gap:6px}
+  .hy-name{grid-column:1/2}
+  .hy-row .fx-chev{grid-column:2;grid-row:1}
+  .hy-c{grid-column:1/2;display:flex;gap:8px;align-items:center;font-size:12.5px}
+  .hy-c::before{content:attr(data-l);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;width:80px}
+  .hy-b{padding-left:2px}
+}
 
 /* Kunnskapsbase: hovedtemaer */
 .kb-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
@@ -2262,19 +2289,26 @@ function walletView() {
 
 /* ----- HYPOTESER ----- */
 function evi(e) { const i = Math.max(0, EVIDENCE.indexOf(e)); return `<span class="evi" title="Evidensstyrke: ${esc(e)}">${[0, 1, 2].map(k => `<i class="${k <= i ? "on" : ""}"></i>`).join("")}<span>${esc(e)}</span></span>`; }
+/* Hypoteser: én linje per hypotese, viktigst først (prioritet, deretter nummer) */
+const HYP_PRIO = ["Høy", "Middels", "Lav"];
+const hypRank = h => { const i = HYP_PRIO.indexOf(h.prio); return i < 0 ? 1.5 : i; };
+const hypsSorted = () => arr("hypotheses").sort((a, b) => hypRank(a) - hypRank(b) || (a.n || 99) - (b.n || 99));
 VIEWS.hypoteser = function () {
-  const hs = arr("hypotheses").sort((a, b) => (a.n || 99) - (b.n || 99));
-  const method = `<div class="card"><h2>Slik tester vi</h2>
-    <div class="method"><div><b>1</b>Formuler hypotesen</div><div><b>2</b>Definer på forhånd hva som motbeviser den</div><div><b>3</b>Test med ekte familier og partnere</div><div><b>4</b>La evidensen avgjøre: fortsett, pivot eller parker</div></div></div>`;
-  const cards = hs.map(h => `<div class="card hyp" data-act="editHyp" data-id="${h.id}">
-    <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><span class="eyebrow">Hypotese ${h.n}</span><h2 style="margin-top:3px">${ph(h.title)}</h2></div><span class="pill s-${esc(h.status)}">${esc(h.status)}</span></div>
-    <dl><div><dt>Motbevist hvis</dt><dd>${ph(h.falsifier) || '<span class="muted">–</span>'}</dd></div>
-      <div><dt>Test</dt><dd>${ph(h.test) || '<span class="muted">–</span>'}</dd></div>
-      <div><dt>Resultat</dt><dd>${ph(h.result) || '<span class="muted">Ikke testet ennå</span>'}</dd></div></dl>
-    <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--line);padding-top:12px">
-      <div><span class="eyebrow" style="display:block;margin-bottom:4px">Evidensstyrke</span>${evi(h.evidence)}</div>
-      <div style="text-align:right"><span class="eyebrow" style="display:block;margin-bottom:4px">Beslutning</span>${h.decision ? `<span class="pill">${esc(h.decision)}</span>` : '<span class="muted">Ikke tatt</span>'}</div></div></div>`).join("");
-  return method + `<div class="grid2">${cards}</div>`;
+  const hs = hypsSorted();
+  if (!hs.length) return `<div class="card"><div class="empty">Ingen hypoteser ennå.</div></div>`;
+  const PT = { "Høy": "t-red", "Middels": "t-orange", "Lav": "t-none" };
+  const rows = hs.map(h => { const open = xpOpen(h.id);
+    return `<div class="hy-item${open ? " open" : ""}"><button class="hy-row" data-act="toggleXp" data-id="${h.id}" aria-expanded="${open}">
+      <span class="hy-name"><b class="mono">H${h.n}</b><span>${ph(h.title)}</span>${h.prio ? `<span class="badge ${PT[h.prio] || "t-none"}">${esc(h.prio)}</span>` : ""}</span>
+      <span class="hy-c" data-l="Evidens">${evi(h.evidence)}</span>
+      <span class="hy-c" data-l="Status"><span class="pill s-${esc(h.status)}">${esc(h.status || "–")}</span></span>
+      <span class="hy-c" data-l="Beslutning">${h.decision ? `<span class="pill">${esc(h.decision)}</span>` : '<span class="muted">Ikke tatt</span>'}</span>
+      <span class="fx-chev">${ico("down", 2)}</span></button>
+      ${open ? `<div class="hy-b"><dl><div><dt>Motbevist hvis</dt><dd>${ph(h.falsifier) || '<span class="muted">–</span>'}</dd></div>
+        <div><dt>Test</dt><dd>${ph(h.test) || '<span class="muted">–</span>'}</dd></div>
+        <div><dt>Resultat</dt><dd>${ph(h.result) || '<span class="muted">Ikke testet ennå</span>'}</dd></div></dl>
+        <div class="card-foot" style="margin-top:0">${miniBtn("editHyp", "Rediger", `data-id="${h.id}"`)}</div></div>` : ""}</div>`; }).join("");
+  return `<div class="card hy-list"><div class="hy-row hy-head" aria-hidden="true"><span>Hypotese</span><span>Evidensstyrke</span><span>Status</span><span>Beslutning</span><span></span></div>${rows}</div>`;
 };
 
 /* ----- INTERVJUER ----- */
@@ -2502,7 +2536,7 @@ function moneyTiles() {
 /* Research & Innsikt: det vi vet */
 function knowCard() {
   const kb = arr("knowledge").sort((a, b) => (b.added || "").localeCompare(a.added || "")).slice(0, 3);
-  const hs = arr("hypotheses").sort((a, b) => a.n - b.n), iv = arr("interviews");
+  const hs = hypsSorted(), iv = arr("interviews");
   const filled = iv.filter(i => i.findings && !hasPh(i.findings)).length;
   return `<div class="card"><div class="tiles t3">
     <section class="gt"><span class="eyebrow">Siste i kunnskapsbasen</span><div class="mini-list">${kb.map(k => `<div class="mrow" data-act="editKb" data-id="${k.id}"><span class="mt">${ph(k.title)}<small>${ph(k.learned || k.summary || "")}</small></span></div>`).join("") || '<p class="sub">Ingen notater ennå.</p>'}</div>${miniBtn("go", "Åpne kunnskapsbasen", 'data-p="research.kunnskap"')}</section>
@@ -2946,7 +2980,8 @@ function hypForm(h, isNew) {
     fields: [{ k: "title", label: "Hypotese", full: true }, { k: "falsifier", label: "Motbevist hvis …", type: "textarea", full: true },
       { k: "test", label: "Test", type: "textarea", full: true }, { k: "result", label: "Resultat", type: "textarea", full: true },
       { k: "status", label: "Status", type: "select", opts: HYP_STATUS }, { k: "evidence", label: "Evidensstyrke", type: "select", opts: EVIDENCE },
-      { k: "decision", label: "Beslutning", type: "select", opts: DECISIONS.map(d => [d, d || "Ikke tatt"]) }],
+      { k: "decision", label: "Beslutning", type: "select", opts: DECISIONS.map(d => [d, d || "Ikke tatt"]) },
+      { k: "prio", label: "Prioritet", type: "select", opts: [["", "Ikke satt"], ...HYP_PRIO.map(x => [x, x])], hint: "Bestemmer rekkefølgen: viktigst øverst." }],
     onSave: v => { if (!v.title) return formError("Skriv inn hypotesen."); put("hypotheses", Object.assign(clone(h), v)); closeModal(); },
     onDelete: isNew ? null : () => { del("hypotheses", h.id); closeModal(); }
   });
