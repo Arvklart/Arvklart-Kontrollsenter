@@ -9,13 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap">
 <style>
-/* Layout: brun flate, venstre sidekolonne (rosa nedtellingskort + meny), kremhvite kort i rutenett til høyre. Ett bevisst tema, likt Kontrollsenter. */
+/* Layout: mørk grønnsvart topplinje og venstre marg, lys flate med hvite bobler i rutenett. Ett bevisst lyst tema. */
 :root{
   color-scheme: light;
-  --bg:#6E5847; --bg-deep:#5E4A3B;
-  --card:#F0E8DC; --card-hi:#F7F2EA; --line:#E2D5C2; --track:#E2D6C4;
-  --ink:#3B2F27; --muted:#8A7867; --on-bg:#F0E8DC; --on-bg-muted:#D6C6B3;
-  --rose:#D97C7C; --rose-soft:#F2D6D2; --mustard:#EADFC4; --bar:#3A2E26;
+  --bg:#EEEBE4; --bg-deep:#E4E0D7; --side:#1E211D; --side-hi:#2A2E28;
+  --card:#FCFBF8; --card-hi:#F5F3ED; --line:#E3DFD6; --track:#E6E2D9;
+  --ink:#22231F; --muted:#6E6A61; --on-bg:#22231F; --on-bg-muted:#6E6A61;
+  --rose:#B39752; --rose-soft:#EFE6CF; --mustard:#F1ECDF; --bar:#22231F;
   --red:#C2544B; --red-soft:#F4D5D0; --red-ink:#8E352D;
   --orange:#D98A38; --orange-soft:#F5E0C3; --orange-ink:#86501A;
   --green:#6F9A5F; --green-soft:#DDE8D3; --green-ink:#41653A;
@@ -24,8 +24,8 @@
   --serif:"Fraunces","DM Serif Display",Georgia,serif;
   --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
-  --r:22px; --r-sm:14px;
-  --shadow:0 1px 2px rgba(45,30,18,.10),0 10px 28px rgba(45,30,18,.16);
+  --r:16px; --r-sm:12px; --topbar:56px;
+  --shadow:0 1px 2px rgba(25,25,20,.05),0 4px 14px rgba(25,25,20,.05);
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -38,16 +38,23 @@ button{cursor:pointer}
 :focus-visible{outline:2px solid var(--rose);outline-offset:2px}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
-.app{display:grid;grid-template-columns:272px minmax(0,1fr);gap:24px;max-width:1480px;margin:0 auto;padding-inline:24px;padding-block:24px 110px}
+.app{display:grid;grid-template-columns:264px minmax(0,1fr);grid-template-rows:auto 1fr;min-height:100vh}
+.topbar{grid-column:1/-1;position:sticky;top:0;z-index:42;display:flex;align-items:center;gap:20px;height:var(--topbar);padding-inline:24px;background:var(--side);border-bottom:1px solid rgba(255,255,255,.06)}
+.tb-brand{display:flex;align-items:center;gap:10px;flex:none;font-weight:800;letter-spacing:.08em;font-size:16px;color:#F4F1EA;text-decoration:none}
+.tb-brand .logo-mark{width:30px;height:24px}
+.tb-links{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;min-width:0}
+.tb-links a,.tb-links button{color:#C9C5BA;text-decoration:none;background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;font-size:14px;font-weight:500;white-space:nowrap}
+.tb-links a:hover,.tb-links button:hover{color:#fff}
+.tb-links a.on{color:#fff;border-bottom-color:#E9E4D8}
 
 /* ---------- Sidekolonne ---------- */
-.side{display:flex;flex-direction:column;gap:18px;position:sticky;top:calc(24px + env(safe-area-inset-top,0px));align-self:start}
-.widget{border-radius:var(--r);padding:18px;background:linear-gradient(160deg,#F7F1E7 0%,#F3E7DB 55%,#EED5CE 100%);border:1px solid #DDB3AC;box-shadow:var(--shadow);color:var(--ink)}
+.side{--on-bg:#ECE9E0;--on-bg-muted:#A3A398;display:flex;flex-direction:column;gap:16px;position:sticky;top:var(--topbar);height:calc(100vh - var(--topbar));overflow:auto;align-self:start;background:var(--side);padding:18px 14px 24px;scrollbar-width:thin}
+.widget{border-radius:var(--r);padding:16px;background:var(--card);border:1px solid rgba(255,255,255,.08);color:var(--ink)}
 .widget .eyebrow{color:var(--muted)}
 .w-brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.06em;font-size:19px;color:var(--ink)}
 .w-brand .logo-mark{width:34px;height:27px}
-.clock{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.tile{position:relative;width:100%;height:104px;border-radius:14px;background:linear-gradient(180deg,#45372E 0%,#3A2E26 50%,#30261F 50%,#2B221C 100%);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 6px 14px rgba(58,30,25,.28);perspective:400px;overflow:hidden}
+.clock{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{position:relative;width:100%;height:96px;border-radius:12px;background:linear-gradient(180deg,#30352F 0%,#272B26 50%,#20241F 50%,#1B1E1A 100%);display:grid;place-items:center;box-shadow:inset 0 -2px 0 rgba(0,0,0,.25),0 6px 14px rgba(58,30,25,.28);perspective:400px;overflow:hidden}
 .tile::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.45);box-shadow:0 1px 0 rgba(255,255,255,.06)}
 .tile span{font-family:var(--mono);font-weight:700;font-size:50px;color:#F3EBDD;letter-spacing:-.02em;line-height:1}
 .tile.flipping span{animation:flip .5s ease-out}
@@ -80,7 +87,7 @@ button{cursor:pointer}
 .sync.ok i{background:#9CC68B}.sync.warn i{background:#E9B26A}
 
 /* ---------- Hovedflate ---------- */
-.main{min-width:0;display:flex;flex-direction:column;gap:20px}
+.main{min-width:0;display:flex;flex-direction:column;gap:18px;padding:24px 28px 110px;max-width:1360px;width:100%}
 .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--on-bg)}
 .head h1.brand{display:flex;align-items:center;gap:12px;font-family:var(--sans);font-weight:800;letter-spacing:.06em;font-size:30px;color:#FFFFFF}
 /* Logoen er en maske, så den får samme farge som teksten rundt (hvit på brunt, mørk i valgt menypunkt) */
@@ -97,6 +104,24 @@ button{cursor:pointer}
 .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:14px}
 .grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
 .grid-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:20px}
+/* Forsiden: tre bobler ved siden av hverandre */
+.grid-top3{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,.9fr);gap:16px;align-items:start}
+.grid-top3 .card{padding:16px 16px 14px}
+.grid-top3 .card h2{font-size:18px}
+.grid-top3 .card-head{margin-bottom:10px}
+.grid-top3 .scroll-list{max-height:330px}
+.grid-top3 .weeklabel{margin:-4px 0 8px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;text-align:center}
+.cal-h{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 0 4px}
+.cal-d{position:relative;aspect-ratio:1;max-width:100%;border:0;background:none;border-radius:8px;font-family:var(--mono);font-size:12.5px;color:var(--ink);display:grid;place-items:center;padding:0}
+.cal-d:hover{background:var(--card-hi)}
+.cal-d.today{background:var(--bar);color:#fff;font-weight:700}
+.cal-d.sel:not(.today){box-shadow:inset 0 0 0 1.5px var(--bar)}
+.cal-d i{position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--orange)}
+.cal-d i.red{background:var(--red)}.cal-d i.ms{background:var(--rose)}
+.cal-d.today i{background:#fff}
+.cal-list{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.cal-list .w-row{background:var(--card-hi)}
 .grid-top .scroll-list{max-height:262px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 .scroll-list{max-height:248px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px;margin-right:-4px}
@@ -210,12 +235,12 @@ button{cursor:pointer}
 .seg button.on{background:var(--card);color:var(--ink)}
 .board-scroll{overflow-x:auto;padding-bottom:6px;margin-inline:-4px;padding-inline:4px}
 .board{display:grid;grid-template-columns:repeat(var(--cols,5),minmax(232px,1fr));gap:14px;align-items:start}
-.col{background:#E6DACA;border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:9px;min-height:120px;border:1px solid #D9CAB5;transition:background .15s,box-shadow .15s}
-.col.over{background:#F0E5D4;box-shadow:inset 0 0 0 2px var(--rose)}
+.col{background:#E8E5DD;border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:9px;min-height:120px;border:1px solid var(--line);transition:background .15s,box-shadow .15s}
+.col.over{background:#F2EFE8;box-shadow:inset 0 0 0 2px var(--rose)}
 .col-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 4px}
 .col-head b{font-weight:700;font-size:13px}
 .col-head .mono{font-size:12px;color:var(--muted);background:var(--card-hi);border-radius:999px;padding:1px 8px}
-.kc{position:relative;background:#FBF7F1;border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;box-shadow:0 1px 2px rgba(45,30,18,.10);cursor:grab;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+.kc{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;box-shadow:0 1px 2px rgba(45,30,18,.10);cursor:grab;overflow:hidden;display:flex;flex-direction:column;gap:8px}
 .kc:hover{box-shadow:0 4px 12px rgba(45,30,18,.14)}
 .kc.dragging{opacity:.45}
 .kc::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--stripe,#C9B8A2)}
@@ -564,7 +589,9 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .io textarea{width:100%;min-height:220px;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#FBF7F1}
 
 @media (max-width:1320px){
-  .app{grid-template-columns:236px minmax(0,1fr);gap:20px}
+  .grid-top3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .grid-top3 > .cal-card{grid-column:1/-1;max-width:420px}
+  .app{grid-template-columns:236px minmax(0,1fr)}
   .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
   .grid3 > .card:nth-child(3){grid-column:1/-1}
   .grid3 > .card:nth-child(3) .scroll-list{max-height:200px}
@@ -578,12 +605,15 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
   .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (max-width:980px){
-  .app{grid-template-columns:minmax(0,1fr);padding-inline:16px;padding-block:16px 110px;gap:16px}
-  .side{position:static}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;padding:14px 16px}
+  .main{padding:16px 16px 110px}
+  .topbar{padding-inline:16px;gap:12px}
   .nav{flex-direction:row;overflow-x:auto;gap:4px;padding-bottom:4px;scrollbar-width:none}
   .nav a{flex:none;padding:8px 12px}
   .nav .count{display:none}
-  .grid3,.grid-top{grid-template-columns:minmax(0,1fr)}
+  .grid3,.grid-top,.grid-top3{grid-template-columns:minmax(0,1fr)}
+  .grid-top3 > .cal-card{max-width:none}
   .grid-top .scroll-list{max-height:none}
   .scroll-list{max-height:none}
   .hero-sales{grid-template-columns:minmax(0,1fr)}
@@ -692,7 +722,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .tn-dot.s-Venter{background:#C9AE6B}.tn-dot.s-Pågår{background:var(--orange)}.tn-dot.s-Ferdig{background:var(--green)}
 
 /* Assistenten */
-.ai-fab{position:fixed;right:20px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:31;display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:#3A2420;border:0;border-radius:999px;padding:13px 18px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(30,18,10,.45)}
+.ai-fab{display:none!important;position:fixed;right:20px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:31;display:inline-flex;align-items:center;gap:8px;background:var(--rose);color:#3A2420;border:0;border-radius:999px;padding:13px 18px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(30,18,10,.45)}
 .ai-fab:hover{background:#E08B8B}
 .ai-fab.on{background:var(--card);color:var(--ink)}
 .ai-fab svg{width:18px;height:18px}
@@ -756,6 +786,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 </div>
 
 <div class="app" id="app" hidden>
+  <header class="topbar"><a class="tb-brand" href="#hjem" aria-label="Arvklart, til oversikten"><span class="logo-mark" aria-hidden="true"></span><span>ARVKLART</span></a><nav class="tb-links" id="tblinks" aria-label="Snarveier"></nav></header>
   <aside class="side">
     <div class="widget" id="widget"></div>
     <nav class="nav" id="nav" aria-label="Hovedmeny"></nav>
@@ -1003,7 +1034,7 @@ const I = {
 const ico = (n, sw = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
 const PAGES = [
-  { id: "hjem", name: "Hjem", icon: "home", sub: "Ukens viktigste oppgaver, frister, mål og hvor vi står." },
+  { id: "hjem", name: "Oversikt", icon: "home", sub: "Ukens viktigste oppgaver, frister, mål og hvor vi står." },
   { id: "oppgaver", name: "Oppgaver", icon: "board", sub: "Alle oppgaver starter i «Må gjøres». Den som tar en oppgave, setter navnet sitt på og flytter den til «Pågår». Flere kan dele en oppgave." },
   { id: "milepaeler", name: "Milepæler", icon: "flag", sub: "Innleveringer og hendelser i STR466, høst 2026." },
   { id: "moter", name: "Møter", icon: "cal", sub: "Beslutninger og actionpunkter fra teammøtene." },
@@ -1576,7 +1607,6 @@ function renderSide() {
   const tone = { red: "var(--red)", orange: "var(--orange)", green: "var(--green)", none: "#CDBBA4" };
   lastTiles = [h, m];
   document.getElementById("widget").innerHTML = `
-    <div class="w-brand" aria-label="Arvklart"><span class="logo-mark" aria-hidden="true"></span><span>ARVKLART</span></div>
     <div class="clock" role="img" aria-label="Klokken er ${h}:${m}">
       <div class="tile"><span class="mono">${h}</span><label class="tl-l">${WDL[td.getUTCDay()]}</label></div>
       <div class="tile"><span class="mono">${m}</span><label class="tl-r">${td.getUTCDate()}. ${MON[td.getUTCMonth()]}</label></div>
@@ -1587,6 +1617,8 @@ function renderSide() {
         || '<p class="w-none">Ingen flere frister denne uken.</p>'}
       ${dl.length > shown.length ? `<button class="w-more" data-act="go" data-p="oppgaver">+ ${dl.length - shown.length} til</button>` : ""}</div>`;
   const openCount = tasks().filter(t => !isDone(t)).length;
+  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["oppgaver", `Oppgaver (${openCount})`], ["milepaeler", "Milepæler"], ["moter", "Møter"]]
+    .map(([id, l]) => `<a href="#${id}" class="${UI.page === id ? "on" : ""}"${UI.page === id ? ' aria-current="page"' : ""}>${l}</a>`).join("") + `<button type="button" data-act="aiToggle">Assistent</button>`;
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
   AREAS.forEach(a => { counts[a.id] = areaTasks(a.id).length; });
   document.getElementById("nav").innerHTML = NAV.map(g => (g.label ? `<span class="nav-label">${g.label}</span>` : "") + g.items.map(id => {
@@ -1672,11 +1704,38 @@ VIEWS.hjem = function () {
         <span class="snext">${nt ? `<span class="muted">Neste:</span> ${ph(nt.title)}` : '<span class="muted">Ingen åpne oppgaver</span>'}</span></div>`;
     }).join("")}</div></div>`;
 
-  return `<div class="grid-top">${topCard}${fristCard}</div>
+  return `<div class="grid-top3">${topCard}${fristCard}${calCard()}</div>
     ${goalsCard()}
     ${statusCard}
     ${followUpCard()}`;
 };
+
+/* ---------- Liten kalender på forsiden ---------- */
+function calItems(iso) {
+  const out = [];
+  tasks().forEach(t => { if (!isDone(t) && t.due === iso) out.push({ title: t.title, act: "editTask", id: t.id, tone: taskTone(t) }); });
+  milestones().forEach(m => { if (!msClosed(m) && m.date === iso) out.push({ title: m.title, act: "editMs", id: m.id, tone: msTone(m), ms: true }); });
+  return out;
+}
+function calCard() {
+  const today = todayISO(), ym = UI.calMonth || today.slice(0, 7), [y, mo] = ym.split("-").map(Number);
+  const first = ym + "-01", lead = (dOf(first).getUTCDay() + 6) % 7, days = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  const sel = UI.calDay && UI.calDay.startsWith(ym) ? UI.calDay : (today.startsWith(ym) ? today : first);
+  let cells = "";
+  for (let i = 0; i < lead; i++) cells += "<span></span>";
+  for (let d = 1; d <= days; d++) {
+    const iso = ym + "-" + String(d).padStart(2, "0"), it = calItems(iso);
+    const dot = it.length ? `<i class="${it.some(x => x.tone === "red") ? "red" : it.some(x => x.ms) ? "ms" : ""}"></i>` : "";
+    cells += `<button class="cal-d${iso === today ? " today" : ""}${iso === sel ? " sel" : ""}" data-act="calDay" data-d="${iso}" aria-label="${d}. ${MONL[mo - 1]}${it.length ? ", " + it.length + " frist" + (it.length > 1 ? "er" : "") : ""}">${d}${dot}</button>`;
+  }
+  const list = calItems(sel), sd = dOf(sel);
+  const tone = { red: "var(--red)", orange: "var(--orange)", green: "var(--green)", none: "#C8C3B8" };
+  return `<div class="card cal-card"><div class="card-head"><div><h2>${MONL[mo - 1][0].toUpperCase() + MONL[mo - 1].slice(1)} <span class="muted" style="font-weight:500">${y}</span></h2></div>
+      <div class="weeknav"><button class="iconbtn" data-act="calNav" data-d="-1" aria-label="Forrige måned">${ico("left", 2.2)}</button><button class="iconbtn" data-act="calNav" data-d="1" aria-label="Neste måned">${ico("right", 2.2)}</button></div></div>
+    <div class="cal-grid">${["ma", "ti", "on", "to", "fr", "lø", "sø"].map(d => `<span class="cal-h">${d}</span>`).join("")}${cells}</div>
+    <div class="cal-list"><span class="eyebrow">${WD[sd.getUTCDay()]} ${sd.getUTCDate()}. ${MON[sd.getUTCMonth()]}</span>
+      ${list.map(x => `<button class="w-row" data-act="${x.act}" data-id="${esc(x.id)}"><span class="w-t">${esc(x.title)}</span><i style="background:${tone[x.tone] || tone.none}"></i></button>`).join("") || '<p class="w-none">Ingen frister denne dagen.</p>'}</div></div>`;
+}
 
 /* ---------- Grafer ---------- */
 function pilotDots(n) {
@@ -3034,6 +3093,8 @@ const A = {
   cancelDelete: () => { document.getElementById("delrow").innerHTML = `<button class="btn danger" data-act="askDelete">Slett</button>`; },
   confirmDelete: () => { if (modalCtx && modalCtx.onDelete) modalCtx.onDelete(); },
   exportData, importData, checkImport, doImport,
+  calNav: el => { const [y, m] = (UI.calMonth || todayISO().slice(0, 7)).split("-").map(Number), d = new Date(Date.UTC(y, m - 1 + Number(el.dataset.d), 1)); UI.calMonth = d.toISOString().slice(0, 7); UI.calDay = null; render(true); },
+  calDay: el => { UI.calDay = el.dataset.d; render(true); },
   toggleXp: (el, ev) => { if (ev && ev.target.closest && ev.target.closest(".selectable") && UI.xp && UI.xp[el.dataset.id]) return; UI.xp = UI.xp || {}; UI.xp[el.dataset.id] = !UI.xp[el.dataset.id]; render(true); },
   setFeat: el => { const i = clone(S.items[el.dataset.id]); if (!i || i.status === el.dataset.s) return; i.status = el.dataset.s; put("items", i); toast(`«${i.title}» er flyttet til ${i.status.toLowerCase()}.`); },
   msDone: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; m.prevStatus = m.status; m.status = msDoneLabel(m); put("milestones", m); toast(`${m.title}: ${m.status.toLowerCase()}. Godt jobbet! Den ligger nå under «Levert og avsluttet».`); releaseWaiting(m.id); },

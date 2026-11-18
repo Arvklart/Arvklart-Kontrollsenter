@@ -79,11 +79,12 @@ AVSLUTT = r'''/* Testversjon: funksjoner som krever den ekte siden, er slått av
 A.importData = () => toast("Import er slått av i testversjonen.", true);
 A.openFile = () => toast("Vedlegg kan ikke åpnes i testversjonen.", true);
 A.logout = () => toast("Testversjonen har ingen innlogging.");
+A.aiToggle = () => toast("Assistenten virker bare på den ekte siden.");
 kbAutofill = async file => { const box = document.getElementById("ai-status"); if (!box) return; box.hidden = !file; box.className = "ai-status full"; box.textContent = "AI-utfylling virker bare på den ekte siden."; };
 boot();'''
 
 BANNER = '<div class="test-banner" role="note"><b>Testversjon</b> · endringer her påvirker ikke den ekte siden.</div>\n'
-BANNER_CSS = '''.test-banner{position:sticky;top:env(safe-area-inset-top,0px);z-index:45;background:var(--ph-soft);color:#6A5016;border-bottom:1px dashed var(--ph);text-align:center;font-size:13px;padding:8px 16px}
+BANNER_CSS = '''.test-banner{position:relative;z-index:45;background:var(--ph-soft);color:#6A5016;border-bottom:1px dashed var(--ph);text-align:center;font-size:13px;padding:8px 16px}
 </style>'''
 
 
