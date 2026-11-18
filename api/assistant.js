@@ -28,7 +28,7 @@ const FIELDS = {
     family: "familie eller kontaktperson", source: "én av {sources}", stage: "én av {stages}", price: "pris i kroner, bare tall",
     owner: "ansvarlig: ett navn fra teamet", next: "neste steg", date: "ÅÅÅÅ-MM-DD", note: "notat" } },
   meetings: { label: "møte", fields: {
-    title: "tittel", date: "ÅÅÅÅ-MM-DD", attendees: "deltakere: navn fra teamet, kommaseparert",
+    title: "tittel", date: "ÅÅÅÅ-MM-DD", with: "hvem møtet var med: Team eller navnet på samarbeidspartneren, f.eks. HVL Skape", attendees: "deltakere: navn fra teamet, kommaseparert",
     decisions: "beslutninger, én per linje", actionsText: "actionpunkter, én per linje" } },
   decisions: { label: "beslutning", fields: {
     text: "hva er bestemt", why: "hvorfor", date: "ÅÅÅÅ-MM-DD", area: "område-id", by: "registrert av: ett navn fra teamet" } },

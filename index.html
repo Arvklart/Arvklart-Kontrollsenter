@@ -652,6 +652,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 
 /* Møter: kompakte, utvidbare linjer */
 .mt-list{padding:6px 18px}
+.head-select{border-radius:999px;border:1px solid var(--line);background:var(--card);padding:7px 12px;font-size:13px;color:var(--ink);max-width:220px}
 .mt-item{border-bottom:1px solid var(--line)}
 .mt-item:last-child{border-bottom:0}
 .mt-h{width:100%;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:14px 2px;background:none;border:0;text-align:left;color:var(--ink)}
@@ -1351,7 +1352,7 @@ const AI_SPEC = {
   leads: { label: "lead", form: leadForm, make: () => ({ id: uid("l"), family: "", source: "", price: null, owner: "", next: "", date: null, stage: "Lead", note: "" }),
     fields: { family: "text", source: ["enum", () => SOURCES], stage: ["enum", () => STAGES], price: "num", owner: ["enum", () => PEOPLE], next: "text", date: "date", note: "text" } },
   meetings: { label: "møte", form: meetingForm, make: () => ({ id: uid("mt"), title: "Teammøte", date: todayISO(), attendees: [...PEOPLE], decisions: "", actions: [] }),
-    fields: { title: "text", date: "date", attendees: ["list", () => PEOPLE], decisions: "text", actionsText: "actions" } },
+    fields: { title: "text", date: "date", with: "text", attendees: ["list", () => PEOPLE], decisions: "text", actionsText: "actions" } },
   decisions: { label: "beslutning", form: decisionForm, make: () => ({ id: uid("d"), area: "", date: todayISO(), text: "", why: "", by: UI.me || "" }),
     fields: { text: "text", why: "text", date: "date", area: ["enum", AREA_IDS], by: ["enum", () => PEOPLE] } },
   legal: { label: "juridisk spørsmål", form: legalForm, make: () => ({ id: uid("l"), question: "", status: "Uavklart", owner: UI.me || "", findings: "", next: "", files: [], link: "", updated: todayISO() }),
@@ -1360,7 +1361,7 @@ const AI_SPEC = {
 const AI_FIELD_LABELS = { title: "Tittel", status: "Status", owners: "Ansvarlige", due: "Frist", prio: "Prioritet", area: "Område", note: "Notat", contacts: "Kontakter", ms: "Milepæl",
   name: "Navn", org: "Organisasjon", role: "Rolle", owner: "Ansvarlig", email: "E-post", phone: "Telefon", website: "Nettside", next: "Neste steg", areas: "Områder", notes: "Notater", waitsOn: "Venter på",
   kind: "Type", summary: "Sammendrag", learned: "Det vi lærte", url: "Lenke", tags: "Tags", hyps: "Hypoteser", date: "Dato", segment: "Segment", findings: "Funn",
-  family: "Familie / kontakt", source: "Kilde", stage: "Steg", price: "Pris", attendees: "Deltakere", decisions: "Beslutninger", actionsText: "Actionpunkter",
+  family: "Familie / kontakt", source: "Kilde", stage: "Steg", price: "Pris", attendees: "Deltakere", with: "Møte med", decisions: "Beslutninger", actionsText: "Actionpunkter",
   text: "Beslutning", why: "Hvorfor", by: "Av", question: "Spørsmål" };
 
 // Gjør en verdi fra assistenten om til riktig type. Ugyldige verdier blir undefined og hoppes over.
@@ -1672,7 +1673,7 @@ function headRight(id) {
       kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
   return { hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
-    okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: btn("newMeeting", "Nytt møte") }[id] || "";
+    okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: `<div class="row-btns" style="align-items:center"><select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>` }[id] || "";
 }
 
 const VIEWS = {};
@@ -2274,8 +2275,18 @@ VIEWS.intervjuer = function () {
 };
 
 /* ----- MØTER ----- */
+/* Hvem møtet var med (samarbeidspartner). Uten lagret verdi utledes det fra tittelen. */
+function meetingWith(m) {
+  if (m.with) return m.with;
+  const t = (m.title || "").trim();
+  if (!t || /^teammøte/i.test(t)) return "Team";
+  return t.includes(":") ? t.split(":")[0].trim() : "Annet";
+}
+const meetingPartners = () => [...new Set(arr("meetings").map(meetingWith))].sort((a, b) => a === "Team" ? -1 : b === "Team" ? 1 : a.localeCompare(b, "nb"));
 VIEWS.moter = function () {
-  const ms = arr("meetings").sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const all = arr("meetings").sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  if (UI.mtWith && !all.some(m => meetingWith(m) === UI.mtWith)) UI.mtWith = "";
+  const ms = UI.mtWith ? all.filter(m => meetingWith(m) === UI.mtWith) : all;
   if (!ms.length) return `<div class="card"><div class="empty">Ingen møter registrert ennå.</div></div>`;
   // Kompakte linjer: tittel og dato. Trykk for å se deltakere, referat, beslutninger og actionpunkter.
   const rows = ms.map(m => {
@@ -2638,7 +2649,8 @@ function fieldHtml(f, v) {
   if (f.type === "select") return `<label class="${cls}">${f.label}<select id="${id}">${f.opts.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o || "–"]; return `<option value="${esc(val)}"${String(v ?? "") === String(val) ? " selected" : ""}>${esc(lab)}</option>`; }).join("")}</select>${hint}</label>`;
   if (f.type === "check") return `<label class="${cls}"><span class="checks"><label><input type="checkbox" id="${id}"${v ? " checked" : ""}> ${f.text || f.label}</label></span>${hint}</label>`;
   if (f.type === "multi") return `<div class="${cls}" style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)">${f.label}<span class="checks" id="${id}-list">${f.opts.map(([val, lab, area]) => `<label${area !== undefined ? ` data-area="${esc(area)}"` : ""}><input type="checkbox" name="${id}" value="${esc(val)}"${(v || []).includes(val) ? " checked" : ""}> ${esc(lab)}</label>`).join("")}<span class="muted checks-empty" hidden>Ingen i dette området.</span></span>${hint}</div>`;
-  return `<label class="${cls}">${f.label}<input type="${f.type || "text"}" id="${id}" value="${esc(v ?? "")}" ${f.type === "number" ? 'step="any" min="0" inputmode="decimal"' : ""} ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}>${hint}</label>`;
+  const dl = f.suggest && f.suggest.length ? `<datalist id="${id}-dl">${f.suggest.map(x => `<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
+  return `<label class="${cls}">${f.label}<input type="${f.type || "text"}" id="${id}" value="${esc(v ?? "")}" ${f.type === "number" ? 'step="any" min="0" inputmode="decimal"' : ""} ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}${dl ? ` list="${id}-dl" autocomplete="off"` : ""}>${dl}${hint}</label>`;
 }
 function openForm({ title, fields, value, onSave, onDelete, extra }) {
   modalCtx = { fields, value, onSave, onDelete };
@@ -2908,10 +2920,11 @@ function interviewForm(i, isNew) {
   });
 }
 function meetingForm(m, isNew) {
-  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => a.text).join("\n") });
+  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => a.text).join("\n"), with: meetingWith(m) });
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
     fields: [{ k: "title", label: "Tittel", ph: "Teammøte" }, { k: "date", label: "Dato", type: "date" },
+      { k: "with", label: "Møte med", ph: "Velg eller skriv en ny samarbeidspartner", suggest: meetingPartners(), hint: "F.eks. Team eller HVL Skape. Skriv et nytt navn for å legge til en ny samarbeidspartner." },
       { k: "attendees", label: "Deltakere", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
       { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true },
       { k: "actionsText", label: "Actionpunkter (én per linje)", type: "textarea", full: true, hint: "Hvert actionpunkt kan gjøres om til en oppgave fra møtekortet." },
@@ -2928,7 +2941,8 @@ function meetingForm(m, isNew) {
       }
       const old = m.actions || [];
       const actions = f.actionsText.split("\n").map(s => s.trim()).filter(Boolean).map(text => { const hit = old.find(a => a.text === text); return hit ? hit : { id: uid("a"), text, taskId: "" }; });
-      const o = Object.assign(clone(m), { title: f.title, date: f.date, attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      const o = Object.assign(clone(m), { title: f.title, date: f.date, with: f.with || "", attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
     },
     onDelete: isNew ? null : () => { del("meetings", m.id); closeModal(); }
@@ -3094,7 +3108,7 @@ const A = {
   newHyp: () => hypForm({ id: uid("h"), n: Math.max(0, ...arr("hypotheses").map(h => h.n || 0)) + 1, title: "", falsifier: "", test: "", result: "", decision: "", evidence: "Antagelse", status: "Ikke testet" }, true),
   editInterview: el => { const i = S.interviews[el.dataset.id]; if (i) interviewForm(clone(i), false); },
   newInterview: () => { const nr = Math.max(0, ...arr("interviews").map(i => i.nr || 0)) + 1; interviewForm({ id: uid("i"), nr, title: "Intervju " + String(nr).padStart(2, "0"), date: todayISO(), segment: "", findings: "", owner: UI.me || "", hyps: [], files: [], link: "" }, true); },
-  newMeeting: () => meetingForm({ id: uid("mt"), title: "Teammøte", date: todayISO(), attendees: [...PEOPLE], decisions: "", actions: [] }, true),
+  newMeeting: () => { const w = UI.mtWith || "Team"; meetingForm({ id: uid("mt"), title: w === "Team" ? "Teammøte" : w + ": ", date: todayISO(), with: w, attendees: [...PEOPLE], decisions: "", actions: [] }, true); },
   editMeeting: el => { const m = S.meetings[el.dataset.id]; if (m) meetingForm(clone(m), false); },
   actionToTask: el => {
     const m = clone(S.meetings[el.dataset.mid]); const a = m.actions.find(x => x.id === el.dataset.aid); if (!a) return;
@@ -3175,6 +3189,7 @@ document.addEventListener("keydown", ev => {
 });
 main.addEventListener("change", ev => {
   if (ev.target.id === "area-filter") { UI.areaFilter = ev.target.value; ev.target.blur(); render(true); return; }
+  if (ev.target.id === "mt-filter") { UI.mtWith = ev.target.value; ev.target.blur(); render(true); return; }
   if (ev.target.id === "sub-filter") { const fa = (UI.areaFilter || "").split(".")[0]; UI.areaFilter = fa + (ev.target.value ? "." + ev.target.value : ""); ev.target.blur(); render(true); return; } if (ev.target.id === "me-select") { UI.me = ev.target.value; savePref(); ev.target.blur(); render(true); } });
 main.addEventListener("input", ev => {
   if (ev.target.id === "win-text") UI.winDraft = ev.target.value;
