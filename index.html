@@ -983,7 +983,7 @@ const AREAS = [
   { id: "research", name: "Research & Innsikt", short: "Research", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser og intervjuer." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { drift: [["milepaeler", "Milepæler"]], marked: [["salg", "Salg"], ["pilot", "Pilot"]], jus: [["jus", "Jus"], ["selskap", "Selskap"]], finans: [["okonomi", "Lommebok og budsjett"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
+const SUBS = { drift: [["milepaeler", "Milepæler"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"]], jus: [["jus", "Jus"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "finans", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -1065,7 +1065,7 @@ const NAV = [
   { label: "Nettverk", items: ["kontakter"] }
 ];
 /* Gamle lenker og snarveier peker til fanene på områdesidene */
-const ALIAS = { milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "finans.okonomi", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
+const ALIAS = { "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
 
 /* ---------- Dato (Europe/Oslo) ---------- */
 const TZ = "Europe/Oslo";
@@ -1901,7 +1901,7 @@ function followUpCard() {
   arr("areas").filter(a => hasPh(a.text)).forEach(a => miss.push([`Status for ${AREA[a.id] ? AREA[a.id].short : a.id}`, a.id]));
   const un = arr("items").filter(i => i.kind === "funksjon" && !FEATURE_STATUS.includes(i.status)).length; if (un) miss.push([`${un} funksjoner å plassere`, "produkt"]);
   arr("items").filter(i => i.kind === "sak" && (!i.status || hasPh(i.summary))).forEach(i => miss.push([i.title, i.area || "hjem"]));
-  arr("companyDocs").filter(d => !d.status).forEach(d => miss.push([`Status: ${d.title}`, "jus.selskap"]));
+  arr("companyDocs").filter(d => !d.status).forEach(d => miss.push([`Status: ${d.title}`, "drift.selskap"]));
   arr("milestones").filter(m => !m.date && hasPh(m.dateText)).forEach(m => miss.push([`Dato: ${m.title}`, "milepaeler"]));
   const set = S.meta.settings; if (set && hasPh(set.totalNote)) miss.push(["Budsjettramme", "okonomi"]);
   if (arr("budget").some(b => b.budget == null)) miss.push(["Budsjettbeløp", "okonomi"]);
@@ -2141,7 +2141,7 @@ function jusCard() {
       ${miniBtn("go", "Åpne juridiske spørsmål", 'data-p="jus.jus"')}</section>
     <section class="gt"><span class="eyebrow">Selskapsdokumenter</span><div class="gt-big"><b class="mono">${ds.filter(d => d.status === "Signert").length}</b> av ${ds.length} signert</div>
       <div class="mini-list">${need.map(d => `<div class="mrow" data-act="editCdoc" data-id="${d.id}"><span class="mt">${esc(d.title)}<small>${esc(d.kind || "")}</small></span>${d.status ? `<span class="badge ${CDOC_TONE[d.status]}">${esc(d.status)}</span>` : '<span class="ph">[BEKREFT status]</span>'}</div>`).join("") || '<p class="sub">Ingen dokumenter som mangler eller venter.</p>'}</div>
-      ${miniBtn("go", "Åpne selskap", 'data-p="jus.selskap"')}</section>
+      ${miniBtn("go", "Åpne selskap", 'data-p="drift.selskap"')}</section>
   </div></div>`;
 }
 
@@ -2480,7 +2480,7 @@ function moneyTiles() {
   const fs = arr("funding").sort((a, b) => a.step - b.step || a.n - b.n);
   return `<div class="card"><div class="tiles t3">
     <section class="gt center"><span class="eyebrow">Budsjett</span>${gaugeSvg(set.totalBudget ? spent / set.totalBudget * 100 : 0, kr(spent), "brukt av " + kr(set.totalBudget))}${hasPh(set.totalNote) ? '<span class="ph">Rammen er ikke bekreftet</span>' : ""}</section>
-    <section class="gt"><span class="eyebrow">Lommebok</span><div class="gt-big"><b class="mono">${kr(walletBalance())}</b></div><p class="sub">${owed ? `${kr(owed)} i utlegg venter på refusjon` : "Ingen utestående utlegg"}</p>${miniBtn("go", "Lommebok og budsjett", 'data-p="finans.okonomi"')}</section>
+    <section class="gt"><span class="eyebrow">Lommebok</span><div class="gt-big"><b class="mono">${kr(walletBalance())}</b></div><p class="sub">${owed ? `${kr(owed)} i utlegg venter på refusjon` : "Ingen utestående utlegg"}</p>${miniBtn("go", "Budsjett", 'data-p="drift.okonomi"')}</section>
     <section class="gt"><span class="eyebrow">Søknader og tilskudd</span><div class="mini-list">${fs.map(f => `<div class="mrow" data-act="editFund" data-id="${f.id}"><span class="mnum">${f.step}</span><span class="mt">${esc(f.name)}<small>${f.deadline ? "Frist " + ph(f.deadline) : esc(f.amount || "")}</small></span><span class="badge t-none">${esc(f.status)}</span></div>`).join("")}</div></section>
   </div></div>`;
 }
