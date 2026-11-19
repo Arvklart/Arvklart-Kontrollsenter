@@ -1285,7 +1285,7 @@ const AREAS = [
   { id: "finans", name: "Finansiering", short: "Finansiering", icon: "coins", desc: "Søknader, tilskudd og finansieringsstigen. STUD-ENT har egen fane." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { produkt: [["funksjoner", "Funksjoner"], ["beslutninger", "Beslutninger"], ["dokumenter", "Dokumenter"]], drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"]], finans: [["student", "STUD-ENT"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
+const SUBS = { produkt: [["funksjoner", "Funksjoner"], ["beslutninger", "Beslutninger"], ["dokumenter", "Dokumenter"]], drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["dokumenter", "Dokumenter"]], finans: [["student", "STUD-ENT"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "marked", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -2901,17 +2901,21 @@ function areaOverview(id) {
   const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
 
   const saker = arr("items").filter(i => i.kind === "sak" && i.area === id).sort((a, b) => (a.status === "Ferdig") - (b.status === "Ferdig") || (a.title || "").localeCompare(b.title || ""));
-  const sakerBox = saker.length && id !== "finans" ? cardBox("Saker", "",
-    `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || '<div class="empty">Ingen saker ennå.</div>'}</div>`,
-    miniBtn("newItem", "+ Sak", `data-kind="sak" data-area="${id}"`)) : "";
+  // Produkt & Tech, Salg og partnere og Drift har alltid boksen «Saker og forslag» nederst
+  const sf = ["produkt", "marked", "drift"].includes(id);
+  const sakerBox = (saker.length || sf) && id !== "finans" ? cardBox(sf ? "Saker og forslag" : "Saker", "",
+    `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || `<div class="empty">${sf ? "Ingen saker eller forslag ennå." : "Ingen saker ennå."}</div>`}</div>`,
+    miniBtn("newItem", sf ? "+ Sak eller forslag" : "+ Sak", `data-kind="sak" data-area="${id}"`)) : "";
 
   const noTasks = !allArea.length ? `<p class="quiet">Ingen oppgaver i området ennå. ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${id}"`)}</p>` : "";
   if (id === "research") return wrap(tasksBox + noTasks + main + sakerBox + extrasCard(id));
-  return wrap(main + tasksBox + noTasks + sakerBox + (id === "produkt" ? "" : extrasCard(id)));
+  // Kontakter ligger under Kontakter, og dokumentene har egen fane på Produkt & Tech og Salg og partnere
+  const extras = id === "produkt" ? "" : extrasCard(id, "", id === "marked" ? { noContacts: true, noDocs: true } : {});
+  return wrap(main + tasksBox + noTasks + (sf ? extras + sakerBox : sakerBox + extras));
 }
 
 /* Kontakter, beslutninger og dokumenter i ett kort, bare de delene som har innhold */
-function extrasCard(id, sub) {
+function extrasCard(id, sub, opt = {}) {
   // Kontakter med egen delfane vises i den fanen, de andre på oversikten
   const tabOf = c => (c.areaTabs || []).find(t => t.startsWith(id + ".")) || "";
   const cs = contactsIn(id).filter(c => sub ? tabOf(c) === id + "." + sub : !tabOf(c)).sort((a, b) => CONTACT_STATUS.indexOf(a.status) - CONTACT_STATUS.indexOf(b.status));
@@ -2919,9 +2923,9 @@ function extrasCard(id, sub) {
   const ds = arr("decisions").filter(inTab).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   const docs = arr("docs").filter(inTab).sort((a, b) => (b.added || "").localeCompare(a.added || ""));
   const parts = [];
-  if (cs.length) parts.push(`<div><span class="eyebrow">Kontakter</span><div class="mini-list">${cs.map(c => `<div class="lrow" data-act="editContact" data-id="${c.id}">${orgLogo(c, "sm")}<span class="lt"><b>${esc(c.name)}</b><small>${esc([c.org, c.role].filter(Boolean).join(" · "))}${c.next ? ` · Neste: ${esc(c.next)}` : ""}</small></span><span class="badge ${CONTACT_TONE[c.status] || "t-none"}">${esc(c.status || "–")}</span></div>`).join("")}</div></div>`);
+  if (cs.length && !opt.noContacts) parts.push(`<div><span class="eyebrow">Kontakter</span><div class="mini-list">${cs.map(c => `<div class="lrow" data-act="editContact" data-id="${c.id}">${orgLogo(c, "sm")}<span class="lt"><b>${esc(c.name)}</b><small>${esc([c.org, c.role].filter(Boolean).join(" · "))}${c.next ? ` · Neste: ${esc(c.next)}` : ""}</small></span><span class="badge ${CONTACT_TONE[c.status] || "t-none"}">${esc(c.status || "–")}</span></div>`).join("")}</div></div>`);
   if (ds.length) parts.push(`<div><span class="eyebrow">Beslutninger</span><div class="mini-list">${ds.map(d => `<div class="drow" data-act="editDecision" data-id="${d.id}"><span class="mono muted">${d.date ? fmtDate(d.date, false) : "–"}</span><div><b>${esc(d.text)}</b>${d.why ? `<small>${esc(d.why)}</small>` : ""}</div></div>`).join("")}</div></div>`);
-  if (docs.length) parts.push(`<div><span class="eyebrow">Dokumenter</span><div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("")}</div></div>`);
+  if (docs.length && !opt.noDocs) parts.push(`<div><span class="eyebrow">Dokumenter</span><div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("")}</div></div>`);
   return parts.length ? `<div class="card"><div class="extras" style="--n:${parts.length}">${parts.join("")}</div></div>` : "";
 }
 
@@ -3188,8 +3192,8 @@ function areaForm(id) {
 }
 function itemForm(i, isNew) {
   const feat = i.kind === "funksjon";
-  openForm({ title: (isNew ? "Ny " : "Rediger ") + (feat ? "funksjon" : "sak"), value: i,
-    fields: [{ k: "title", label: feat ? "Funksjon" : "Sak", full: true },
+  openForm({ title: feat ? (isNew ? "Ny funksjon" : "Rediger funksjon") : (isNew ? "Ny sak eller nytt forslag" : "Rediger sak eller forslag"), value: i,
+    fields: [{ k: "title", label: feat ? "Funksjon" : "Sak eller forslag", full: true },
       { k: "status", label: "Status", type: "select", opts: feat ? [["", "Må plasseres"], ...FEATURE_STATUS.map(s => [s, s])] : [["", "Avklares"], ...SAK_STATUS.map(s => [s, s])] },
       { k: "owner", label: "Ansvarlig", type: "select", opts: personOpts() },
       ...(feat ? [] : [{ k: "area", label: "Område", type: "select", opts: areaOpts() }, { k: "next", label: "Neste steg" }]),
