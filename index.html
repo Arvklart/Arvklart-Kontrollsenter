@@ -89,6 +89,17 @@ button{cursor:pointer}
 .fpanel .ffoot{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 .board.bstatus{grid-template-columns:repeat(3,minmax(232px,1fr)) minmax(190px,.72fr)}
 .col .closed-list{margin-top:4px}
+.atasks{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:12px;align-items:start}
+.atasks .col{min-height:0}
+.atasks .kc{cursor:pointer}
+.tb-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.wait-sw{display:inline-flex;align-items:center;gap:7px;background:none;border:0;padding:0;font-size:12px;font-weight:600;color:var(--muted)}
+.wait-sw .sw{position:relative;width:28px;height:16px;border-radius:999px;background:#D6D1C6;transition:background .15s;flex:none}
+.wait-sw .sw::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .15s}
+.wait-sw[aria-checked="true"]{color:var(--ink)}
+.wait-sw[aria-checked="true"] .sw{background:var(--bar)}
+.wait-sw[aria-checked="true"] .sw::after{transform:translateX(12px)}
+@media (max-width:760px){.atasks{grid-template-columns:minmax(0,1fr)}}
 .pgroup{display:flex;flex-direction:column;gap:9px;border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(255,255,255,.35)}
 .pg-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 2px}
 .pg-h .mono{margin-left:auto;font-weight:500}
@@ -1864,7 +1875,7 @@ function askRelease(ids, what) {
   setTimeout(show, 700);
 }
 function dueBadge(t, short) {
-  if (!t.due) return t.dueText ? `<span class="badge t-none">${ph(t.dueText)}</span>` : `<span class="badge t-none">Ingen frist</span>`;
+  if (!t.due) return t.dueText ? `<span class="badge t-none">${ph(t.dueText)}</span>` : "";
   const tone = taskTone(t);
   return `<span class="badge t-${tone}">${isDone(t) ? "Ferdig" : fmtDate(t.due, !short)}</span>`;
 }
@@ -2327,14 +2338,14 @@ function prioGroups(list, key) {
       : `<div class="pgroup">${head}${l.map(t => kcard(t, key)).join("")}</div>`; };
   return PRIOS.map(box).join("");
 }
-function kcard(t, from) {
+function kcard(t, from, opts = {}) {
   const own = ownersOf(t), todo = t.status === "Må gjøres";
   const step = todo ? (own.length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
   return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="editTask" tabindex="0">
     ${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}
     <div class="kt" style="${isDone(t) ? "padding-right:26px" : ""}">${ph(t.title)}</div>
-    <div class="kf">${t.due && !isDone(t) ? dueBadge(t, true) : ""}${taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button>${who}</div>
+    <div class="kf">${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button>${who}</div>
     ${own.length && !todo ? `<div class="kown">${esc(joinNames(own))}</div>` : ""}
     ${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}
     ${isDone(t) ? "" : waitLine(t)}</div>`;
@@ -2794,11 +2805,17 @@ function taskRows(list, opts = {}) {
       <button class="mini${done ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}${todo ? " " + ico("right", 2.4) : ""}</button></div></div>`;
   }).join("");
 }
+/* Oppgaver på områdesidene: kolonner som på oppgavesiden. «Venter» vises bare når bryteren er på. */
 function tasksBlock(all, opts) {
   const open = all.filter(t => !isDone(t)).sort(byPrioDue), done = all.filter(isDone);
+  const waiting = open.filter(t => t.status === "Venter"), show = !!UI.showWaiting;
+  const cols = [...(show ? [["Venter", "Venter"]] : []), ["Må gjøres", "Må gjøres"], ["Pågår", "Pågår"]];
+  const col = ([st, label]) => { const l = open.filter(t => t.status === st);
+    return `<div class="col"><div class="col-head"><b>${label}</b><span class="mono">${l.length}</span></div>${l.map(t => kcard(t, st, opts)).join("") || '<span class="pk-empty">Ingen</span>'}</div>`; };
   return `<div class="card"><div class="card-head"><div><h2>${opts.title || "Oppgaver"}</h2><p class="sub">${open.length} åpne${done.length ? ` · ${done.length} ferdig` : ""}</p></div>
-      ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${opts.area || ""}" data-sub="${opts.sub || ""}"`)}</div>
-    <div class="mini-list">${taskRows(open, opts) || '<div class="empty">Ingen åpne oppgaver.</div>'}</div>
+      <div class="tb-right">${miniBtn("newTaskIn", "+ Oppgave", `data-area="${opts.area || ""}" data-sub="${opts.sub || ""}"`)}
+        <button type="button" class="wait-sw" role="switch" aria-checked="${show}" data-act="toggleWaiting"><span class="sw" aria-hidden="true"></span>Vis ventende oppgaver${waiting.length ? ` (${waiting.length})` : ""}</button></div></div>
+    <div class="atasks" style="--n:${cols.length}">${cols.map(col).join("")}</div>
     ${done.length ? `<details class="done-list"><summary>Ferdige oppgaver (${done.length})</summary><div class="mini-list">${taskRows(done, opts)}</div></details>` : ""}</div>`;
 }
 function subTasks(area, sub) {
@@ -3787,6 +3804,7 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  toggleWaiting: () => { UI.showWaiting = !UI.showWaiting; render(true); },
   toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
   aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
   aiClear: () => { if (CHAT.busy) return; CHAT.log = []; renderChat(); document.getElementById("ai-input").focus(); },
