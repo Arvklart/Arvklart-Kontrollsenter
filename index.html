@@ -709,19 +709,28 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .lg-row{grid-template-columns:minmax(0,1fr) auto 18px}
 @media (max-width:760px){.lg-row{grid-template-columns:minmax(0,1fr) auto 18px}.lg-row .badge{grid-column:2;grid-row:1}.lg-row .fx-chev{grid-column:3}}
 
-/* Ukens viktigste: hvem og hva */
-.fk-list{display:flex;flex-direction:column}
-.fk-row{display:flex;align-items:center;border-top:1px solid var(--line)}
-.fk-row:first-child{border-top:0}
-.fk-main{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:none;border:0;text-align:left;padding:10px 2px;color:var(--ink);font-size:14px}
+/* Ukens viktigste: hvem og hva, i bokser */
+.fk-list{display:flex;flex-direction:column;gap:8px}
+.fk-box{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--card-hi);border:1px solid var(--line)}
+.fk-check{flex:none;width:20px;height:20px;border-radius:5px;border:2px solid #B9B4A8;background:#fff;display:grid;place-items:center;padding:0}
+.fk-check svg{width:12px;height:12px;color:#fff;opacity:0}
+.fk-check:hover{border-color:var(--ink)}
+.fk-check.on{background:var(--green);border-color:var(--green)}
+.fk-check.on svg{opacity:1}
+.fk-main{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;background:none;border:0;text-align:left;padding:2px 0;color:var(--ink);font-size:14px}
 .fk-main b{font-weight:700;flex:none}
 .fk-main span{min-width:0;overflow-wrap:anywhere}
 .fk-main small{color:var(--muted);font-size:11.5px}
 .fk-main:hover span{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
-.fk-x{flex:none;width:26px;height:26px;border:0;background:none;border-radius:50%;color:var(--muted);font-size:17px;line-height:1;opacity:0;transition:opacity .15s}
-.fk-row:hover .fk-x,.fk-x:focus-visible{opacity:1}
-.fk-x:hover{background:var(--card-hi);color:var(--ink)}
+.fk-box .avs,.fk-box > .av{flex:none}
+.fk-x{flex:none;width:24px;height:24px;border:0;background:none;border-radius:50%;color:var(--muted);font-size:17px;line-height:1;opacity:0;transition:opacity .15s;padding:0}
+.fk-box:hover .fk-x,.fk-x:focus-visible{opacity:1}
+.fk-x:hover{background:#fff;color:var(--ink)}
 @media (hover:none){.fk-x{opacity:.6}}
+.fk-box.done{opacity:.7}
+.fk-box.done .fk-main span,.fk-box.done .fk-main b{text-decoration:line-through;color:var(--muted)}
+.fk-done{margin-top:12px}
+.fk-done .fk-list{margin-top:8px}
 
 /* Kunnskapsbase: hovedtemaer */
 .kb-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
@@ -1791,9 +1800,14 @@ VIEWS.hjem = function () {
   // Ukens viktigste oppgaver: velges av teamet (feltet focus), ikke regnet ut automatisk. Bare hvem og hva.
   const openAll = tasks().filter(t => !isDone(t));
   const top = focusTasks().filter(t => !isDone(t));
-  const topHtml = top.map(t => `<div class="fk-row"><button class="fk-main" data-act="openTaskInArea" data-id="${t.id}"><b>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}</b><span>${ph(t.title)}</span>${t.due ? `<small class="mono">${fmtDate(t.due)}</small>` : ""}</button><button class="fk-x" data-act="unFocus" data-id="${t.id}" aria-label="Fjern fra ukens viktigste" title="Fjern fra listen">×</button></div>`).join("");
+  const wk = mondayOf(today), doneWeek = focusTasks().filter(t => isDone(t) && t.doneAt && toUTC(t.doneAt) >= toUTC(wk));
+  const fkRow = t => { const done = isDone(t);
+    return `<div class="fk-box${done ? " done" : ""}"><button class="fk-check${done ? " on" : ""}" data-act="toggleDone" data-id="${t.id}" aria-label="${done ? "Marker som ikke ferdig" : "Marker som ferdig"}">${ico("check", 3)}</button>
+      <button class="fk-main" data-act="openTaskInArea" data-id="${t.id}"><b>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}</b><span>${ph(t.title)}</span>${t.due && !done ? `<small class="mono">${fmtDate(t.due)}</small>` : ""}</button>
+      ${ownersOf(t).length ? avatars(t, true) : ""}${done ? "" : `<button class="fk-x" data-act="unFocus" data-id="${t.id}" aria-label="Fjern fra ukens viktigste" title="Fjern fra listen">×</button>`}</div>`; };
   const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2></div>${top.length < 5 ? '<button class="mini" data-act="pickFocus">+ Legg til</button>' : ""}</div>
-    <div class="fk-list">${topHtml || `<div class="empty">Ingen valgt ennå. Legg til de viktigste oppgavene etter møtet.</div>`}</div>
+    <div class="fk-list">${top.map(fkRow).join("") || `<div class="empty">Ingen valgt ennå. Legg til de viktigste oppgavene etter møtet.</div>`}</div>
+    ${doneWeek.length ? `<details class="closed-list fk-done"${keepOpen("fokus-ferdig")}><summary>Fullført denne uken (${doneWeek.length})</summary><div class="fk-list">${doneWeek.map(fkRow).join("")}</div></details>` : ""}
     <div class="card-foot">${miniBtn("go", `Se alle oppgaver (${openAll.length})`, 'data-p="drift.oppgaver"')}</div></div>`;
 
   // Frister
@@ -2994,7 +3008,7 @@ function renderPicker() {
 function setTaskStatus(t, status, prev) {
   const was = prev != null ? prev : t.status;
   t.status = status;
-  if (status === "Ferdig" && was !== "Ferdig") { t.prevStatus = was; UI.lastDone = t.id; }
+  if (status === "Ferdig" && was !== "Ferdig") { t.prevStatus = was; t.doneAt = todayISO(); UI.lastDone = t.id; }
   put("tasks", t);
   if (status === "Ferdig" && was !== "Ferdig") {
     const all = tasks(), d = all.filter(isDone).length;
