@@ -378,6 +378,7 @@ button{cursor:pointer}
 .kst.done span:last-child{text-decoration:line-through}
 .kst.done .kbox{background:var(--green);border-color:var(--green)}
 .kst-add{display:flex;gap:6px}
+.vphase .kst-add{max-width:420px}
 .kst-add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;background:#fff}
 .kexp-foot{display:flex;justify-content:flex-end;gap:6px}
 .kexp-foot .kgo{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;background:var(--bar);color:var(--card);border-color:var(--bar)}
@@ -763,6 +764,32 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .wbig span{color:var(--muted);font-size:14px}
 .wchart{width:100%;height:auto;max-height:210px;display:block}
 .wnote{margin:0;white-space:pre-wrap;line-height:1.5}
+.vtable td{vertical-align:top}
+.vtable tbody tr{cursor:pointer}
+.vtable tbody tr:hover td{background:#fff}
+.vmore{margin-top:4px;font-size:12.5px}
+.vmore summary{cursor:pointer;color:var(--muted);font-size:12px}
+.vmore p{margin:4px 0 0;color:var(--ink);line-height:1.45;max-width:46ch}
+.vprog{display:flex;flex-direction:column;gap:4px;min-width:96px}
+.vprog .bar > i.green,.bar.green > i{background:var(--green)}
+.vplus{margin-top:6px;font-family:var(--mono);font-size:11px;padding:2px 8px}
+.vlearn{margin:8px 0 0;padding-left:20px;line-height:1.55}
+.vphases{display:flex;flex-direction:column;gap:12px}
+.vphase{border:1px solid var(--line);border-radius:14px;background:var(--card-hi);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.vph-h{display:flex;align-items:center;gap:8px}
+.vph-h b{font-family:var(--serif);font-size:16px;font-weight:600}
+.vph-h .vph-d{flex:1}
+.vph-n{width:22px;height:22px;border-radius:50%;background:var(--bar);color:var(--card);display:grid;place-items:center;font-size:11px;flex:none}
+.vph-d{font-size:12px;color:var(--muted)}
+.vsteps{display:flex;flex-direction:column;gap:4px}
+.vstep{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:5px 6px 5px 8px}
+.vstep .fk-check{width:17px;height:17px;border-radius:4px}
+.vstep .fk-check svg{width:10px;height:10px}
+.vst-t{flex:1;min-width:0;font-size:13px;overflow-wrap:anywhere}
+.vstep.done .vst-t{text-decoration:line-through;color:var(--muted)}
+.vst-due input{border:1px solid var(--line);border-radius:8px;padding:2px 4px;font-size:11.5px;font-family:var(--mono);background:var(--card-hi);max-width:118px}
+.vph-foot{font-size:12px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .fboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start}
 .fbox{border-radius:14px;background:var(--card-hi);border:1px solid var(--line);border-top:4px solid var(--bar);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0}
 .fbox:hover{border-color:#CDBBA4;border-top-color:var(--bar)}
@@ -1316,7 +1343,7 @@ const FIXED_NOTES = [
 ];
 
 /* ===================================================================== */
-const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets"];
+const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets","validation"];
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
@@ -2924,8 +2951,8 @@ function areaView(id) {
   if (sub === "milepaeler") return tabHtml + VIEWS.milepaeler();
   if (sub === "oppgaver") return tabHtml + VIEWS.oppgaver();
   if (sub === "moter") return tabHtml + VIEWS.moter();
-  const body = { design: () => sakerCard(id, "design", "Saker og forslag om design"), funksjoner: featuresView, beslutninger: () => decisionsCard(id), dokumenter: () => docsCard(id), student: () => sakerCard("finans", "student", "Saker", true), juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
-  return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : ["funksjoner", "beslutninger", "dokumenter"].includes(sub) ? body : subTasks(id, sub) + body);
+  const body = { design: () => sakerCard(id, "design", "Saker og forslag om design"), student: () => validationView() + sakerCard("finans", "student", "Saker", true), funksjoner: featuresView, beslutninger: () => decisionsCard(id), dokumenter: () => docsCard(id), juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
+  return tabHtml + (["pilot", "jus", "selskap", "student"].includes(sub) ? body + subTasks(id, sub) : ["funksjoner", "beslutninger", "dokumenter"].includes(sub) ? body : subTasks(id, sub) + body);
 }
 function cardBox(title, sub, inner, foot) {
   return `<div class="card"><div class="card-head"><div><h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ""}</div></div>${inner}${foot ? `<div class="card-foot">${foot}</div>` : ""}</div>`;
@@ -3054,6 +3081,78 @@ function extrasCard(id, sub, opt = {}) {
   if (docs.length && !opt.noDocs) parts.push(`<div><span class="eyebrow">Dokumenter</span><div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("")}</div></div>`);
   return parts.length ? `<div class="card"><div class="extras" style="--n:${parts.length}">${parts.join("")}</div></div>` : "";
 }
+
+/* ---------- Markedsvalidering (Finansiering → STUD-ENT) ----------
+   Bygger på markedsvalideringsplanen. Data ligger i samlingen «validation»: info, aktiviteter, suksesskriterier og faser.
+   Aktivitetene har et tall (count) som teamet teller opp etter hvert. Kriteriene henter tallet fra aktiviteten de er koblet til. */
+const VAL_STATUS = ["Ikke startet", "Pågår", "Ferdig"];
+const valOf = k => arr("validation").filter(d => d.kind === k).sort((a, b) => (a.n || 0) - (b.n || 0));
+function valProgress(a) {
+  const n = Number(a.count) || 0;
+  if (a.goal) return `<div class="vprog"><span class="mono"><b>${n}</b> / ${a.goal}${a.unit ? " " + esc(a.unit) : ""}</span>${bar(n / a.goal * 100, n >= a.goal ? "green" : "")}</div>`;
+  return a.unit ? `<span class="mono"><b>${n}</b> ${esc(a.unit)}</span>` : '<span class="muted">–</span>';
+}
+function validationView() {
+  const info = valOf("info")[0], acts = valOf("aktivitet"), crits = valOf("kriterie"), phases = valOf("fase");
+  if (!info && !acts.length) return `<div class="card"><div class="empty">Markedsvalideringen er ikke lagt inn ennå.</div></div>`;
+  const tone = { "Ikke startet": "t-none", "Pågår": "t-orange", "Ferdig": "t-green" };
+  const actRows = acts.map(a => `<tr data-act="editVal" data-id="${a.id}">
+      <td class="mono muted">${a.n}</td>
+      <td style="min-width:200px"><b>${esc(a.title)}</b><details class="vmore" data-act="noop"><summary>Hva vi gjør</summary><p>${ph(a.what)}</p></details></td>
+      <td style="min-width:180px">${ph(a.target)}</td>
+      <td>${ph(a.owner || "")}</td>
+      <td style="min-width:130px">${valProgress(a)}${a.unit ? `<button class="mini vplus" data-act="valPlus" data-id="${a.id}" title="Tell opp én">+1</button>` : ""}</td>
+      <td><span class="badge ${tone[a.status] || "t-none"}">${esc(a.status || "Ikke startet")}</span></td></tr>`).join("");
+  const critRows = crits.map(c => {
+    const a = c.act ? (S.validation || {})[c.act] : null, cur = a ? Number(a.count) || 0 : null, ok = c.goal && cur != null && cur >= c.goal;
+    return `<tr data-act="editCrit" data-id="${c.id}"><td><b>${esc(c.measure)}</b></td><td>${ph(c.criterion)}</td>
+      <td class="mono">${cur != null ? `<b>${cur}</b>` : c.value ? ph(c.value) : '<span class="muted">–</span>'}</td>
+      <td>${ok ? `<span class="badge t-green">Nådd</span>` : c.goal || c.criterion ? '<span class="badge t-none">Ikke nådd</span>' : ""}</td></tr>`; }).join("");
+  const phaseCards = phases.map(f => { const st = f.steps || [], done = st.filter(x => x.done).length;
+    return `<div class="vphase"><div class="vph-h"><span class="vph-n mono">${f.n}</span><b>${esc(f.name)}</b><span class="vph-d mono">${f.start ? fmtDate(f.start, false) : '<span class="ph">[FYLL INN]</span>'} – ${f.end ? fmtDate(f.end, false) : '<span class="ph">[FYLL INN]</span>'}</span>${miniBtn("editPhase", "Rediger", `data-id="${f.id}"`)}</div>
+      <div class="vsteps">${st.map(x => `<div class="vstep${x.done ? " done" : ""}"><button class="fk-check${x.done ? " on" : ""}" data-act="vStepDone" data-id="${f.id}" data-s="${x.id}" aria-label="${x.done ? "Marker som ikke ferdig" : "Marker som ferdig"}">${ico("check", 3)}</button>
+        <span class="vst-t">${esc(x.text)}</span><label class="vst-due" title="Frist"><span class="sr">Frist</span><input type="date" class="vstep-due" data-id="${f.id}" data-s="${x.id}" value="${x.due || ""}"></label>
+        <button class="step-x" data-act="vStepDel" data-id="${f.id}" data-s="${x.id}" aria-label="Fjern steget">×</button></div>`).join("") || '<span class="pk-empty">Ingen steg ennå.</span>'}</div>
+      <div class="kst-add"><input class="vstep-new" data-id="${f.id}" type="text" placeholder="Nytt steg" autocomplete="off" aria-label="Nytt steg i ${esc(f.name)}"><button class="mini" data-act="vStepAdd" data-id="${f.id}">Legg til</button></div>
+      <div class="vph-foot muted">${done} av ${st.length} ferdig</div></div>`; }).join("");
+  return `<div class="card"><div class="card-head"><div><h2>Markedsvalidering for STUD-ENT</h2>${info ? `<p class="sub">${ph(info.purpose)}</p>` : ""}</div>${info ? miniBtn("editValInfo", "Rediger", `data-id="${info.id}"`) : ""}</div>
+      ${info && (info.learn || []).length ? `<details class="closed-list"${keepOpen("val-laere")}><summary>Hva vi skal lære (${info.learn.length})</summary><ul class="vlearn">${info.learn.map(l => `<li>${ph(l)}</li>`).join("")}</ul></details>` : ""}</div>
+    <div class="card"><div class="card-head"><div><h2>Aktiviteter</h2><p class="sub">Trykk på en rad for å endre. «+1» teller opp når dere har ringt, fått svar eller gjort et intervju.</p></div></div>
+      <div class="tablewrap"><table class="vtable"><thead><tr><th>#</th><th>Aktivitet</th><th>Mål og resultat</th><th>Ansvarlig</th><th>Fremdrift</th><th>Status</th></tr></thead><tbody>${actRows}</tbody></table></div></div>
+    <div class="card"><div class="card-head"><div><h2>Suksesskriterier</h2><p class="sub">Satt før vi starter, så resultatene kan vurderes mot dem etterpå.</p></div></div>
+      <div class="tablewrap"><table class="vtable"><thead><tr><th>Hva vi måler</th><th>Kriterium</th><th>Nå</th><th></th></tr></thead><tbody>${critRows}</tbody></table></div></div>
+    <div class="card"><div class="card-head"><div><h2>Fremdriftsplan</h2><p class="sub">Sett periode for hver fase og frist for hvert steg.</p></div></div>
+      <div class="vphases">${phaseCards}</div></div>`;
+}
+function valForm(a) {
+  openForm({ title: "Aktivitet " + a.n, value: a,
+    fields: [{ k: "title", label: "Aktivitet", full: true }, { k: "what", label: "Hva vi gjør", type: "textarea", full: true },
+      { k: "target", label: "Mål og resultat", type: "textarea", full: true }, { k: "owner", label: "Ansvarlig" },
+      { k: "status", label: "Status", type: "select", opts: VAL_STATUS },
+      { k: "count", label: "Antall så langt", type: "number" }, { k: "goal", label: "Mål (tall, valgfritt)", type: "number" },
+      { k: "unit", label: "Hva telles", ph: "F.eks. intervjuer", hint: "Tom betyr at aktiviteten ikke telles." },
+      { k: "note", label: "Notat", type: "textarea", full: true }],
+    onSave: v => { if (!v.title) return formError("Aktiviteten trenger et navn."); put("validation", Object.assign(clone(a), v, { count: v.count || 0 })); closeModal(); } });
+}
+function critForm(c) {
+  openForm({ title: "Suksesskriterium", value: c,
+    fields: [{ k: "measure", label: "Hva vi måler", full: true }, { k: "criterion", label: "Kriterium", full: true },
+      { k: "goal", label: "Mål (tall, valgfritt)", type: "number", hint: "Brukes til å vise «Nådd» når tallet er nådd." },
+      { k: "act", label: "Hent tallet fra aktivitet", type: "select", opts: [["", "Ingen, skriv selv"], ...valOf("aktivitet").map(a => [a.id, a.n + ". " + a.title])] },
+      { k: "value", label: "Status nå (hvis ingen aktivitet er valgt)" }],
+    onSave: v => { if (!v.measure) return formError("Skriv hva som måles."); put("validation", Object.assign(clone(c), v)); closeModal(); } });
+}
+function phaseForm(f) {
+  openForm({ title: "Fase " + f.n, value: f,
+    fields: [{ k: "name", label: "Navn", full: true }, { k: "start", label: "Start", type: "date" }, { k: "end", label: "Slutt", type: "date" }],
+    onSave: v => { if (!v.name) return formError("Fasen trenger et navn."); if (v.start && v.end && v.end < v.start) return formError("Slutt må være etter start."); put("validation", Object.assign(clone(f), v)); closeModal(); } });
+}
+function valInfoForm(i) {
+  openForm({ title: "Formål og hva vi skal lære", value: Object.assign({}, i, { learnText: (i.learn || []).join("\n") }),
+    fields: [{ k: "purpose", label: "Formål", type: "textarea", full: true }, { k: "learnText", label: "Hva vi skal lære (én per linje)", type: "textarea", full: true }],
+    onSave: v => { const o = Object.assign(clone(i), { purpose: v.purpose, learn: v.learnText.split("\n").map(x => x.trim()).filter(Boolean) }); put("validation", o); closeModal(); } });
+}
+function vStepChange(fid, sid, fn) { const f = clone(S.validation[fid]); if (!f) return; f.steps = f.steps || []; fn(f); put("validation", f); }
 
 /* Beslutninger og dokumenter for et helt område (egne faner under Produkt og Tech) */
 function decisionsCard(area) {
@@ -3995,6 +4094,14 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  editVal: el => { const a = S.validation[el.dataset.id]; if (a) valForm(clone(a)); },
+  editCrit: el => { const c = S.validation[el.dataset.id]; if (c) critForm(clone(c)); },
+  editPhase: el => { const f = S.validation[el.dataset.id]; if (f) phaseForm(clone(f)); },
+  editValInfo: el => { const i = S.validation[el.dataset.id]; if (i) valInfoForm(clone(i)); },
+  valPlus: el => { const a = clone(S.validation[el.dataset.id]); if (!a) return; a.count = (Number(a.count) || 0) + 1; if (a.status === "Ikke startet") a.status = "Pågår"; put("validation", a); toast(`${a.title}: ${a.count}${a.unit ? " " + a.unit : ""}.`); },
+  vStepDone: el => vStepChange(el.dataset.id, el.dataset.s, f => { const x = f.steps.find(y => y.id === el.dataset.s); if (x) x.done = !x.done; }),
+  vStepDel: el => vStepChange(el.dataset.id, el.dataset.s, f => { f.steps = f.steps.filter(y => y.id !== el.dataset.s); }),
+  vStepAdd: el => { const inp = el.parentElement.querySelector(".vstep-new"), v = inp.value.trim(); if (!v) return inp.focus(); vStepChange(el.dataset.id, "", f => { f.steps.push({ id: uid("vs"), text: v, due: null, done: false }); }); },
   driveLink: () => { const cur = ((S.meta || {}).links || {}).drive || "";
     openForm({ title: "Lenke til Drive", value: { url: cur }, fields: [{ k: "url", label: "Lenke til den felles Google Drive-mappen", full: true, ph: "https://drive.google.com/…", hint: "Lenken lagres i databasen og gjelder for hele teamet. Bare de som har tilgang i Google Drive, kan åpne mappen." }],
       onSave: v => { if (v.url && !/^https:\/\/(drive|docs)\.google\.com\//.test(v.url)) return formError("Lenken må starte med https://drive.google.com/"); const m = clone((S.meta || {}).links || { id: "links" }); m.id = "links"; m.drive = v.url; put("meta", m); closeModal(); toast("Drive-knappen er oppdatert."); } }); },
@@ -4048,10 +4155,12 @@ document.addEventListener("keydown", ev => {
   if (ev.target.id === "add-input" && ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); A.addCardSave(); }
   if (ev.key === "Enter" && ev.target.matches && ev.target.matches(".kc,.lrow,.msrow,.stair,.hyp,.xp")) ev.target.click();
   if (ev.key === "Enter" && ev.target.id === "step-new") { ev.preventDefault(); A.stepAdd(); return; }
+  if (ev.key === "Enter" && ev.target.classList && ev.target.classList.contains("vstep-new")) { ev.preventDefault(); A.vStepAdd(ev.target.parentElement.querySelector("button")); return; }
   if (ev.key === "Enter" && ev.target.classList && ev.target.classList.contains("kstep-new")) { ev.preventDefault(); A.kStepAdd(ev.target.parentElement.querySelector("button")); return; }
   if (ev.key === "Enter" && modalCtx && ev.target.tagName === "INPUT" && ev.target.type !== "checkbox") { ev.preventDefault(); A.saveModal(); }
 });
 main.addEventListener("change", ev => {
+  if (ev.target.classList.contains("vstep-due")) { const { id, s: sid } = ev.target.dataset; vStepChange(id, sid, f => { const x = f.steps.find(y => y.id === sid); if (x) x.due = ev.target.value || null; }); return; }
   if (ev.target.id === "area-filter") { UI.areaFilter = ev.target.value; ev.target.blur(); render(true); return; }
   if (ev.target.id === "mt-filter") { UI.mtWith = ev.target.value; ev.target.blur(); render(true); return; }
   if (ev.target.id === "sub-filter") { const fa = (UI.areaFilter || "").split(".")[0]; UI.areaFilter = fa + (ev.target.value ? "." + ev.target.value : ""); ev.target.blur(); render(true); return; } if (ev.target.id === "me-select") { UI.me = ev.target.value; savePref(); ev.target.blur(); render(true); } });
