@@ -626,13 +626,16 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .mbar{width:70px;flex:none}
 .mtype{font-size:11.5px;flex:none}
 .srows{display:flex;flex-direction:column}
-.srow{display:grid;grid-template-columns:200px 112px minmax(0,1fr) minmax(0,.8fr);gap:14px;align-items:center;padding:11px 6px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px}
+.srow{display:grid;grid-template-columns:190px 84px minmax(0,1fr);gap:12px;align-items:center;padding:11px 6px;border-top:1px solid var(--line);cursor:pointer;font-size:13.5px}
 .srow:first-child{border-top:0}
 .srow:hover{background:var(--card-hi)}
 .sname{display:flex;gap:8px;align-items:center;font-weight:600}
 .sname svg{width:15px;height:15px;color:var(--muted);flex:none}
 .stext,.snext{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .snext{font-size:12.5px}
+.sdate{font-size:11px;color:var(--muted);white-space:nowrap}
+.sdate.old{color:var(--red-ink)}
+.stext .light{margin-right:4px}
 .ok-line{display:flex;gap:8px;align-items:center;margin:0;color:var(--green-ink);font-weight:600}
 .ok-line svg{width:16px;height:16px}
 .miss{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
@@ -668,7 +671,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .hb-track{height:10px;border-radius:5px;background:var(--track);overflow:hidden}
 .hb-track i{display:block;height:100%;background:var(--bar)}
 .refrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:var(--mustard)}
-@media (max-width:1180px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.srow{grid-template-columns:180px 104px minmax(0,1fr)}.snext{display:none}}
+@media (max-width:1180px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.srow{grid-template-columns:170px 80px minmax(0,1fr)}}
 @media (max-width:640px){.tiles,.extras{grid-template-columns:minmax(0,1fr)}.srow{grid-template-columns:minmax(0,1fr) auto}.stext{grid-column:1/-1;white-space:normal}}
 
 /* Felles oppgaveliste */
@@ -2114,10 +2117,9 @@ VIEWS.hjem = function () {
   // Hvor står vi: én linje per område
   const statusCard = `<div class="card"><div class="card-head"><div><h2>Hvor står vi?</h2></div></div>
     <div class="srows">${AREAS.map(a => {
-      const st = S.areas[a.id] || {}, nt = areaTasks(a.id)[0];
-      return `<div class="srow" data-act="go" data-p="${a.id}" tabindex="0"><span class="sname">${ico(a.icon)}${esc(a.name)}</span>${statusPill(st)}
-        <span class="stext" title="${esc(st.text || "")}">${st.text ? ph(st.text) : '<span class="muted">Ingen status skrevet</span>'}</span>
-        <span class="snext">${nt ? `<span class="muted">Neste:</span> ${ph(nt.title)}` : '<span class="muted">Ingen åpne oppgaver</span>'}</span></div>`;
+      const st = S.areas[a.id] || {}, old = !st.updated || daysUntil(st.updated) < -14;
+      return `<div class="srow" data-act="go" data-p="${a.id}" tabindex="0"><span class="sname">${ico(a.icon)}${esc(a.name)}</span><span class="sdate mono${old ? " old" : ""}">${statusDate(st)}</span>
+        <span class="stext" title="${esc(st.text || "")}">${st.light ? lightPill(st.light) + " " : ""}${st.text ? ph(st.text) : '<span class="muted">Ingen status skrevet</span>'}</span></div>`;
     }).join("")}</div></div>`;
 
   return `<div class="grid-top3">${topCard}${fristCard}${avtalerCard()}</div>
