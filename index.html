@@ -1233,7 +1233,7 @@ const AREAS = [
   { id: "finans", name: "Finansiering", short: "Finansiering", icon: "coins", desc: "Søknader, tilskudd og finansieringsstigen. STUD-ENT har egen fane." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"]], finans: [["student", "STUD-ENT"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
+const SUBS = { produkt: [["funksjoner", "Funksjoner"], ["beslutninger", "Beslutninger"], ["dokumenter", "Dokumenter"]], drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"]], finans: [["student", "STUD-ENT"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "marked", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -1319,7 +1319,7 @@ const NAV = [
   { label: "Nettverk", items: ["kontakter"] }
 ];
 /* Gamle lenker og snarveier peker til fanene på områdesidene */
-const ALIAS = { oppgaver: "drift.oppgaver", moter: "drift.moter", jus: "research.juridisk", "jus.jus": "research.juridisk", "marked.finansiering": "finans", "student.finansiering": "finans", student: "finans.student", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
+const ALIAS = { oppgaver: "drift.oppgaver", moter: "drift.moter", jus: "research.juridisk", "jus.jus": "research.juridisk", "marked.finansiering": "finans", "student.finansiering": "finans", student: "finans.student", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt.funksjoner" };
 
 /* ---------- Dato (Europe/Oslo) ---------- */
 const TZ = "Europe/Oslo";
@@ -1966,7 +1966,7 @@ function meetingsHead() {
 function headRight(id) {
   const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
   if (AREA[id]) {
-    return { oppgaver: btn("newTask", "Ny oppgave"), moter: meetingsHead(), funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), juridisk: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
+    return { oppgaver: btn("newTask", "Ny oppgave"), moter: meetingsHead(), funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), beslutninger: btn("newDecision", "Ny beslutning", `data-area="${id}"`), dokumenter: btn("newDoc", "Nytt dokument", `data-area="${id}"`), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), juridisk: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
       milepaeler: btn("newMs", "Ny milepæl"), partnere: btn("newContact", "Ny partner", 'data-area="marked"'), finansiering: btn("newFund", "Nytt trinn"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
   return { kalender: btn("newAvtale", "Ny avtale"), hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
@@ -2813,8 +2813,8 @@ function areaView(id) {
   if (sub === "milepaeler") return tabHtml + VIEWS.milepaeler();
   if (sub === "oppgaver") return tabHtml + VIEWS.oppgaver();
   if (sub === "moter") return tabHtml + VIEWS.moter();
-  const body = { student: () => sakerCard("finans", "student", "Saker", true), juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
-  return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : subTasks(id, sub) + body);
+  const body = { funksjoner: featuresView, beslutninger: () => decisionsCard(id), dokumenter: () => docsCard(id), student: () => sakerCard("finans", "student", "Saker", true), juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
+  return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : ["funksjoner", "beslutninger", "dokumenter"].includes(sub) ? body : subTasks(id, sub) + body);
 }
 function cardBox(title, sub, inner, foot) {
   return `<div class="card"><div class="card-head"><div><h2>${title}</h2>${sub ? `<p class="sub">${sub}</p>` : ""}</div></div>${inner}${foot ? `<div class="card-foot">${foot}</div>` : ""}</div>`;
@@ -2832,7 +2832,7 @@ function areaOverview(id) {
       <button class="pi-edit" type="button" data-act="editArea" data-id="${id}">Oppdater${st.by ? ` · sist av ${esc(st.by)}` : ""}</button></aside>`;
   const wrap = body => `<div class="ov-wrap"><div class="ov-main">${body}</div>${statusCard}</div>`;
 
-  const main = { drift: driftCard, produkt: featuresView, marked: marketCharts, finans: fundingView, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
+  const main = { drift: driftCard, produkt: () => "", marked: marketCharts, finans: fundingView, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
 
   const allArea = tasks().filter(t => t.area === id);
   const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
@@ -2844,7 +2844,7 @@ function areaOverview(id) {
 
   const noTasks = !allArea.length ? `<p class="quiet">Ingen oppgaver i området ennå. ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${id}"`)}</p>` : "";
   if (id === "research") return wrap(tasksBox + noTasks + main + sakerBox + extrasCard(id));
-  return wrap(main + tasksBox + noTasks + sakerBox + extrasCard(id));
+  return wrap(main + tasksBox + noTasks + sakerBox + (id === "produkt" ? "" : extrasCard(id)));
 }
 
 /* Kontakter, beslutninger og dokumenter i ett kort, bare de delene som har innhold */
@@ -2860,6 +2860,18 @@ function extrasCard(id, sub) {
   if (ds.length) parts.push(`<div><span class="eyebrow">Beslutninger</span><div class="mini-list">${ds.map(d => `<div class="drow" data-act="editDecision" data-id="${d.id}"><span class="mono muted">${d.date ? fmtDate(d.date, false) : "–"}</span><div><b>${esc(d.text)}</b>${d.why ? `<small>${esc(d.why)}</small>` : ""}</div></div>`).join("")}</div></div>`);
   if (docs.length) parts.push(`<div><span class="eyebrow">Dokumenter</span><div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("")}</div></div>`);
   return parts.length ? `<div class="card"><div class="extras" style="--n:${parts.length}">${parts.join("")}</div></div>` : "";
+}
+
+/* Beslutninger og dokumenter for et helt område (egne faner under Produkt & Tech) */
+function decisionsCard(area) {
+  const ds = arr("decisions").filter(d => d.area === area).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  return `<div class="card"><div class="card-head"><div><h2>Beslutninger</h2></div>${miniBtn("newDecision", "+ Beslutning", `data-area="${area}"`)}</div>
+    <div class="mini-list">${ds.map(d => `<div class="drow" data-act="editDecision" data-id="${d.id}"><span class="mono muted">${d.date ? fmtDate(d.date, false) : "–"}</span><div><b>${esc(d.text)}</b>${d.why ? `<small>${esc(d.why)}</small>` : ""}</div></div>`).join("") || '<div class="empty">Ingen beslutninger ennå.</div>'}</div></div>`;
+}
+function docsCard(area) {
+  const docs = arr("docs").filter(d => d.area === area).sort((a, b) => (b.added || "").localeCompare(a.added || ""));
+  return `<div class="card"><div class="card-head"><div><h2>Dokumenter</h2></div>${miniBtn("newDoc", "+ Dokument", `data-area="${area}"`)}</div>
+    <div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("") || '<div class="empty">Ingen dokumenter ennå.</div>'}</div></div>`;
 }
 
 /* Produkt & Tech: funksjonsoversikt */
