@@ -2895,7 +2895,7 @@ function areaOverview(id) {
       <button class="pi-edit" type="button" data-act="editArea" data-id="${id}">Oppdater${st.by ? ` · sist av ${esc(st.by)}` : ""}</button></aside>`;
   const wrap = body => `<div class="ov-wrap"><div class="ov-main">${body}</div>${statusCard}</div>`;
 
-  const main = { drift: driftCard, produkt: () => "", marked: marketCharts, finans: fundingView, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
+  const main = { drift: () => "", produkt: () => "", marked: marketCharts, finans: fundingView, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
 
   const allArea = tasks().filter(t => t.area === id);
   const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
