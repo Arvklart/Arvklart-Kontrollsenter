@@ -1220,7 +1220,7 @@ const AREAS = [
   { id: "student", name: "STUD-ENT", short: "STUD-ENT", icon: "book", desc: "Søknaden til STUD-ENT: oppgaver og status." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["finansiering", "Finansiering"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
+const SUBS = { drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"]], student: [["finansiering", "Finansiering"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "marked", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -1244,7 +1244,7 @@ const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "
 const PRIOS = ["Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
-const MS_TYPE_AREA = { Innlevering: "drift", Vurdering: "drift", Hendelse: "drift", Finansiering: "marked", Salg: "marked" };
+const MS_TYPE_AREA = { Innlevering: "drift", Vurdering: "drift", Hendelse: "drift", Finansiering: "student", Salg: "marked" };
 const msArea = m => (m && (m.area || MS_TYPE_AREA[m.type])) || "";
 const MS_STATUS = ["Ikke startet","Pågår","Levert","Gjennomført","Fullført","Ikke aktuell","Avklares","Obligatorisk","Valgfritt"];
 /* Avsluttede milepæler: ferdige (Levert/Gjennomført/Fullført) eller droppet (Ikke aktuell). De legges i en sammenleggbar liste nederst. */
@@ -1306,7 +1306,7 @@ const NAV = [
   { label: "Nettverk", items: ["kontakter"] }
 ];
 /* Gamle lenker og snarveier peker til fanene på områdesidene */
-const ALIAS = { oppgaver: "drift.oppgaver", moter: "drift.moter", jus: "research.juridisk", "jus.jus": "research.juridisk", finans: "marked.finansiering", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
+const ALIAS = { oppgaver: "drift.oppgaver", moter: "drift.moter", jus: "research.juridisk", "jus.jus": "research.juridisk", finans: "student.finansiering", "marked.finansiering": "student.finansiering", "finans.okonomi": "drift.okonomi", "jus.selskap": "drift.selskap", milepaeler: "drift.milepaeler", salg: "marked.salg", pilot: "marked.pilot", okonomi: "drift.okonomi", selskap: "drift.selskap", hypoteser: "research.hyp", intervjuer: "research.int", kunnskap: "research.kunnskap", funksjoner: "produkt" };
 
 /* ---------- Dato (Europe/Oslo) ---------- */
 const TZ = "Europe/Oslo";
@@ -1352,8 +1352,14 @@ const clone = o => JSON.parse(JSON.stringify(o));
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
 /* Områder som er slått sammen: gamle data tolkes inn i nytt område (og delfane), uten å skrive om databasen */
-const AREA_MOVED = { finans: ["marked", "finansiering"], jus: ["research", "juridisk"] };
+const AREA_MOVED = { finans: ["student", "finansiering"], jus: ["research", "juridisk"] };
 function normDoc(c, d) {
+  // Finansiering lå en stund under Salg og partnere. Nå er den en fane under STUD-ENT.
+  if (d.area === "marked" && d.sub === "finansiering") d.area = "student";
+  if (Array.isArray(d.areaTabs) && d.areaTabs.includes("marked.finansiering")) {
+    d.areaTabs = [...new Set(d.areaTabs.map(t => t === "marked.finansiering" ? "student.finansiering" : t))];
+    if (Array.isArray(d.areas) && !d.areas.includes("student")) d.areas = [...d.areas, "student"];
+  }
   const mv = AREA_MOVED[d.area];
   if (mv && ["tasks", "items", "decisions", "docs", "knowledge", "milestones"].includes(c)) {
     d.area = mv[0];
@@ -3032,7 +3038,7 @@ function sakerCard(area, sub, title, hideEmpty) {
     miniBtn("newItem", "+ Sak", `data-kind="sak" data-area="${area}" data-sub="${sub}"`));
 }
 function fundingView() {
-  return sakerCard("marked", "finansiering", "Søknader, tilskudd og saker") + fundingStairs();
+  return sakerCard("student", "finansiering", "Søknader, tilskudd og saker") + fundingStairs();
 }
 /* Marked og data → Juridisk: spørsmål, saker, beslutninger og dokumenter */
 function juridiskView() {
