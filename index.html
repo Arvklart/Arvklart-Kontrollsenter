@@ -2125,7 +2125,7 @@ function avtaler(iso) {
   const out = [], mine = mineView(), mineOk = x => !mine || (x.attendees || []).includes(UI.me);
   const timed = [];
   arr("meetings").filter(m => m.date === iso && mineOk(m))
-    .forEach(m => timed.push({ t: m.time, act: "editMeeting", id: m.id, title: m.title || "Møte", kind: m.time ? "Møte · kl. " + m.time : "Møte", col: EVENT_COL["Møte"], who: m.attendees || [] }));
+    .forEach(m => timed.push({ t: m.time, act: "editMeeting", id: m.id, title: m.title || "Møte", kind: m.time ? "Møte · kl. " + m.time + (m.endTime ? "–" + m.endTime : "") : "Møte", col: EVENT_COL["Møte"], who: m.attendees || [] }));
   arr("events").filter(e => e.date === iso && mineOk(e))
     .forEach(e => timed.push({ t: e.time, act: "editEvent", id: e.id, title: e.title || e.type, kind: (e.type || "Annet") + (e.time ? " · kl. " + e.time + (e.endTime ? "–" + e.endTime : "") : "") + (e.place ? " · " + e.place : ""), col: EVENT_COL[e.type] || EVENT_COL.Annet, who: e.attendees || [] }));
   timed.sort((a, b) => (a.t || "99").localeCompare(b.t || "99")).forEach(x => out.push(x));
@@ -3724,7 +3724,7 @@ function meetingForm(m, isNew) {
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
     fields: [{ k: "title", label: "Tittel", ph: "Teammøte" }, { k: "date", label: "Dato", type: "date" },
-      { k: "time", label: "Klokkeslett", type: "time" },
+      { k: "time", label: "Fra kl.", type: "time" }, { k: "endTime", label: "Til kl.", type: "time" },
       { k: "with", label: "Møte med", ph: "Velg eller skriv en ny samarbeidspartner", suggest: meetingPartners(), hint: "F.eks. Team eller HVL Skape. Skriv et nytt navn for å legge til en ny samarbeidspartner." },
       { k: "attendees", label: "Deltakere", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
       { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true },
@@ -3742,7 +3742,7 @@ function meetingForm(m, isNew) {
       }
       const old = m.actions || [];
       const actions = f.actionsText.split("\n").map(s => s.trim()).filter(Boolean).map(text => { const hit = old.find(a => a.text === text); return hit ? hit : { id: uid("a"), text, taskId: "" }; });
-      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", with: f.with || "", attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
       if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
     },
