@@ -2028,7 +2028,7 @@ function renderSide() {
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
   document.getElementById("nav").innerHTML = NAV.map(g => (g.label ? `<span class="nav-label">${g.label}</span>` : "") + g.items.map(id => {
     const p = PAGES.find(x => x.id === id), c = counts[id];
-    const dot = p.area ? `<i class="ldot l-${(S.areas[id] || {}).light || "none"}"></i>` : "";
+    const dot = "";
     return `<a href="#${p.id}" class="${UI.page === p.id ? "on" : ""}" ${UI.page === p.id ? 'aria-current="page"' : ""}>${p.icon === "logo" ? '<span class="logo-mark" aria-hidden="true"></span>' : ico(p.icon)}<span>${p.name}</span>${dot}${c ? `<span class="count">${c}</span>` : ""}</a>`;
   }).join("")).join("");
   // Lenken til teamets Google Drive ligger i databasen (meta/links), ikke i koden, siden repoet er offentlig
