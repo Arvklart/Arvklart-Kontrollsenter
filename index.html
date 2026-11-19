@@ -2026,7 +2026,6 @@ function renderSide() {
     .map(([id, l]) => `<a href="#${id}" class="${UI.page === id ? "on" : ""}"${UI.page === id ? ' aria-current="page"' : ""}>${l}</a>`).join("") + `<button type="button" data-act="aiToggle">Assistent</button>`
     + `<button type="button" class="tb-switch" role="switch" aria-checked="${UI.mine ? "true" : "false"}" data-act="mineToggle" title="${UI.mine ? "Viser bare dine oppgaver og avtaler (" + esc(UI.me) + "). Klikk for å vise alle." : "Vis bare dine viktigste oppgaver og dine avtaler"}"><span class="sw" aria-hidden="true"></span><span class="sw-l">Bare mine</span><span class="sw-s">Mine</span></button>`;
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
-  AREAS.forEach(a => { counts[a.id] = areaTasks(a.id).length; });
   document.getElementById("nav").innerHTML = NAV.map(g => (g.label ? `<span class="nav-label">${g.label}</span>` : "") + g.items.map(id => {
     const p = PAGES.find(x => x.id === id), c = counts[id];
     const dot = p.area ? `<i class="ldot l-${(S.areas[id] || {}).light || "none"}"></i>` : "";
