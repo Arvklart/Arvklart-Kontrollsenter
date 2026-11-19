@@ -483,6 +483,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .kb-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
 .kb-tags{display:flex;gap:6px;flex-wrap:wrap}
 .hash{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.inc-per{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
 .c-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
 /* Kontakter som liste: én linje per kontakt */
 .cl-card{padding:6px 0;overflow:hidden}
@@ -2206,7 +2207,7 @@ function incomeEvents() {
 function niceMax(v) { const p = Math.pow(10, Math.floor(Math.log10(Math.max(1, v)))); for (const m of [1, 2, 2.5, 5, 10]) if (m * p >= v) return m * p; return 10 * p; }
 const krShort = v => v >= 1000 ? (v / 1000).toLocaleString("nb-NO", { maximumFractionDigits: 1 }) + "k" : String(Math.round(v));
 function incomeSection(compact) {
-  const today = todayISO(), ev = incomeEvents(), key = UI.incRange || "ALT", r = INC_RANGES.find(x => x[0] === key) || INC_RANGES[5];
+  const today = todayISO(), ev = incomeEvents(), key = compact ? "3M" : UI.incRange || "ALT", r = INC_RANGES.find(x => x[0] === key) || INC_RANGES[5];
   let start = r[2] > 0 ? addDays(today, -r[2]) : r[2] === 0 ? today.slice(0, 4) + "-01-01" : (ev.length ? addDays(ev[0].date, -7) : addDays(today, -60));
   if (toUTC(start) > toUTC(today)) start = today;
   const days = Math.max(1, Math.round((toUTC(today) - toUTC(start)) / 864e5));
@@ -2226,7 +2227,7 @@ function incomeSection(compact) {
   else { const step = days > 35 ? 14 : 7; for (let d = 0; d <= days; d += step) xl += `<text x="${X(d)}" y="${H - 8}" text-anchor="${d === 0 ? "start" : "middle"}" font-family="Inter, sans-serif" font-size="10.5" fill="var(--muted)">${fmtDate(pts[d][0], false)}</text>`; }
   const dots = inR.map(e => { const d = Math.round((toUTC(e.date) - toUTC(start)) / 864e5); return `<circle cx="${X(d)}" cy="${Y(pts[d][1])}" r="3" fill="var(--inc)" opacity=".55"><title>${esc(e.label)}: ${kr(e.amount)}</title></circle>`; }).join("");
   const chg = gain > 0 ? `<span class="inc-chg up">↗ ${kr(gain)}${pct != null ? ` (${pct.toLocaleString("nb-NO", { maximumFractionDigits: 1 })} %)` : ""}</span>` : `<span class="inc-chg">Ingen nye inntekter</span>`;
-  return `<section class="gt${compact ? "" : " span-2"} inc"><div class="inc-head"><div><span class="eyebrow">Totale inntekter</span><div class="inc-big">${kr(cum)}</div><div class="inc-sub">${chg} <span class="muted">${esc(r[1].toLowerCase())}</span></div></div>
+  return `<section class="gt${compact ? "" : " span-2"} inc"><div class="inc-head"><div><span class="eyebrow">Totale inntekter</span><div class="inc-big">${kr(cum)}${compact ? ' <small class="inc-per">siste 3 mnd</small>' : ""}</div>${compact ? "" : `<div class="inc-sub">${chg} <span class="muted">${esc(r[1].toLowerCase())}</span></div>`}</div>
       ${compact ? "" : ''}</div>
     <div class="inc-chart"><svg viewBox="0 0 ${W} ${H}" class="inc-svg" role="img" aria-label="Totale inntekter ${kr(cum)}">
       <defs><linearGradient id="incfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--inc)" stop-opacity=".28"/><stop offset="1" stop-color="var(--inc)" stop-opacity="0"/></linearGradient></defs>
@@ -2236,7 +2237,7 @@ function incomeSection(compact) {
       <rect x="${L}" y="${T}" width="${W - L - Rr}" height="${H - T - B}" fill="transparent" class="inc-hit"/></svg>
       <div class="inc-tip" hidden></div>
       ${ev.length ? "" : `<div class="inc-empty">${compact ? "Ingen inntekter registrert ennå." : "Ingen inntekter registrert ennå. Legg inn innbetalinger i lommeboka, eller registrer salg til pilotfamilier."}</div>`}</div>
-    <div class="seg-range" role="group" aria-label="Periode">${INC_RANGES.map(([k, l]) => `<button class="${k === key ? "on" : ""}" data-act="incRange" data-r="${k}">${l}</button>`).join("")}</div></section>`;
+    ${compact ? "" : `<div class="seg-range" role="group" aria-label="Periode">${INC_RANGES.map(([k, l]) => `<button class="${k === key ? "on" : ""}" data-act="incRange" data-r="${k}">${l}</button>`).join("")}</div>`}</section>`;
 }
 function incomeHover(ev) {
   const svg = ev.target.closest && ev.target.closest(".inc-svg"); if (!svg || !INC) return;
@@ -2432,7 +2433,8 @@ VIEWS.salg = function () {
       <button class="addcard" data-act="newLead" data-key="${st}">+ Legg til</button></div>`;
   }).join("");
   return hero + (leads.length ? "" : `<div class="empty" style="background:var(--card)">Ingen leads ennå. Legg inn den første med «Ny lead».</div>`) +
-    `<div class="board-scroll"><div class="board" style="--cols:6;grid-template-columns:repeat(6,minmax(200px,1fr))">${board}</div></div>`;
+    `<div class="board-scroll"><div class="board" style="--cols:6;grid-template-columns:repeat(6,minmax(200px,1fr))">${board}</div></div>`
+    + `<div class="card">${incomeSection()}</div>`;
 };
 
 /* ----- PILOT ----- */
@@ -2873,7 +2875,7 @@ function marketCharts() {
   const fun = STAGES.slice(0, 5), reached = fun.map((s, i) => active.filter(l => STAGES.indexOf(l.stage) >= i).length), mx = Math.max(1, reached[0]);
   const funnel = fun.map((s, i) => `<div class="frow"><span class="fl">${s}</span><div class="ftrack"><i style="width:${Math.max(reached[i] ? 6 : 0, reached[i] / mx * 100)}%;opacity:${1 - i * 0.12}"></i></div><b class="mono">${reached[i]}</b><span class="fc mono">${i && reached[i - 1] ? Math.round(reached[i] / reached[i - 1] * 100) + " %" : ""}</span></div>`).join("");
   const lost = leads.filter(l => l.stage === "Tapt").length;
-  return `<div class="card"><div class="card-head"><div><h2>Salg i tall</h2><p class="sub">${leads.length ? `${leads.length} leads totalt${lost ? `, ${lost} tapt` : ""}` : "Grafene fylles når dere legger inn den første leaden under «Salg»."}</p></div><div class="row-btns">${miniBtn("go", "Salg", 'data-p="marked.salg"')}${miniBtn("go", "Pilot", 'data-p="marked.pilot"')}</div></div>
+  return `<div class="card"><div class="card-head"><div><h2>Salg i tall</h2>${leads.length ? `<p class="sub">${leads.length} leads totalt${lost ? `, ${lost} tapt` : ""}</p>` : ""}</div><div class="row-btns">${miniBtn("go", "Salg", 'data-p="marked.salg"')}${miniBtn("go", "Pilot", 'data-p="marked.pilot"')}</div></div>
     <div class="tiles t3">
       <section class="gt"><span class="eyebrow">Pilotmål</span>${pilotDots(pay)}<div class="gt-big"><b class="mono">${pay}</b> av ${PILOT_GOAL} betaler</div><p class="sub">${kr(rev)} i omsetning${pay ? ` · snitt ${kr(rev / pay)}` : ""}</p></section>
       <section class="gt"><span class="eyebrow">Salgstrakt</span><div class="funnel">${funnel}</div></section>
