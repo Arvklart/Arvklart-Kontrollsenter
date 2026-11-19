@@ -1299,13 +1299,13 @@ const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","inte
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
-  { id: "produkt", name: "Produkt & Tech", short: "Produkt", icon: "cpu", desc: "Hva løsningen gjør i dag, hva vi bygger, hva vi vurderer og hva vi har droppet." },
+  { id: "produkt", name: "Produkt og Tech", short: "Produkt", icon: "cpu", desc: "Hva løsningen gjør i dag, hva vi bygger, hva vi vurderer og hva vi har droppet." },
   { id: "marked", name: "Salg og partnere", short: "Salg", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
   { id: "research", name: "Marked og data", short: "Marked", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser, intervjuer og juridiske avklaringer." },
   { id: "finans", name: "Finansiering", short: "Finansiering", icon: "coins", desc: "Søknader, tilskudd og finansieringsstigen. STUD-ENT har egen fane." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
-const SUBS = { produkt: [["funksjoner", "Funksjoner"], ["beslutninger", "Beslutninger"], ["dokumenter", "Dokumenter"]], drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["dokumenter", "Dokumenter"]], finans: [["student", "STUD-ENT"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
+const SUBS = { produkt: [["funksjoner", "Funksjoner"], ["design", "Design"], ["beslutninger", "Beslutninger"], ["dokumenter", "Dokumenter"]], drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["dokumenter", "Dokumenter"]], finans: [["student", "STUD-ENT"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
 const PILOT_STATUS = ["Oppstart", "I gang", "Fullført", "Avbrutt"];
 const CAT_TO_AREA = { Rapport: "", Pitch: "", Salg: "marked", Produkt: "produkt", "Økonomi": "marked", Research: "research", Admin: "" };
 const LIGHTS = { "": ["Ikke vurdert", "none"], ok: ["I rute", "green"], watch: ["Følg med", "orange"], help: ["Trenger hjelp", "red"] };
@@ -2896,7 +2896,7 @@ function areaView(id) {
   if (sub === "milepaeler") return tabHtml + VIEWS.milepaeler();
   if (sub === "oppgaver") return tabHtml + VIEWS.oppgaver();
   if (sub === "moter") return tabHtml + VIEWS.moter();
-  const body = { funksjoner: featuresView, beslutninger: () => decisionsCard(id), dokumenter: () => docsCard(id), student: () => sakerCard("finans", "student", "Saker", true), juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
+  const body = { design: () => sakerCard(id, "design", "Saker og forslag om design"), funksjoner: featuresView, beslutninger: () => decisionsCard(id), dokumenter: () => docsCard(id), student: () => sakerCard("finans", "student", "Saker", true), juridisk: juridiskView, partnere: partnerView, finansiering: fundingView, salg: VIEWS.salg, pilot: pilotView, jus: legalView, selskap: selskapView, okonomi: VIEWS.okonomi, kunnskap: knowledgeView, hyp: VIEWS.hypoteser, int: VIEWS.intervjuer }[sub]();
   return tabHtml + (["pilot", "jus", "selskap"].includes(sub) ? body + subTasks(id, sub) : ["funksjoner", "beslutninger", "dokumenter"].includes(sub) ? body : subTasks(id, sub) + body);
 }
 function cardBox(title, sub, inner, foot) {
@@ -3027,7 +3027,7 @@ function extrasCard(id, sub, opt = {}) {
   return parts.length ? `<div class="card"><div class="extras" style="--n:${parts.length}">${parts.join("")}</div></div>` : "";
 }
 
-/* Beslutninger og dokumenter for et helt område (egne faner under Produkt & Tech) */
+/* Beslutninger og dokumenter for et helt område (egne faner under Produkt og Tech) */
 function decisionsCard(area) {
   const ds = arr("decisions").filter(d => d.area === area).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   return `<div class="card"><div class="card-head"><div><h2>Beslutninger</h2></div>${miniBtn("newDecision", "+ Beslutning", `data-area="${area}"`)}</div>
@@ -3039,7 +3039,7 @@ function docsCard(area) {
     <div class="mini-list">${docs.map(d => `<div class="docrow">${ico("link")}<div class="lt">${isUrl(d.url) ? `<a class="linkout" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(d.title)} ↗</a>` : `<b>${esc(d.title)}</b>`}<small>${esc(d.kind || "")}${d.note ? " · " + esc(d.note) : ""}</small></div>${miniBtn("editDoc", "Rediger", `data-id="${d.id}"`)}</div>`).join("") || '<div class="empty">Ingen dokumenter ennå.</div>'}</div></div>`;
 }
 
-/* Produkt & Tech: funksjonsoversikt */
+/* Produkt og Tech: funksjonsoversikt */
 function featuresView() {
   const it = arr("items").filter(i => i.kind === "funksjon").sort((a, b) => (a.title || "").localeCompare(b.title || "", "nb"));
   const st = i => FEATURE_STATUS.includes(i.status) ? i.status : "";
