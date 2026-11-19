@@ -747,6 +747,26 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 /* Områdefilter i skjemaet */
 .checks label[hidden]{display:none}
 .checks-empty{font-weight:400;font-size:13px}
+/* Uttrekkbare valg i oppgaveskjemaet: milepæl, venter på, kontakter */
+.pk-btns{display:flex;gap:8px;flex-wrap:wrap}
+.pk-btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--card-hi);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600;color:var(--ink)}
+.pk-btn svg{width:13px;height:13px;transition:transform .15s}
+.pk-btn[aria-expanded="true"]{background:var(--bar);color:var(--card);border-color:var(--bar)}
+.pk-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.pk-btn b{font-family:var(--mono);font-size:11px;background:var(--rose);color:#fff;border-radius:999px;padding:0 6px;line-height:17px}
+.pk-panel{margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--card-hi);font-weight:400;color:var(--ink)}
+.pk-panel .pk-title{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px}
+.pk-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.pk-chips button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--muted)}
+.pk-chips button.on{background:var(--bar);color:var(--card);border-color:var(--bar)}
+.pk-list{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow:auto}
+.pk-list label{display:flex;gap:8px;align-items:flex-start;font-size:13px;padding:4px 2px;cursor:pointer;line-height:1.35}
+.pk-list label input{margin-top:2px;flex:none}
+.pk-list label small{color:var(--muted);font-size:11.5px;margin-left:4px}
+.pk-list label[hidden]{display:none}
+.pk-more{margin-top:6px}
+.pk-more summary{cursor:pointer;font-size:12px;color:var(--muted);padding:4px 2px}
+.pk-empty{font-size:12.5px;color:var(--muted);padding:4px 2px}
 .form .hint .mini{margin-left:4px;font-size:11.5px;padding:2px 9px}
 
 /* Hypoteser: linjer */
@@ -1179,7 +1199,7 @@ function normStatus(s) {
   return "Må gjøres";
 }
 const NEXT_STEP = { "Må gjøres": ["Pågår", "Start"], "Venter": ["Pågår", "Start likevel"], "Pågår": ["Ferdig", "Ferdig"], "Ferdig": ["Pågår", "Åpne igjen"] };
-const PRIOS = ["Kritisk","Høy","Middels","Lav"];
+const PRIOS = ["Høy","Middels","Lav"];
 const CATS = ["Rapport","Pitch","Salg","Produkt","Økonomi","Research","Admin"];
 const MS_TYPES = ["Innlevering","Vurdering","Finansiering","Salg","Hendelse"];
 const MS_TYPE_AREA = { Innlevering: "drift", Vurdering: "drift", Hendelse: "drift", Finansiering: "marked", Salg: "marked" };
@@ -1537,7 +1557,7 @@ const AREA_IDS = () => AREAS.map(a => a.id);
 const idsOf = c => () => Object.keys(S[c] || {});
 // Hvordan forslag fra assistenten tolkes per felt: tekst, dato, tall, ett valg, eller liste
 const AI_SPEC = {
-  tasks: { label: "oppgave", form: taskForm, make: () => newTask(), alias: { area: "omr" },
+  tasks: { label: "oppgave", form: taskForm, make: () => newTask(),
     fields: { title: "text", status: ["enum", () => STATUSES], owners: ["list", () => PEOPLE], due: "date", prio: ["enum", () => PRIOS], area: ["enum", AREA_IDS], note: "text", contacts: ["list", idsOf("contacts")], ms: ["list", idsOf("milestones")], waitsOn: ["list", () => [...Object.keys(S.tasks), ...Object.keys(S.milestones)]] } },
   contacts: { label: "kontakt", form: contactForm, make: () => ({ id: uid("c"), name: "", org: "", role: "", areas: [], status: "Bør kontaktes", owner: "", email: "", phone: "", next: "", notes: "" }),
     fields: { name: "text", org: "text", role: "text", status: ["enum", () => CONTACT_STATUS], owner: ["enum", () => PEOPLE], email: "text", phone: "text", website: "text", next: "text", areas: ["list", AREA_IDS], notes: "text" } },
@@ -1736,7 +1756,7 @@ function avatar(owner, sm) {
 const ownerText = o => o ? esc(o) : `<span class="muted">Ikke fordelt</span>`;
 /* Oppgaver kan ha flere ansvarlige. Eldre data med ett navn i «owner» gjøres om til en liste. */
 function ownersOf(t) { return Array.isArray(t.owners) ? t.owners.filter(Boolean) : (t.owner ? [t.owner] : []); }
-function normTask(t) { if (t.area === undefined) t.area = CAT_TO_AREA[t.cat] || ""; if (t.sub === undefined) t.sub = ""; if (!Array.isArray(t.contacts)) t.contacts = []; if (!Array.isArray(t.waitsOn)) t.waitsOn = []; t.status = normStatus(t.status); t.owners = PEOPLE.filter(p => ownersOf(t).includes(p)).concat(ownersOf(t).filter(o => !PEOPLE.includes(o))); delete t.owner; return t; }
+function normTask(t) { if (t.prio === "Kritisk") t.prio = "Høy"; if (t.area === undefined) t.area = CAT_TO_AREA[t.cat] || ""; if (t.sub === undefined) t.sub = ""; if (!Array.isArray(t.contacts)) t.contacts = []; if (!Array.isArray(t.waitsOn)) t.waitsOn = []; t.status = normStatus(t.status); t.owners = PEOPLE.filter(p => ownersOf(t).includes(p)).concat(ownersOf(t).filter(o => !PEOPLE.includes(o))); delete t.owner; return t; }
 const joinNames = a => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " og " + a[a.length - 1];
 const ownersText = t => { const a = ownersOf(t); return a.length ? esc(joinNames(a)) : `<span class="muted">Ikke fordelt</span>`; };
 function avatars(t, sm) { const a = ownersOf(t); return a.length ? `<span class="avs">${a.map(o => avatar(o, sm)).join("")}</span>` : avatar("", sm); }
@@ -1761,11 +1781,24 @@ function waitLine(t) {
   const bs = waitIds(t).map(blockerOf).filter(Boolean); if (!bs.length) return "";
   return `<div class="kwait">${ico("clock", 2)}<span>Venter på: ${bs.map(b => `<a href="#" class="wlink${b.done ? " wdone" : ""}" data-act="${b.kind === "task" ? "editTask" : "editMs"}" data-id="${esc(b.id)}">${b.kind === "ms" ? "milepæl " : ""}${esc(b.title)}</a>`).join(", ")}</span></div>`;
 }
-// Når noe blir ferdig: oppgaver som bare ventet på dette, flyttes tilbake til «Må gjøres»
+// Når noe blir ferdig: spør om oppgavene som ventet på det, skal flyttes til «Må gjøres». Ingenting flyttes automatisk.
 function releaseWaiting(doneId) {
   const ready = tasks().filter(t => t.status === "Venter" && waitIds(t).includes(doneId) && !openBlockers(t).length);
-  ready.forEach(t => put("tasks", Object.assign(clone(t), { status: "Må gjøres" })));
-  if (ready.length) setTimeout(() => toast(`Klar til å starte: ${joinNames(ready.map(t => "«" + t.title + "»"))}. ${ready.length === 1 ? "Den" : "De"} ligger nå i «Må gjøres».`), 1200);
+  const done = S.tasks[doneId] || S.milestones[doneId] || {};
+  askRelease(ready.map(t => t.id), done.title || "");
+}
+function askRelease(ids, what) {
+  if (!ids.length) return;
+  let tries = 0;
+  const show = () => {
+    if (modalEl.innerHTML) { if (++tries < 200) setTimeout(show, 500); return; }
+    const list = ids.map(id => S.tasks[id]).filter(t => t && t.status === "Venter" && !openBlockers(t).length); if (!list.length) return;
+    modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal" style="width:min(440px,100%)" role="dialog" aria-modal="true" aria-label="Klar til å starte?"><h3>Klar til å starte?</h3>
+      <p class="muted" style="margin:-6px 0 12px;font-size:13px">${what ? `«${esc(what)}» er ferdig. ` : ""}${list.length === 1 ? "Denne oppgaven ventet på den og venter ikke på noe mer:" : "Disse oppgavene ventet på den og venter ikke på noe mer:"}</p>
+      <div class="pk-list" style="max-height:40vh">${list.map(t => `<label><input type="checkbox" name="rel" value="${t.id}" checked><span>${ph(t.title)}${ownersOf(t).length ? `<small>${esc(joinNames(ownersOf(t)))}</small>` : ""}</span></label>`).join("")}</div>
+      <div class="modal-foot"><span></span><div class="r"><button class="btn ghost" data-act="closeModal">Ikke nå</button><button class="btn" data-act="relYes">Flytt til «Må gjøres»</button></div></div></div></div>`;
+  };
+  setTimeout(show, 700);
 }
 function dueBadge(t, short) {
   if (!t.due) return t.dueText ? `<span class="badge t-none">${ph(t.dueText)}</span>` : `<span class="badge t-none">Ingen frist</span>`;
@@ -3044,6 +3077,7 @@ function fieldHtml(f, v) {
   const id = "f-" + f.k, cls = f.full ? "fl full" : "fl";
   const hint = f.hint ? `<span class="hint muted">${f.hint}</span>` : "";
   if (f.type === "html") return f.html;
+  if (f.type === "picks") return "";
   if (f.type === "file") return `<label class="${cls}">${f.label}<input type="file" id="${id}" accept="${esc(f.accept || "")}">${hint}</label>`;
   if (f.type === "textarea") return `<label class="${cls}">${f.label}<textarea id="${id}" ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}>${esc(v)}</textarea>${hint}</label>`;
   if (f.type === "select") return `<label class="${cls}">${f.label}<select id="${id}">${f.opts.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o || "–"]; return `<option value="${esc(val)}"${String(v ?? "") === String(val) ? " selected" : ""}>${esc(lab)}</option>`; }).join("")}</select>${hint}</label>`;
@@ -3065,7 +3099,7 @@ function readForm() {
   for (const f of modalCtx.fields) {
     if (f.type === "html") continue;
     const id = "f-" + f.k;
-    if (f.type === "multi") out[f.k] = [...modalEl.querySelectorAll(`input[name="${id}"]:checked`)].map(i => i.value);
+    if (f.type === "multi" || f.type === "picks") out[f.k] = [...modalEl.querySelectorAll(`input[name="${id}"]:checked`)].map(i => i.value);
     else if (f.type === "check") out[f.k] = document.getElementById(id).checked;
     else if (f.type === "file") out[f.k] = document.getElementById(id).files[0] || null;
     else if (f.type === "number") { const v = document.getElementById(id).value.trim().replace(",", "."); out[f.k] = v === "" ? null : Number(v); }
@@ -3103,22 +3137,66 @@ function waitOpts(t) {
   const ms = milestones().filter(m => !msClosed(m) || cur.includes(m.id)).map(m => [m.id, "Milepæl: " + m.title, msArea(m)]);
   return [...ts, ...ms];
 }
+/* Uttrekkbare lister i oppgaveskjemaet. Milepæler vises på tvers av områder.
+   «Venter på» og «Kontakter» filtreres på området som er valgt øverst, med «Vis alle». */
+const subOpts = area => [["", area && AREA[area] ? "Hele " + AREA[area].short : "–"], ...(SUBS[area] || []).map(([k, l]) => [k, l])];
+function pickRow(name, val, label, areas, checked, small) {
+  return `<label data-areas="${esc((areas || []).join(" "))}"><input type="checkbox" name="${name}" value="${esc(val)}"${checked ? " checked" : ""}><span>${esc(label)}${small ? `<small>${esc(small)}</small>` : ""}</span></label>`;
+}
+function pickPanel(p, title, rows, older, olderLabel, chips) {
+  return `<div class="pk-panel" id="pk-${p}" hidden><div class="pk-title">${title}</div>
+    ${chips ? `<div class="pk-chips" data-p="${p}"><button type="button" data-act="pkArea" data-p="${p}" data-a="">Vis alle</button>${AREAS.map(a => `<button type="button" data-act="pkArea" data-p="${p}" data-a="${a.id}">${esc(a.short)}</button>`).join("")}</div>` : ""}
+    <div class="pk-list">${rows.join("")}<span class="pk-empty" hidden>Ingen i dette området.</span></div>
+    ${older.length ? `<details class="pk-more"${older.some(r => r.includes(" checked")) ? " open" : ""}><summary>${olderLabel} (${older.length})</summary><div class="pk-list">${older.join("")}</div></details>` : ""}</div>`;
+}
+function taskPicks(t) {
+  const has = (k, id) => (t[k] || []).includes(id), wait = waitIds(t);
+  const byDate = (a, b) => (a.date ? toUTC(a.date) : 9e15) - (b.date ? toUTC(b.date) : 9e15);
+  const msAll = milestones().slice().sort(byDate);
+  const msRow = m => pickRow("f-ms", m.id, m.title, [msArea(m)], has("ms", m.id), m.date ? fmtDate(m.date, false) : "");
+  const ms = pickPanel("ms", "Milepæler", msAll.filter(m => !msClosed(m)).map(msRow), msAll.filter(msClosed).map(msRow), "Fullførte milepæler", false);
+  const cand = tasks().filter(x => x.id !== t.id && !waitsOnDeep(x.id, t.id)).sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+  const tRow = x => pickRow("f-waitsOn", x.id, x.title, [x.area || ""], wait.includes(x.id), x.area && AREA[x.area] ? AREA[x.area].short : "");
+  const mRow = m => pickRow("f-waitsOn", m.id, "Milepæl: " + m.title, [msArea(m)], wait.includes(m.id), m.date ? fmtDate(m.date, false) : "");
+  const wt = pickPanel("waitsOn", "Oppgaver og milepæler som må bli ferdige først", [...cand.filter(x => !isDone(x)).map(tRow), ...msAll.filter(m => !msClosed(m)).map(mRow)],
+    [...cand.filter(isDone).map(tRow), ...msAll.filter(msClosed).map(mRow)], "Ferdige", true);
+  const order = id => { const i = AREAS.findIndex(a => a.id === id); return i < 0 ? 99 : i; };
+  const cs = arr("contacts").slice().sort((a, b) => Math.min(99, ...(a.areas || []).map(order)) - Math.min(99, ...(b.areas || []).map(order)) || (a.name || "").localeCompare(b.name || ""));
+  const ct = pickPanel("contacts", "Kontakter", cs.map(c => pickRow("f-contacts", c.id, c.name + (c.org ? " (" + c.org + ")" : ""), c.areas || [], has("contacts", c.id), (c.areas || []).map(a => AREA[a] ? AREA[a].short : "").filter(Boolean).join(", "))), [], "", true);
+  const btn = (p, label) => `<button type="button" class="pk-btn" data-act="pkToggle" data-p="${p}" aria-expanded="false">${label}<b id="pkn-${p}" hidden></b>${ico("down", 2.2)}</button>`;
+  return `<div class="fl full"><div class="pk-btns">${btn("ms", "Milepæl")}${btn("waitsOn", "Venter på")}${btn("contacts", "Kontakter")}</div>${ms}${wt}${ct}</div>`;
+}
+// Viser bare valg fra området som er valgt (det som er huket av, vises alltid), og oppdaterer tallene på knappene
+function applyPicks() {
+  if (!modalCtx || !modalCtx.pkArea) return;
+  for (const p of ["waitsOn", "contacts"]) {
+    const panel = document.getElementById("pk-" + p); if (!panel) continue;
+    const want = modalCtx.pkArea[p] || "";
+    panel.querySelectorAll(".pk-chips button").forEach(b => b.classList.toggle("on", b.dataset.a === want));
+    panel.querySelectorAll(".pk-list").forEach(list => {
+      let shown = 0;
+      list.querySelectorAll("label").forEach(l => { const ok = !want || l.dataset.areas.split(" ").includes(want) || l.querySelector("input").checked; l.hidden = !ok; if (ok) shown++; });
+      const e = list.querySelector(".pk-empty"); if (e) e.hidden = shown > 0;
+    });
+  }
+  for (const p of ["ms", "waitsOn", "contacts"]) {
+    const n = modalEl.querySelectorAll(`input[name="f-${p}"]:checked`).length, b = document.getElementById("pkn-" + p);
+    if (b) { b.hidden = !n; b.textContent = n; }
+  }
+}
 function taskForm(t, isNew) {
-  const msOpts = milestones().map(m => [m.id, m.title, msArea(m)]);
   openForm({
-    title: isNew ? "Ny oppgave" : "Rediger oppgave", value: Object.assign({}, t, { omr: t.area ? t.area + (t.sub ? "." + t.sub : "") : "" }),
+    title: isNew ? "Ny oppgave" : "Rediger oppgave", value: Object.assign({}, t, { area: t.area && AREA[t.area] ? t.area : "", sub: t.sub || "" }),
     fields: [
       { k: "title", label: "Tittel", full: true },
       { k: "status", label: "Status", type: "select", opts: STATUSES },
-      { k: "owners", label: "Ansvarlige", type: "multi", opts: PEOPLE.map(p => [p, p]), full: true, hint: "Velg én eller flere. Må fylles ut før oppgaven kan settes til «Pågår» eller «Ferdig». Fjerner du alle fra en oppgave som pågår, legges den tilbake i «Må gjøres»." },
+      { k: "owners", label: "Ansvarlige", type: "multi", opts: PEOPLE.map(p => [p, p]), full: true },
       { k: "due", label: "Frist", type: "date", hint: t.dueText && !t.due ? "Nå: " + ph(t.dueText) : "" },
       { k: "prio", label: "Prioritet", type: "select", opts: PRIOS },
-      { k: "omr", label: "Område", type: "select", opts: [["", "Ikke valgt"], ...areaSubOpts()] },
-      { k: "est", label: "Estimert tid (timer)", type: "number" },
-      { k: "ms", label: "Milepæl", type: "multi", opts: msOpts, full: true, hint: AREA_FILTER_HINT },
-      { k: "waitsOn", label: "Venter på", type: "multi", full: true, opts: waitOpts(t),
-        hint: "Oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og flyttes tilbake til «Må gjøres» når alt den venter på er ferdig. " + AREA_FILTER_HINT },
-      { k: "contacts", label: "Kontakter", type: "multi", full: true, opts: arr("contacts").sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(c => [c.id, c.name + (c.org ? " (" + c.org + ")" : "")]), hint: arr("contacts").length ? "" : "Ingen kontakter ennå. Legg dem inn under Kontakter." },
+      { k: "area", label: "Område", type: "select", opts: [["", "Ikke valgt"], ...AREAS.map(a => [a.id, a.name])] },
+      { k: "sub", label: "Delområde", type: "select", opts: subOpts(t.area) },
+      { k: "ms", type: "picks" }, { k: "waitsOn", type: "picks" }, { k: "contacts", type: "picks" },
+      { k: "picks", type: "html", html: taskPicks(t) },
       { k: "note", label: "Notat", type: "textarea", full: true },
       { k: "focus", label: "Ukens viktigste", type: "check", text: "Vis på forsiden under «Ukens viktigste oppgaver» (maks 5)", full: true }
     ],
@@ -3130,7 +3208,7 @@ function taskForm(t, isNew) {
         if (isNew || v.status !== t.status) return formError(`Velg minst én ansvarlig før oppgaven settes til «${v.status}».`);
         v.status = "Må gjøres"; gaveBack = true;
       }
-      const [area, sub] = (v.omr || "").split("."); v.area = area || ""; v.sub = sub || ""; delete v.omr;
+      if (!(SUBS[v.area] || []).some(x => x[0] === v.sub)) v.sub = "";
       const o = Object.assign(clone(t), v); delete o.owner;
       if (o.due) o.dueText = "";
       const blocking = openBlockers(o);
@@ -3140,13 +3218,23 @@ function taskForm(t, isNew) {
       else if (o.status === "Venter" && t.status !== "Venter" && blocking.length) toast(`Oppgaven venter på ${joinNames(blocking.map(b => "«" + b.title + "»"))}.`);
     },
     onDelete: isNew ? null : () => {
-      tasks().filter(x => waitIds(x).includes(t.id)).forEach(x => put("tasks", Object.assign(clone(x), { waitsOn: waitIds(x).filter(id => id !== t.id) })));
+      const waiting = tasks().filter(x => waitIds(x).includes(t.id));
+      const trimmed = waiting.map(x => Object.assign(clone(x), { waitsOn: waitIds(x).filter(id => id !== t.id) }));
+      trimmed.forEach(x => put("tasks", x));
       del("tasks", t.id); closeModal(); toast("Oppgaven er slettet.");
-      releaseWaiting(t.id);
+      askRelease(trimmed.filter(x => x.status === "Venter" && !openBlockers(x).length).map(x => x.id), t.title);
     }
   });
-  const omr = document.getElementById("f-omr");
-  if (omr) { omr.addEventListener("change", () => { modalCtx.showAllOpts = false; applyAreaFilter(); }); applyAreaFilter(); }
+  modalCtx.pkArea = { waitsOn: t.area || "", contacts: t.area || "" };
+  const area = document.getElementById("f-area"), sub = document.getElementById("f-sub");
+  area.addEventListener("change", () => {
+    sub.innerHTML = subOpts(area.value).map(([k, l]) => `<option value="${esc(k)}">${esc(l)}</option>`).join("");
+    sub.disabled = sub.options.length < 2;
+    modalCtx.pkArea = { waitsOn: area.value, contacts: area.value }; applyPicks();
+  });
+  sub.disabled = sub.options.length < 2;
+  document.getElementById("mform").addEventListener("change", ev => { if (ev.target.type === "checkbox") applyPicks(); });
+  applyPicks();
 }
 /* Flytt en oppgave. Til «Pågår» eller «Ferdig» må den ha minst én ansvarlig. */
 function moveTask(t, to) {
@@ -3567,14 +3655,21 @@ const A = {
     const freed = [];
     tasks().filter(t => (t.ms || []).includes(id) || waitIds(t).includes(id)).forEach(t => {
       const o = Object.assign(clone(t), { ms: (t.ms || []).filter(x => x !== id), waitsOn: waitIds(t).filter(x => x !== id) });
-      if (o.status === "Venter" && waitIds(t).includes(id) && !openBlockers(o).length) { o.status = "Må gjøres"; freed.push(o.title); }
+      if (o.status === "Venter" && waitIds(t).includes(id) && !openBlockers(o).length) freed.push(o.id);
       put("tasks", o);
     });
     del("milestones", id);
-    toast(`«${m.title}» er slettet.${freed.length ? ` Klar til å starte: ${joinNames(freed.map(x => "«" + x + "»"))}.` : ""}`);
+    toast(`«${m.title}» er slettet.`); askRelease(freed, m.title);
   },
   msDrop: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; m.prevStatus = m.status; m.status = "Ikke aktuell"; put("milestones", m); toast(`${m.title} er satt som ikke aktuell. Du kan angre under «Levert og avsluttet».`); releaseWaiting(m.id); },
   msUndo: el => { const m = clone(S.milestones[el.dataset.id]); if (!m) return; const back = m.prevStatus && !["Levert", "Gjennomført", "Fullført", "Ikke aktuell"].includes(m.prevStatus) ? m.prevStatus : "Ikke startet"; m.status = back; delete m.prevStatus; put("milestones", m); toast(`${m.title} er åpen igjen.`); },
+  pkToggle: el => { const p = document.getElementById("pk-" + el.dataset.p); if (!p) return; p.hidden = !p.hidden; el.setAttribute("aria-expanded", String(!p.hidden)); },
+  pkArea: el => { if (!modalCtx || !modalCtx.pkArea) return; modalCtx.pkArea[el.dataset.p] = el.dataset.a; applyPicks(); },
+  relYes: () => {
+    const ids = [...modalEl.querySelectorAll('input[name="rel"]:checked')].map(i => i.value); closeModal();
+    ids.forEach(id => { const t = S.tasks[id]; if (t) put("tasks", Object.assign(clone(t), { status: "Må gjøres" })); });
+    if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
+  },
   toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
   aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
   aiClear: () => { if (CHAT.busy) return; CHAT.log = []; renderChat(); document.getElementById("ai-input").focus(); },

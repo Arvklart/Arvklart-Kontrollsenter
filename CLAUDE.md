@@ -32,8 +32,10 @@ Brukerne er ikke tekniske. Forklar kort og med enkle ord på norsk hva du gjør 
 - Navigasjon via hash: `#side` eller `#område.delside`. `ALIAS` mapper gamle lenker.
 - Områder: `AREAS`. Delområder: `SUBS`.
 - Oppgaver: status «Må gjøres», «Venter», «Pågår», «Ferdig». Må ha minst én ansvarlig før «Pågår» eller «Ferdig». Alle oppgavelister bruker `taskRows()`.
-- «Venter på»: `waitsOn` på en oppgave er en liste med id-er for oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og `releaseWaiting()` flytter den tilbake til «Må gjøres» når alt den venter på er ferdig (oppgave «Ferdig» eller milepæl «Levert»). Ring-avhengigheter stoppes i `waitOpts()`.
-- Milepæler har et valgfritt `area`. Uten det brukes typen (`msArea()` / `MS_TYPE_AREA`). I oppgaveskjemaet viser «Milepæl» og «Venter på» bare valg fra området som er valgt (`applyAreaFilter()`), med «Vis alle» for resten.
+- «Venter på»: `waitsOn` på en oppgave er en liste med id-er for oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter». Når alt den venter på er ferdig (oppgave «Ferdig» eller milepæl «Levert»), spør `releaseWaiting()`/`askRelease()` om den skal flyttes til «Må gjøres». Ingenting flyttes automatisk. Ring-avhengigheter stoppes med `waitsOnDeep()`.
+- Prioritet: bare «Høy», «Middels» og «Lav» (`PRIOS`). Eldre «Kritisk» leses som «Høy» i `normTask()`.
+- Milepæler har et valgfritt `area`. Uten det brukes typen (`msArea()` / `MS_TYPE_AREA`).
+- Oppgaveskjemaet: Område og Delområde er to valg. «Milepæl», «Venter på» og «Kontakter» er uttrekkbare paneler (`taskPicks()`, `applyPicks()`, felttypen `picks`). Bare aktive vises, ferdige ligger i en sammenleggbar liste. Milepæler vises på tvers av områder. «Venter på» og «Kontakter» filtreres på området som er valgt øverst, med «Vis alle».
 - Avsluttede milepæler (`msClosed()`): «Levert», «Gjennomført», «Fullført» (ferdig, `msDone()`) eller «Ikke aktuell» (droppet). De vises i en sammenleggbar liste nederst (`closedMs()`), med «Angre». Knappene «Levert»/«Gjennomført» og «Slett» (med bekreftelse) lages i `msActions()`, og teksten følger typen (`MS_DONE_LABEL`).
 - Utvidbare kort: bare overskriften vises til man trykker (`toggleXp`, `xpOpen()`). Brukes for funksjoner, kunnskapsbasen og kontakter. `keepOpen(nøkkel)` husker åpne `<details>` når siden tegnes på nytt.
 - Kontakter har `website`. Logoen hentes fra Googles ikontjeneste med bare domenet (`orgLogo()`), ellers vises forbokstaver.
