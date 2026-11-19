@@ -89,6 +89,16 @@ button{cursor:pointer}
 .fpanel .ffoot{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:12px}
 .board.bstatus{grid-template-columns:repeat(3,minmax(232px,1fr)) minmax(190px,.72fr)}
 .col .closed-list{margin-top:4px}
+.pgroup{display:flex;flex-direction:column;gap:9px;border:1px solid var(--line);border-radius:12px;padding:8px;background:rgba(255,255,255,.35)}
+.pg-h{display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 2px}
+.pg-h .mono{margin-left:auto;font-weight:500}
+.pg-dot{width:8px;height:8px;border-radius:50%;background:#C9AE6B}
+.pg-dot.p-Høy{background:var(--orange)}.pg-dot.p-Lav{background:#A9B89D}
+.pg-lav summary{cursor:pointer;list-style:none}
+.pg-h svg{width:12px;height:12px;transition:transform .15s}.pg-lav[open] .pg-h svg{transform:rotate(180deg)}
+.pg-lav summary::-webkit-details-marker{display:none}
+.pg-lav[open] summary{margin-bottom:9px}
+.pg-lav:not([open]){opacity:.85}
 .col .closed-list .kc{margin-top:8px}
 @media (max-width:760px){
   .kal-grid{grid-template-columns:minmax(0,1fr);gap:4px}
@@ -2256,6 +2266,14 @@ function taskFilter(t) {
 }
 const filterCount = () => (UI.fWho !== "all") + (UI.fDue !== "all") + !!UI.areaFilter;
 function resetFilters() { UI.fWho = "all"; UI.fDue = "all"; UI.areaFilter = ""; }
+// «Må gjøres» deles i tre bokser: Høy øverst, Middels, og Lav nederst (lukket, så de ikke tar fokus)
+function prioGroups(list, key) {
+  const box = p => { const l = list.filter(t => (PRIOS.includes(t.prio) ? t.prio : "Middels") === p); if (!l.length && p !== "Lav") return "";
+    const head = `<span class="pg-h"><i class="pg-dot p-${p}"></i>${p} prioritet<span class="mono">${l.length}</span>${p === "Lav" ? ico("down", 2.2) : ""}</span>`;
+    return p === "Lav" ? `<details class="pgroup pg-lav"${keepOpen("lav-prioritet")}><summary>${head}</summary>${l.map(t => kcard(t, key)).join("") || '<span class="pk-empty">Ingen ennå. Sett prioritet «Lav» på en oppgave for å legge den her.</span>'}</details>`
+      : `<div class="pgroup">${head}${l.map(t => kcard(t, key)).join("")}</div>`; };
+  return PRIOS.map(box).join("");
+}
 function kcard(t, from) {
   const own = ownersOf(t), todo = t.status === "Må gjøres";
   const step = todo ? (own.length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
@@ -2286,7 +2304,7 @@ VIEWS.oppgaver = function () {
     const adding = UI.addingCol === field + ":" + key;
     return `<div class="col" data-drop="task" data-field="${field}" data-key="${esc(key)}">
       <div class="col-head"><b>${UI.boardMode === "owner" ? `<span style="display:inline-flex;gap:8px;align-items:center">${avatar(key, true)}${esc(label)}</span>` : esc(label)}</b><span class="mono">${list.length}</span></div>
-      ${list.map(t => kcard(t, key)).join("")}
+      ${field === "status" && key === "Må gjøres" ? prioGroups(list, key) : list.map(t => kcard(t, key)).join("")}
       ${older.length ? `<details class="closed-list"${keepOpen("eldre-ferdige")}><summary>Eldre ferdige (${older.length})</summary>${older.map(t => kcard(t, key)).join("")}</details>` : ""}
       ${adding ? `<div class="addbox"><textarea id="add-input" placeholder="Tittel på kortet" data-field="${field}" data-key="${esc(key)}"></textarea><div class="row"><button class="btn" data-act="addCardSave">Legg til</button><button class="btn ghost" data-act="addCardCancel">Avbryt</button></div></div>`
         : `<button class="addcard" data-act="addCard" data-field="${field}" data-key="${esc(key)}">+ Legg til kort</button>`}</div>`;
