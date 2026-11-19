@@ -338,7 +338,18 @@ button{cursor:pointer}
 .col-head{display:flex;align-items:center;justify-content:space-between;padding:2px 4px 4px}
 .col-head b{font-weight:700;font-size:13px}
 .col-head .mono{font-size:12px;color:var(--muted);background:var(--card-hi);border-radius:999px;padding:1px 8px}
-.kc{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 12px 10px;box-shadow:0 1px 2px rgba(45,30,18,.10);cursor:grab;overflow:hidden;display:flex;flex-direction:column;gap:8px}
+.kc{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 10px 10px 12px;box-shadow:0 1px 2px rgba(45,30,18,.10);cursor:grab;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:10px;align-items:start}
+.kc .kbody{min-width:0;display:flex;flex-direction:column;gap:6px}
+.kc .kfull{grid-column:1/-1;display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.kc .kfull .kown{margin-top:0}
+.kc .kside{display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:96px}
+.kc .kside .badge{font-size:10px;padding:2px 6px}
+.kc .kside .tag{font-size:10px;padding:1px 5px;max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc .kside .kstep{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 8px;white-space:nowrap}
+.kc .kside .kstep svg{width:10px;height:10px}
+.kc .kside .kstep.ghosty{background:transparent;border-color:transparent;color:var(--muted);font-weight:500;padding-right:0}
+.kc .kside .avbtn .av{margin-left:0}
+.kc .kside .stamp{position:static}
 .kc:hover{box-shadow:0 4px 12px rgba(45,30,18,.14)}
 .kc.dragging{opacity:.45}
 .kc::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--stripe,#C9B8A2)}
@@ -2343,12 +2354,9 @@ function kcard(t, from, opts = {}) {
   const step = todo ? (own.length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
   return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="editTask" tabindex="0">
-    ${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}
-    <div class="kt" style="${isDone(t) ? "padding-right:26px" : ""}">${ph(t.title)}</div>
-    <div class="kf">${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button>${who}</div>
-    ${own.length && !todo ? `<div class="kown">${esc(joinNames(own))}</div>` : ""}
-    ${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}
-    ${isDone(t) ? "" : waitLine(t)}</div>`;
+    <div class="kbody"><div class="kt">${ph(t.title)}</div></div>
+    <div class="kside">${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button></div>
+    ${(t.contacts || []).length || (!isDone(t) && waitIds(t).length) ? `<div class="kfull">${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}${isDone(t) ? "" : waitLine(t)}</div>` : ""}</div>`;
 }
 VIEWS.oppgaver = function () {
   const ts = tasks().filter(taskFilter).sort(byPrioDue);
