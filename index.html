@@ -670,6 +670,19 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 @media (max-width:980px){.grid-wallet{grid-template-columns:minmax(0,1fr)}}
 
 /* Finansieringsstige */
+.fboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start}
+.fbox{border-radius:14px;background:var(--card-hi);border:1px solid var(--line);border-top:4px solid var(--bar);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0}
+.fbox:hover{border-color:#CDBBA4;border-top-color:var(--bar)}
+.fb-top{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.fb-top b{font-family:var(--serif);font-size:16px;font-weight:600;line-height:1.25;overflow-wrap:anywhere}
+.fb-top .pill,.fb-top .badge{flex:none}
+.fbox .amt{font-family:var(--mono);font-size:13px}
+.fbox dl{margin:2px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:12.5px}
+.fbox dt{color:var(--muted)}
+.fbox dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.fb-more{border-top:1px solid var(--line);padding-top:6px;margin-top:2px;font-size:12.5px;cursor:default}
+.fb-more summary{cursor:pointer;color:var(--muted);font-weight:600}
+.fb-more p{margin:6px 0 0;line-height:1.45}
 .stairs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:end}
 .stair{border-radius:16px;background:var(--card-hi);border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;border-top:4px solid var(--bar)}
 .stair:hover{border-color:#CDBBA4;border-top-color:var(--bar)}
@@ -3039,8 +3052,20 @@ function sakerCard(area, sub, title, hideEmpty) {
   return cardBox(title, "", `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || '<div class="empty">Ingen saker ennå.</div>'}</div>`,
     miniBtn("newItem", "+ Sak", `data-kind="sak" data-area="${area}" data-sub="${sub}"`));
 }
+/* Finansiering: søknader, tilskudd og saker som bokser i ett kort. Krav ligger i en liste man kan åpne. */
 function fundingView() {
-  return sakerCard("finans", "", "Søknader, tilskudd og saker") + fundingStairs();
+  const funds = arr("funding").sort((a, b) => a.step - b.step || a.n - b.n);
+  const saker = arr("items").filter(i => i.kind === "sak" && i.area === "finans" && !i.sub).sort((a, b) => (a.status === "Ferdig") - (b.status === "Ferdig") || (a.title || "").localeCompare(b.title || ""));
+  const dl = (frist, owner) => `<dl><dt>Frist</dt><dd>${frist ? ph(frist) : "–"}</dd><dt>Ansvarlig</dt><dd>${owner ? esc(owner) : '<span class="muted">Ikke fordelt</span>'}</dd></dl>`;
+  const more = (label, text) => text ? `<details class="fb-more" data-act="noop"><summary>${label}</summary><p>${ph(text)}</p></details>` : "";
+  const boxes = [
+    ...funds.map(f => `<div class="fbox" data-act="editFund" data-id="${f.id}" tabindex="0"><div class="fb-top"><b>${esc(f.name)}</b><span class="pill s-${esc(f.status)}">${esc(f.status)}</span></div>
+      <div class="amt">${f.amount ? ph(f.amount) : '<span class="muted">Beløp ikke oppgitt</span>'}</div>${dl(f.deadline, f.owner)}${more("Krav", f.req)}</div>`),
+    ...saker.map(i => `<div class="fbox" data-act="editItem" data-id="${i.id}" tabindex="0"><div class="fb-top"><b>${esc(i.title)}</b>${itemBadge(i)}</div>
+      <div class="amt muted">Sak</div>${dl(i.next ? "Neste: " + i.next : "", i.owner)}${more("Mer", i.summary)}</div>`)
+  ].join("");
+  return `<div class="card"><div class="card-head"><div><h2>Søknader, tilskudd og saker</h2></div><button class="btn ghost" data-act="newFund">${ico("plus")}Sak</button></div>
+    ${boxes ? `<div class="fboxes">${boxes}</div>` : '<div class="empty">Ingen søknader eller saker ennå.</div>'}</div>`;
 }
 /* Marked og data → Juridisk: spørsmål, saker, beslutninger og dokumenter */
 function juridiskView() {
@@ -3454,11 +3479,11 @@ function txForm(w, isNew) {
 }
 function fundForm(f, isNew) {
   openForm({
-    title: isNew ? "Nytt finansieringstrinn" : "Rediger trinn", value: f,
-    fields: [{ k: "name", label: "Ordning", full: true }, { k: "step", label: "Trinn", type: "select", opts: [[0, "Trinn 0"], [1, "Trinn 1"], [2, "Trinn 2"], [3, "Trinn 3"], [4, "Trinn 4"]] },
-      { k: "status", label: "Status", type: "select", opts: FUND_STATUS }, { k: "amount", label: "Maks beløp" }, { k: "deadline", label: "Søknadsfrist" },
+    title: isNew ? "Ny sak" : "Rediger sak", value: f,
+    fields: [{ k: "name", label: "Tittel", full: true, ph: "F.eks. Innovasjon Norge oppstartstilskudd 1" },
+      { k: "status", label: "Status", type: "select", opts: FUND_STATUS }, { k: "amount", label: "Beløp" }, { k: "deadline", label: "Frist" },
       { k: "owner", label: "Ansvarlig", type: "select", opts: ownerOpts }, { k: "req", label: "Krav og notater", type: "textarea", full: true }],
-    onSave: v => { if (!v.name) return formError("Trinnet trenger et navn."); const o = Object.assign(clone(f), v); o.step = Number(o.step) || 0; put("funding", o); closeModal(); },
+    onSave: v => { if (!v.name) return formError("Saken trenger en tittel."); const o = Object.assign(clone(f), v); o.step = Number(o.step) || 0; put("funding", o); closeModal(); },
     onDelete: isNew ? null : () => { del("funding", f.id); closeModal(); }
   });
 }
@@ -3748,6 +3773,7 @@ const A = {
     ids.forEach(id => { const t = S.tasks[id]; if (t) put("tasks", Object.assign(clone(t), { status: "Må gjøres" })); });
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
+  noop: () => {},
   toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
   aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
   aiClear: () => { if (CHAT.busy) return; CHAT.log = []; renderChat(); document.getElementById("ai-input").focus(); },
