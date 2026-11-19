@@ -365,7 +365,10 @@ button{cursor:pointer}
 .kc .kside .kstep.ghosty{background:transparent;border-color:transparent;color:var(--muted);font-weight:500;padding-right:0}
 .kc .kside .avbtn .av{margin-left:0}
 .kc .kside .stamp{position:static}
-.kc .kexp{grid-column:1/-1;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px;cursor:default}
+.kexp{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px;cursor:default}
+.kc .kexp{grid-column:1/-1}
+.fk-box .kexp{flex-basis:100%;margin-top:4px;padding-top:8px}
+.fk-box .kexp .kst{background:#fff}
 .ksteps{display:flex;flex-direction:column;gap:5px}
 .kst{display:flex;align-items:flex-start;gap:8px;text-align:left;width:100%;background:var(--card-hi);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:12.5px;line-height:1.3;color:var(--ink)}
 .kst:hover{background:#fff}
@@ -956,7 +959,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 
 /* Ukens viktigste: hvem og hva, i bokser */
 .fk-list{display:flex;flex-direction:column;gap:8px}
-.fk-box{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--card-hi);border:1px solid var(--line)}
+.fk-box{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--card-hi);border:1px solid var(--line)}
 .fk-check{flex:none;width:20px;height:20px;border-radius:5px;border:2px solid #B9B4A8;background:#fff;display:grid;place-items:center;padding:0}
 .fk-check svg{width:12px;height:12px;color:#fff;opacity:0}
 .fk-check:hover{border-color:var(--ink)}
@@ -2081,8 +2084,8 @@ VIEWS.hjem = function () {
   const wk = mondayOf(today), doneWeek = myF().filter(t => isDone(t) && t.doneAt && toUTC(t.doneAt) >= toUTC(wk));
   const fkRow = t => { const done = isDone(t);
     return `<div class="fk-box${done ? " done" : ""}"><button class="fk-check${done ? " on" : ""}" data-act="toggleDone" data-id="${t.id}" aria-label="${done ? "Marker som ikke ferdig" : "Marker som ferdig"}">${ico("check", 3)}</button>
-      <button class="fk-main" data-act="openTaskInArea" data-id="${t.id}"><b>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}</b><span>${ph(t.title)}</span>${t.due && !done ? `<small class="mono">${fmtDate(t.due)}</small>` : ""}</button>
-      ${ownersOf(t).length ? avatars(t, true) : ""}${done ? "" : `<button class="fk-x" data-act="unFocus" data-id="${t.id}" aria-label="Fjern fra ukens viktigste" title="Fjern fra listen">×</button>`}</div>`; };
+      <button class="fk-main" data-act="kToggle" data-id="${t.id}" aria-expanded="${!!(UI.kOpen || {})[t.id]}"><b>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}</b><span>${ph(t.title)}</span>${t.due && !done ? `<small class="mono">${fmtDate(t.due)}</small>` : ""}</button>
+      ${ownersOf(t).length ? avatars(t, true) : ""}${done ? "" : `<button class="fk-x" data-act="unFocus" data-id="${t.id}" aria-label="Fjern fra ukens viktigste" title="Fjern fra listen">×</button>`}${(UI.kOpen || {})[t.id] ? kExpand(t, stepLabel(t)) : ""}</div>`; };
   const topCard = `<div class="card"><div class="card-head"><div><h2>${mineOnly ? "Dine viktigste oppgaver" : "Ukens viktigste oppgaver"}</h2></div><button class="mini" data-act="pickFocus">+ Legg til</button></div>
     <div class="fk-list">${top.map(fkRow).join("") || `<div class="empty">${mineOnly ? "Du har ingen av ukens viktigste oppgaver." : "Ingen valgt ennå. Legg til de viktigste oppgavene etter møtet."}</div>`}</div>
     ${doneWeek.length ? `<details class="closed-list fk-done"${keepOpen("fokus-ferdig")}><summary>Fullført denne uken (${doneWeek.length})</summary><div class="fk-list">${doneWeek.map(fkRow).join("")}</div></details>` : ""}
@@ -2425,6 +2428,7 @@ function prioGroups(list, key) {
   return PRIOS.map(box).join("");
 }
 // Når man trykker på et oppgavekort, forlenges det med deloppgavene og en «Rediger»-knapp
+const stepLabel = t => t.status === "Må gjøres" ? (ownersOf(t).length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
 function kExpand(t, step) {
   const st = t.steps || [];
   return `<div class="kexp" data-act="noop">
@@ -2433,7 +2437,7 @@ function kExpand(t, step) {
 }
 function kcard(t, from, opts = {}) {
   const own = ownersOf(t), todo = t.status === "Må gjøres";
-  const step = todo ? (own.length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
+  const step = stepLabel(t);
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
   return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="kToggle" tabindex="0" aria-expanded="${!!(UI.kOpen || {})[t.id]}">
     <div class="kbody"><div class="kt">${ph(t.title)}</div></div>
