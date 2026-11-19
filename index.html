@@ -57,7 +57,15 @@ button{cursor:pointer}
 .h-link{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
 .h-link svg{width:15px;height:15px;opacity:.5}
 .h-link:hover{text-decoration:underline;text-underline-offset:3px}
-.av-it .av-who{display:flex;gap:2px;margin-top:3px}
+.av-it.has-who{display:flex;align-items:center;gap:8px}
+.av-it .av-txt{flex:1;min-width:0}
+.av-it .av-who{flex:none;display:flex;gap:2px}
+.av-it .av-who .av{width:18px;height:18px;font-size:9.5px}
+.av-it .av-who.grid{display:grid;grid-template-columns:repeat(2,15px);gap:1px}
+.av-it .av-who.grid .av{width:15px;height:15px;font-size:8px;border-width:1px}
+.kal-c .av-it .av-who{display:grid;grid-template-columns:repeat(2,15px);gap:1px}
+.kal-c .av-it .av-who .av{width:15px;height:15px;font-size:8px}
+.kal-c .av-it b{overflow-wrap:break-word;hyphens:auto}
 .kal-card{padding:14px}
 .kal-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
 .kal-top h2{margin:0;font-family:var(--serif);font-weight:600;font-size:22px}
@@ -2133,7 +2141,9 @@ function avtaler(iso) {
     .forEach(m => out.push({ act: "editMs", id: m.id, title: m.title, kind: m.type, col: m.type === "Innlevering" || m.type === "Vurdering" ? "var(--red)" : "var(--green)" }));
   return out;
 }
-const avItem = x => `<button class="av-it" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><b>${esc(x.title)}</b><small>${esc(x.kind)}</small>${(x.who || []).length ? `<span class="av-who">${x.who.map(p => avatar(p, true)).join("")}</span>` : ""}</button>`;
+// Deltakerne står til høyre. Er fire eller flere med, ligger de i to rader, to og to, litt mindre.
+const avItem = x => { const w = x.who || [];
+  return `<button class="av-it${w.length ? " has-who" : ""}" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><span class="av-txt"><b>${esc(x.title)}</b><small>${esc(x.kind)}</small></span>${w.length ? `<span class="av-who${w.length >= 4 ? " grid" : ""}">${w.map(p => avatar(p, true)).join("")}</span>` : ""}</button>`; };
 
 /* ---------- Kalender: hele måneden, mandag til fredag ---------- */
 VIEWS.kalender = function () {
