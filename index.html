@@ -1202,6 +1202,8 @@ const DOC_KINDS = ["Dokument", "Avtale", "Søknad", "Presentasjon", "Regneark", 
 const PEOPLE = SEED.team.map(p => p.navn);
 const INIT = { Andrea: "A", "Bård": "B", Julie: "J", "Ørjan": "Ø" };
 const STATUSES = ["Må gjøres","Venter","Pågår","Ferdig"];
+// Rekkefølgen på tavla: det som venter, det som kan gjøres nå, det som pågår, og det som er ferdig
+const BOARD_ORDER = ["Venter","Må gjøres","Pågår","Ferdig"];
 /* Eldre statuser fra første versjon av tavlen gjøres om til de tre nye */
 function normStatus(s) {
   if (STATUSES.includes(s)) return s;
@@ -2288,7 +2290,7 @@ function kcard(t, from) {
 }
 VIEWS.oppgaver = function () {
   const ts = tasks().filter(taskFilter).sort(byPrioDue);
-  const cols = UI.boardMode === "owner" ? [...PEOPLE.map(p => [p, p]), ["", "Ikke fordelt"]] : STATUSES.map(s => [s, s]);
+  const cols = UI.boardMode === "owner" ? [...PEOPLE.map(p => [p, p]), ["", "Ikke fordelt"]] : BOARD_ORDER.map(s => [s, s]);
   const openSorted = ts.filter(t => !isDone(t));
   const pedge = { Kritisk: "var(--red)", "Høy": "var(--orange)", Middels: "#C9AE6B", Lav: "#A9B89D" };
   const listView = `<div class="tablewrap"><table><thead><tr><th>Prioritet</th><th>Oppgave</th><th>Område</th><th>Frist</th><th>Ansvarlig</th><th>Status</th></tr></thead><tbody>
