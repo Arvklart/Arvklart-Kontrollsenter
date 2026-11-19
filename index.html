@@ -772,7 +772,20 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vmore p{margin:4px 0 0;color:var(--ink);line-height:1.45;max-width:46ch}
 .vprog{display:flex;flex-direction:column;gap:4px;min-width:96px}
 .vprog .bar > i.green,.bar.green > i{background:var(--green)}
-.vplus{margin-top:6px;font-family:var(--mono);font-size:11px;padding:2px 8px}
+.vrow.open td{background:#fff;border-bottom-color:transparent}
+.vexp td{background:#fff;padding-top:0}
+.vexp:hover td{background:#fff}
+.vlog{display:flex;flex-direction:column;gap:8px;padding:4px 0 6px;cursor:default}
+.vlog-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.vlog-h b{font-size:13px}
+.mini.vreg{display:inline-flex;align-items:center;gap:4px;background:var(--bar);color:var(--card);border-color:var(--bar)}
+.mini.vreg:hover{background:#000}
+.vreg svg{width:11px;height:11px}
+.vlog-list{display:flex;flex-direction:column;gap:4px}
+.vlog-row{display:grid;grid-template-columns:56px minmax(120px,1fr) minmax(90px,auto) minmax(0,2fr) 22px;gap:10px;align-items:center;text-align:left;width:100%;background:var(--card-hi);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:13px;color:var(--ink)}
+.vlog-row:hover{border-color:#CDBBA4}
+.vlog-row > span:nth-child(4){overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:760px){.vlog-row{grid-template-columns:48px minmax(0,1fr) 22px}.vlog-row > span:nth-child(3),.vlog-row > span:nth-child(4){display:none}}
 .vlearn{margin:8px 0 0;padding-left:20px;line-height:1.55}
 .vphases{display:flex;flex-direction:column;gap:12px}
 .vphase{border:1px solid var(--line);border-radius:14px;background:var(--card-hi);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -1343,7 +1356,7 @@ const FIXED_NOTES = [
 ];
 
 /* ===================================================================== */
-const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets","validation"];
+const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets","validation","valLog"];
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
@@ -3087,8 +3100,11 @@ function extrasCard(id, sub, opt = {}) {
    Aktivitetene har et tall (count) som teamet teller opp etter hvert. Kriteriene henter tallet fra aktiviteten de er koblet til. */
 const VAL_STATUS = ["Ikke startet", "Pågår", "Ferdig"];
 const valOf = k => arr("validation").filter(d => d.kind === k).sort((a, b) => (a.n || 0) - (b.n || 0));
+// Registreringer (hvem vi har ringt, intervjuet osv.) ligger i «valLog», én rad per registrering
+const valLogs = id => arr("valLog").filter(l => l.act === id).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.created || "").localeCompare(a.created || ""));
+const valCount = a => valLogs(a.id).length;
 function valProgress(a) {
-  const n = Number(a.count) || 0;
+  const n = valCount(a);
   if (a.goal) return `<div class="vprog"><span class="mono"><b>${n}</b> / ${a.goal}${a.unit ? " " + esc(a.unit) : ""}</span>${bar(n / a.goal * 100, n >= a.goal ? "green" : "")}</div>`;
   return a.unit ? `<span class="mono"><b>${n}</b> ${esc(a.unit)}</span>` : '<span class="muted">–</span>';
 }
@@ -3096,15 +3112,20 @@ function validationView() {
   const info = valOf("info")[0], acts = valOf("aktivitet"), crits = valOf("kriterie"), phases = valOf("fase");
   if (!info && !acts.length) return `<div class="card"><div class="empty">Markedsvalideringen er ikke lagt inn ennå.</div></div>`;
   const tone = { "Ikke startet": "t-none", "Pågår": "t-orange", "Ferdig": "t-green" };
-  const actRows = acts.map(a => `<tr data-act="editVal" data-id="${a.id}">
+  const actRows = acts.map(a => { const open = !!(UI.vOpen || {})[a.id], logs = open ? valLogs(a.id) : [];
+    return `<tr class="vrow${open ? " open" : ""}" data-act="vToggle" data-id="${a.id}" aria-expanded="${open}">
       <td class="mono muted">${a.n}</td>
       <td style="min-width:200px"><b>${esc(a.title)}</b><details class="vmore" data-act="noop"><summary>Hva vi gjør</summary><p>${ph(a.what)}</p></details></td>
       <td style="min-width:180px">${ph(a.target)}</td>
       <td>${ph(a.owner || "")}</td>
-      <td style="min-width:130px">${valProgress(a)}${a.unit ? `<button class="mini vplus" data-act="valPlus" data-id="${a.id}" title="Tell opp én">+1</button>` : ""}</td>
-      <td><span class="badge ${tone[a.status] || "t-none"}">${esc(a.status || "Ikke startet")}</span></td></tr>`).join("");
+      <td style="min-width:120px">${valProgress(a)}</td>
+      <td><span class="badge ${tone[a.status] || "t-none"}">${esc(a.status || "Ikke startet")}</span></td></tr>
+    ${open ? `<tr class="vexp"><td></td><td colspan="5"><div class="vlog" data-act="noop">
+      <div class="vlog-h"><b>Registrert (${logs.length})</b><span class="row-btns">${miniBtn("editVal", "Rediger aktivitet", `data-id="${a.id}"`)}<button class="mini vreg" data-act="vLogNew" data-id="${a.id}">${ico("plus", 2.4)}Registrer</button></span></div>
+      ${logs.length ? `<div class="vlog-list">${logs.map(l => `<button class="vlog-row" data-act="vLogEdit" data-id="${l.id}"><span class="mono muted">${l.date ? fmtDate(l.date, false) : "–"}</span><b>${esc(l.name)}</b><span class="mono">${esc(l.phone || "")}</span><span class="muted">${esc(l.note || "")}</span>${l.by ? avatar(l.by, true) : ""}</button>`).join("")}</div>`
+        : '<p class="pk-empty" style="margin:0">Ingen registrert ennå. Trykk «Registrer» når dere har ringt, kontaktet eller intervjuet noen.</p>'}</div></td></tr>` : ""}`; }).join("");
   const critRows = crits.map(c => {
-    const a = c.act ? (S.validation || {})[c.act] : null, cur = a ? Number(a.count) || 0 : null, ok = c.goal && cur != null && cur >= c.goal;
+    const a = c.act ? (S.validation || {})[c.act] : null, cur = a ? valCount(a) : null, ok = c.goal && cur != null && cur >= c.goal;
     return `<tr data-act="editCrit" data-id="${c.id}"><td><b>${esc(c.measure)}</b></td><td>${ph(c.criterion)}</td>
       <td class="mono">${cur != null ? `<b>${cur}</b>` : c.value ? ph(c.value) : '<span class="muted">–</span>'}</td>
       <td>${ok ? `<span class="badge t-green">Nådd</span>` : c.goal || c.criterion ? '<span class="badge t-none">Ikke nådd</span>' : ""}</td></tr>`; }).join("");
@@ -3117,7 +3138,7 @@ function validationView() {
       <div class="vph-foot muted">${done} av ${st.length} ferdig</div></div>`; }).join("");
   return `<div class="card"><div class="card-head"><div><h2>Markedsvalidering for STUD-ENT</h2>${info ? `<p class="sub">${ph(info.purpose)}</p>` : ""}</div>${info ? miniBtn("editValInfo", "Rediger", `data-id="${info.id}"`) : ""}</div>
       ${info && (info.learn || []).length ? `<details class="closed-list"${keepOpen("val-laere")}><summary>Hva vi skal lære (${info.learn.length})</summary><ul class="vlearn">${info.learn.map(l => `<li>${ph(l)}</li>`).join("")}</ul></details>` : ""}</div>
-    <div class="card"><div class="card-head"><div><h2>Aktiviteter</h2><p class="sub">Trykk på en rad for å endre. «+1» teller opp når dere har ringt, fått svar eller gjort et intervju.</p></div></div>
+    <div class="card"><div class="card-head"><div><h2>Aktiviteter</h2><p class="sub">Trykk på en aktivitet for å se og registrere hvem dere har ringt, kontaktet eller intervjuet.</p></div></div>
       <div class="tablewrap"><table class="vtable"><thead><tr><th>#</th><th>Aktivitet</th><th>Mål og resultat</th><th>Ansvarlig</th><th>Fremdrift</th><th>Status</th></tr></thead><tbody>${actRows}</tbody></table></div></div>
     <div class="card"><div class="card-head"><div><h2>Suksesskriterier</h2><p class="sub">Satt før vi starter, så resultatene kan vurderes mot dem etterpå.</p></div></div>
       <div class="tablewrap"><table class="vtable"><thead><tr><th>Hva vi måler</th><th>Kriterium</th><th>Nå</th><th></th></tr></thead><tbody>${critRows}</tbody></table></div></div>
@@ -3129,10 +3150,28 @@ function valForm(a) {
     fields: [{ k: "title", label: "Aktivitet", full: true }, { k: "what", label: "Hva vi gjør", type: "textarea", full: true },
       { k: "target", label: "Mål og resultat", type: "textarea", full: true }, { k: "owner", label: "Ansvarlig" },
       { k: "status", label: "Status", type: "select", opts: VAL_STATUS },
-      { k: "count", label: "Antall så langt", type: "number" }, { k: "goal", label: "Mål (tall, valgfritt)", type: "number" },
-      { k: "unit", label: "Hva telles", ph: "F.eks. intervjuer", hint: "Tom betyr at aktiviteten ikke telles." },
+      { k: "goal", label: "Mål (tall, valgfritt)", type: "number" },
+      { k: "unit", label: "Hva telles", ph: "F.eks. intervjuer", hint: "Tallet er antall registreringer. Tom betyr at tallet ikke vises." },
       { k: "note", label: "Notat", type: "textarea", full: true }],
-    onSave: v => { if (!v.title) return formError("Aktiviteten trenger et navn."); put("validation", Object.assign(clone(a), v, { count: v.count || 0 })); closeModal(); } });
+    onSave: v => { if (!v.title) return formError("Aktiviteten trenger et navn."); put("validation", Object.assign(clone(a), v)); closeModal(); } });
+}
+// Registrering: hvem vi har ringt eller intervjuet. Varsler hvis samme navn eller nummer er registrert fra før.
+function valLogForm(l, isNew) {
+  const a = S.validation[l.act] || {};
+  openForm({ title: (isNew ? "Registrer: " : "Endre: ") + (a.title || ""), value: l,
+    fields: [{ k: "name", label: "Navn", full: true, ph: "Person eller firma" }, { k: "phone", label: "Telefon", type: "tel", ph: "Valgfritt" },
+      { k: "date", label: "Dato", type: "date" }, { k: "by", label: "Hvem i teamet", type: "select", opts: personOpts() },
+      { k: "note", label: "Resultat og notat", type: "textarea", full: true, ph: "F.eks. ikke svar, ring igjen tirsdag, positiv til å anbefale" }],
+    onSave: v => {
+      if (!v.name) return formError("Skriv navnet på den dere har ringt eller snakket med.");
+      const norm = x => String(x || "").toLowerCase().replace(/\s+/g, " ").trim(), digits = x => String(x || "").replace(/\D/g, "");
+      const dup = valLogs(l.act).find(o => o.id !== l.id && (norm(o.name) === norm(v.name) || (digits(v.phone).length >= 8 && digits(o.phone) === digits(v.phone))));
+      if (dup && modalCtx.dupFor !== dup.id) { modalCtx.dupFor = dup.id; return formError(`${dup.name} er allerede registrert${dup.by ? " av " + dup.by : ""}${dup.date ? " " + fmtDate(dup.date, false) : ""}. Trykk «Lagre» igjen for å registrere likevel.`); }
+      put("valLog", Object.assign(clone(l), v)); closeModal();
+      if (isNew && a.status === "Ikke startet") put("validation", Object.assign(clone(a), { status: "Pågår" }));
+      toast(isNew ? `${v.name} er registrert.` : "Endringen er lagret.");
+    },
+    onDelete: isNew ? null : () => { del("valLog", l.id); closeModal(); } });
 }
 function critForm(c) {
   openForm({ title: "Suksesskriterium", value: c,
@@ -4098,7 +4137,9 @@ const A = {
   editCrit: el => { const c = S.validation[el.dataset.id]; if (c) critForm(clone(c)); },
   editPhase: el => { const f = S.validation[el.dataset.id]; if (f) phaseForm(clone(f)); },
   editValInfo: el => { const i = S.validation[el.dataset.id]; if (i) valInfoForm(clone(i)); },
-  valPlus: el => { const a = clone(S.validation[el.dataset.id]); if (!a) return; a.count = (Number(a.count) || 0) + 1; if (a.status === "Ikke startet") a.status = "Pågår"; put("validation", a); toast(`${a.title}: ${a.count}${a.unit ? " " + a.unit : ""}.`); },
+  vToggle: el => { UI.vOpen = UI.vOpen || {}; UI.vOpen[el.dataset.id] = !UI.vOpen[el.dataset.id]; render(true); },
+  vLogNew: el => valLogForm({ id: uid("vl"), act: el.dataset.id, name: "", phone: "", date: todayISO(), by: UI.me || "", note: "", created: new Date().toISOString() }, true),
+  vLogEdit: el => { const l = S.valLog[el.dataset.id]; if (l) valLogForm(clone(l), false); },
   vStepDone: el => vStepChange(el.dataset.id, el.dataset.s, f => { const x = f.steps.find(y => y.id === el.dataset.s); if (x) x.done = !x.done; }),
   vStepDel: el => vStepChange(el.dataset.id, el.dataset.s, f => { f.steps = f.steps.filter(y => y.id !== el.dataset.s); }),
   vStepAdd: el => { const inp = el.parentElement.querySelector(".vstep-new"), v = inp.value.trim(); if (!v) return inp.focus(); vStepChange(el.dataset.id, "", f => { f.steps.push({ id: uid("vs"), text: v, due: null, done: false }); }); },
