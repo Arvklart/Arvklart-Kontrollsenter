@@ -350,6 +350,19 @@ button{cursor:pointer}
 .kc .kside .kstep.ghosty{background:transparent;border-color:transparent;color:var(--muted);font-weight:500;padding-right:0}
 .kc .kside .avbtn .av{margin-left:0}
 .kc .kside .stamp{position:static}
+.kc .kexp{grid-column:1/-1;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:8px;cursor:default}
+.ksteps{display:flex;flex-direction:column;gap:5px}
+.kst{display:flex;align-items:flex-start;gap:8px;text-align:left;width:100%;background:var(--card-hi);border:1px solid var(--line);border-radius:10px;padding:5px 10px;font-size:12.5px;line-height:1.3;color:var(--ink)}
+.kst:hover{background:#fff}
+.kst .kbox{flex:none;width:15px;height:15px;border-radius:4px;border:1.5px solid #B9B3A6;display:grid;place-items:center;margin-top:1px;background:#fff}
+.kst .kbox svg{width:10px;height:10px;color:#fff}
+.kst.done{color:var(--muted)}
+.kst.done span:last-child{text-decoration:line-through}
+.kst.done .kbox{background:var(--green);border-color:var(--green)}
+.kst-add{display:flex;gap:6px}
+.kst-add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;background:#fff}
+.kexp-foot{display:flex;justify-content:flex-end}
+.kc[aria-expanded="true"]{box-shadow:0 4px 14px rgba(45,30,18,.14)}
 .kprog{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--card-hi);border:1px solid var(--line);border-radius:999px;padding:1px 6px}
 .kprog svg{width:10px;height:10px}
 .kprog.all{color:var(--green-ink);background:var(--green-soft);border-color:transparent}
@@ -2363,14 +2376,23 @@ function prioGroups(list, key) {
       : `<div class="pgroup">${head}${l.map(t => kcard(t, key)).join("")}</div>`; };
   return PRIOS.map(box).join("");
 }
+// Når man trykker på et oppgavekort, forlenges det med deloppgavene og en «Rediger»-knapp
+function kExpand(t) {
+  const st = t.steps || [];
+  return `<div class="kexp" data-act="noop">
+    ${st.length ? `<div class="ksteps">${st.map(x => `<button type="button" class="kst${x.done ? " done" : ""}" data-act="kStep" data-id="${t.id}" data-s="${x.id}" aria-pressed="${!!x.done}"><span class="kbox">${x.done ? ico("check", 3) : ""}</span><span>${esc(x.text)}</span></button>`).join("")}</div>` : '<span class="pk-empty">Ingen deloppgaver ennå.</span>'}
+    <div class="kst-add"><input class="kstep-new" data-id="${t.id}" type="text" placeholder="Ny deloppgave" autocomplete="off" aria-label="Ny deloppgave"><button type="button" class="mini" data-act="kStepAdd" data-id="${t.id}">Legg til</button></div>
+    <div class="kexp-foot">${miniBtn("editTask", "Rediger", `data-id="${t.id}"`)}</div></div>`;
+}
 function kcard(t, from, opts = {}) {
   const own = ownersOf(t), todo = t.status === "Må gjøres";
   const step = todo ? (own.length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
-  return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="editTask" tabindex="0">
+  return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="kToggle" tabindex="0" aria-expanded="${!!(UI.kOpen || {})[t.id]}">
     <div class="kbody"><div class="kt">${ph(t.title)}</div></div>
     <div class="kside">${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}${(t.steps || []).length && !isDone(t) ? `<span class="kprog${t.steps.every(x => x.done) ? " all" : ""}" title="Deloppgaver">${ico("check", 2.6)}${t.steps.filter(x => x.done).length}/${t.steps.length}</span>` : ""}${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button></div>
-    ${(t.contacts || []).length || (!isDone(t) && waitIds(t).length) ? `<div class="kfull">${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}${isDone(t) ? "" : waitLine(t)}</div>` : ""}</div>`;
+    ${(t.contacts || []).length || (!isDone(t) && waitIds(t).length) ? `<div class="kfull">${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}${isDone(t) ? "" : waitLine(t)}</div>` : ""}
+    ${(UI.kOpen || {})[t.id] ? kExpand(t) : ""}</div>`;
 }
 VIEWS.oppgaver = function () {
   const ts = tasks().filter(taskFilter).sort(byPrioDue);
@@ -3842,6 +3864,12 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  kToggle: el => { UI.kOpen = UI.kOpen || {}; UI.kOpen[el.dataset.id] = !UI.kOpen[el.dataset.id]; render(true); },
+  kStep: el => { const t = clone(S.tasks[el.dataset.id]); if (!t) return; const x = (t.steps || []).find(y => y.id === el.dataset.s); if (!x) return; x.done = !x.done; put("tasks", t);
+    if (x.done && t.steps.every(y => y.done) && !isDone(t)) toast("Alle deloppgavene er gjort. Husk å markere oppgaven som ferdig."); },
+  kStepAdd: el => { const inp = el.closest(".kexp").querySelector(".kstep-new"), v = inp.value.trim(); if (!v) return inp.focus(); const t = clone(S.tasks[el.dataset.id]); if (!t) return;
+    t.steps = [...(t.steps || []), { id: uid("st"), text: v, done: false }]; put("tasks", t);
+    setTimeout(() => { const n = main.querySelector(`.kstep-new[data-id="${t.id}"]`); if (n) n.focus(); }, 30); },
   stepAdd: () => { const inp = document.getElementById("step-new"); if (!inp || !modalCtx || !modalCtx.steps) return; const v = inp.value.trim(); if (!v) return inp.focus(); modalCtx.steps.push({ id: uid("st"), text: v, done: false }); inp.value = ""; renderSteps(); inp.focus(); },
   stepDel: el => { if (!modalCtx || !modalCtx.steps) return; modalCtx.steps = modalCtx.steps.filter(x => x.id !== el.dataset.id); renderSteps(); },
   toggleWaiting: () => { UI.showWaiting = !UI.showWaiting; render(true); },
@@ -3879,6 +3907,7 @@ document.addEventListener("keydown", ev => {
   if (ev.target.id === "add-input" && ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); A.addCardSave(); }
   if (ev.key === "Enter" && ev.target.matches && ev.target.matches(".kc,.lrow,.msrow,.stair,.hyp,.xp")) ev.target.click();
   if (ev.key === "Enter" && ev.target.id === "step-new") { ev.preventDefault(); A.stepAdd(); return; }
+  if (ev.key === "Enter" && ev.target.classList && ev.target.classList.contains("kstep-new")) { ev.preventDefault(); A.kStepAdd(ev.target.parentElement.querySelector("button")); return; }
   if (ev.key === "Enter" && modalCtx && ev.target.tagName === "INPUT" && ev.target.type !== "checkbox") { ev.preventDefault(); A.saveModal(); }
 });
 main.addEventListener("change", ev => {
