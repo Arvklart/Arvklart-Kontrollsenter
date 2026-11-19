@@ -350,6 +350,20 @@ button{cursor:pointer}
 .kc .kside .kstep.ghosty{background:transparent;border-color:transparent;color:var(--muted);font-weight:500;padding-right:0}
 .kc .kside .avbtn .av{margin-left:0}
 .kc .kside .stamp{position:static}
+.kprog{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--card-hi);border:1px solid var(--line);border-radius:999px;padding:1px 6px}
+.kprog svg{width:10px;height:10px}
+.kprog.all{color:var(--green-ink);background:var(--green-soft);border-color:transparent}
+.steps-box{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)}
+.steps-h b{font-family:var(--mono);font-weight:500;margin-left:4px}
+.steps-list{display:flex;flex-direction:column;gap:4px}
+.step{display:flex;align-items:center;gap:8px;background:var(--card-hi);border:1px solid var(--line);border-radius:10px;padding:6px 8px 6px 10px}
+.step label{flex:1;display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:500;color:var(--ink);cursor:pointer;min-width:0}
+.step label span{overflow-wrap:anywhere}
+.step.done label span{text-decoration:line-through;color:var(--muted)}
+.step-x{border:0;background:none;color:var(--muted);font-size:17px;line-height:1;padding:0 4px}
+.step-x:hover{color:var(--red-ink)}
+.step-add{display:flex;gap:8px}
+.step-add input{flex:1;min-width:0}
 .kc:hover{box-shadow:0 4px 12px rgba(45,30,18,.14)}
 .kc.dragging{opacity:.45}
 .kc::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--stripe,#C9B8A2)}
@@ -1841,7 +1855,7 @@ function avatar(owner, sm) {
 const ownerText = o => o ? esc(o) : `<span class="muted">Ikke fordelt</span>`;
 /* Oppgaver kan ha flere ansvarlige. Eldre data med ett navn i «owner» gjøres om til en liste. */
 function ownersOf(t) { return Array.isArray(t.owners) ? t.owners.filter(Boolean) : (t.owner ? [t.owner] : []); }
-function normTask(t) { if (t.prio === "Kritisk") t.prio = "Høy"; if (t.area === undefined) t.area = CAT_TO_AREA[t.cat] || ""; if (t.sub === undefined) t.sub = ""; if (!Array.isArray(t.contacts)) t.contacts = []; if (!Array.isArray(t.waitsOn)) t.waitsOn = []; t.status = normStatus(t.status); t.owners = PEOPLE.filter(p => ownersOf(t).includes(p)).concat(ownersOf(t).filter(o => !PEOPLE.includes(o))); delete t.owner; return t; }
+function normTask(t) { if (t.prio === "Kritisk") t.prio = "Høy"; if (!Array.isArray(t.steps)) t.steps = []; if (t.area === undefined) t.area = CAT_TO_AREA[t.cat] || ""; if (t.sub === undefined) t.sub = ""; if (!Array.isArray(t.contacts)) t.contacts = []; if (!Array.isArray(t.waitsOn)) t.waitsOn = []; t.status = normStatus(t.status); t.owners = PEOPLE.filter(p => ownersOf(t).includes(p)).concat(ownersOf(t).filter(o => !PEOPLE.includes(o))); delete t.owner; return t; }
 const joinNames = a => a.length <= 1 ? (a[0] || "") : a.slice(0, -1).join(", ") + " og " + a[a.length - 1];
 const ownersText = t => { const a = ownersOf(t); return a.length ? esc(joinNames(a)) : `<span class="muted">Ikke fordelt</span>`; };
 function avatars(t, sm) { const a = ownersOf(t); return a.length ? `<span class="avs">${a.map(o => avatar(o, sm)).join("")}</span>` : avatar("", sm); }
@@ -2355,7 +2369,7 @@ function kcard(t, from, opts = {}) {
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
   return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="editTask" tabindex="0">
     <div class="kbody"><div class="kt">${ph(t.title)}</div></div>
-    <div class="kside">${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button></div>
+    <div class="kside">${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}${(t.steps || []).length && !isDone(t) ? `<span class="kprog${t.steps.every(x => x.done) ? " all" : ""}" title="Deloppgaver">${ico("check", 2.6)}${t.steps.filter(x => x.done).length}/${t.steps.length}</span>` : ""}${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button></div>
     ${(t.contacts || []).length || (!isDone(t) && waitIds(t).length) ? `<div class="kfull">${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}${isDone(t) ? "" : waitLine(t)}</div>` : ""}</div>`;
 }
 VIEWS.oppgaver = function () {
@@ -3324,6 +3338,14 @@ function applyPicks() {
     if (b) { b.hidden = !n; b.textContent = n; }
   }
 }
+/* Deloppgaver: en enkel sjekkliste inne i oppgaven. Lagres når oppgaven lagres. */
+function renderSteps() {
+  const box = document.getElementById("steps-list"); if (!box || !modalCtx || !modalCtx.steps) return;
+  const st = modalCtx.steps, done = st.filter(x => x.done).length;
+  box.innerHTML = st.map(x => `<div class="step${x.done ? " done" : ""}"><label><input type="checkbox" data-step="${x.id}"${x.done ? " checked" : ""}><span>${esc(x.text)}</span></label><button type="button" class="step-x" data-act="stepDel" data-id="${x.id}" aria-label="Fjern deloppgaven">×</button></div>`).join("")
+    || '<span class="pk-empty">Ingen deloppgaver ennå. Del gjerne opp oppgaven i små steg.</span>';
+  document.getElementById("steps-count").textContent = st.length ? `${done}/${st.length}` : "";
+}
 function taskForm(t, isNew) {
   openForm({
     title: isNew ? "Ny oppgave" : "Rediger oppgave", value: Object.assign({}, t, { area: t.area && AREA[t.area] ? t.area : "", sub: t.sub || "" }),
@@ -3338,6 +3360,8 @@ function taskForm(t, isNew) {
       { k: "ms", type: "picks" }, { k: "waitsOn", type: "picks" }, { k: "contacts", type: "picks" },
       { k: "picks", type: "html", html: taskPicks(t) },
       { k: "note", label: "Notat", type: "textarea", full: true },
+      { k: "stepsBox", type: "html", html: `<div class="fl full steps-box"><span class="steps-h">Deloppgaver <b id="steps-count"></b></span><div id="steps-list" class="steps-list"></div>
+        <div class="step-add"><input id="step-new" type="text" placeholder="Legg til en deloppgave og trykk Enter" autocomplete="off"><button type="button" class="mini" data-act="stepAdd">Legg til</button></div></div>` },
       { k: "focus", label: "Ukens viktigste", type: "check", text: "Vis på forsiden under «Ukens viktigste oppgaver» (maks 5)", full: true }
     ],
     onSave: v => {
@@ -3349,6 +3373,8 @@ function taskForm(t, isNew) {
         v.status = "Må gjøres"; gaveBack = true;
       }
       if (!(SUBS[v.area] || []).some(x => x[0] === v.sub)) v.sub = "";
+      const pending = (document.getElementById("step-new") || {}).value; if (pending && pending.trim()) modalCtx.steps.push({ id: uid("st"), text: pending.trim(), done: false });
+      v.steps = modalCtx.steps.filter(x => x.text);
       const o = Object.assign(clone(t), v); delete o.owner;
       if (o.due) o.dueText = "";
       const blocking = openBlockers(o);
@@ -3373,7 +3399,11 @@ function taskForm(t, isNew) {
     modalCtx.pkArea = { waitsOn: area.value, contacts: area.value }; applyPicks();
   });
   sub.disabled = sub.options.length < 2;
-  document.getElementById("mform").addEventListener("change", ev => { if (ev.target.type === "checkbox") applyPicks(); });
+  document.getElementById("mform").addEventListener("change", ev => {
+    if (ev.target.dataset.step) { const st = modalCtx.steps.find(x => x.id === ev.target.dataset.step); if (st) st.done = ev.target.checked; renderSteps(); return; }
+    if (ev.target.type === "checkbox") applyPicks();
+  });
+  modalCtx.steps = clone(t.steps || []); renderSteps();
   applyPicks();
 }
 /* Flytt en oppgave. Til «Pågår» eller «Ferdig» må den ha minst én ansvarlig. */
@@ -3812,6 +3842,8 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  stepAdd: () => { const inp = document.getElementById("step-new"); if (!inp || !modalCtx || !modalCtx.steps) return; const v = inp.value.trim(); if (!v) return inp.focus(); modalCtx.steps.push({ id: uid("st"), text: v, done: false }); inp.value = ""; renderSteps(); inp.focus(); },
+  stepDel: el => { if (!modalCtx || !modalCtx.steps) return; modalCtx.steps = modalCtx.steps.filter(x => x.id !== el.dataset.id); renderSteps(); },
   toggleWaiting: () => { UI.showWaiting = !UI.showWaiting; render(true); },
   toggleAreaFilter: () => { if (!modalCtx) return; modalCtx.showAllOpts = !modalCtx.showAllOpts; applyAreaFilter(); },
   aiToggle: () => { CHAT.open = !CHAT.open; renderChat(); if (CHAT.open) document.getElementById("ai-input").focus(); },
@@ -3846,6 +3878,7 @@ document.addEventListener("keydown", ev => {
   if (ev.key === "Escape") { if (modalEl.innerHTML) closeModal(); else if (CHAT.open) { CHAT.open = false; renderChat(); document.getElementById("ai-fab").focus(); } else if (UI.addingCol) { UI.addingCol = null; render(true); } }
   if (ev.target.id === "add-input" && ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); A.addCardSave(); }
   if (ev.key === "Enter" && ev.target.matches && ev.target.matches(".kc,.lrow,.msrow,.stair,.hyp,.xp")) ev.target.click();
+  if (ev.key === "Enter" && ev.target.id === "step-new") { ev.preventDefault(); A.stepAdd(); return; }
   if (ev.key === "Enter" && modalCtx && ev.target.tagName === "INPUT" && ev.target.type !== "checkbox") { ev.preventDefault(); A.saveModal(); }
 });
 main.addEventListener("change", ev => {
