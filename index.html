@@ -46,6 +46,67 @@ button{cursor:pointer}
 .tb-links a,.tb-links button{color:#C9C5BA;text-decoration:none;background:none;border:0;border-bottom:2px solid transparent;padding:8px 10px;font-size:14px;font-weight:500;white-space:nowrap}
 .tb-links a:hover,.tb-links button:hover{color:#fff}
 .tb-links a.on{color:#fff;border-bottom-color:#E9E4D8}
+.tb-switch{display:inline-flex!important;align-items:center;gap:8px;margin-left:6px}
+.tb-switch .sw-s{display:none}
+.tb-switch .sw{position:relative;flex:none;width:32px;height:18px;border-radius:999px;background:rgba(255,255,255,.18);transition:background .15s}
+.tb-switch .sw::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#E9E4D8;transition:transform .15s}
+.tb-switch[aria-checked="true"]{color:#fff!important}
+.tb-switch[aria-checked="true"] .sw{background:var(--rose)}
+.tb-switch[aria-checked="true"] .sw::after{transform:translateX(14px);background:#fff}
+/* Kalender */
+.h-link{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.h-link svg{width:15px;height:15px;opacity:.5}
+.h-link:hover{text-decoration:underline;text-underline-offset:3px}
+.av-it .av-who{display:flex;gap:2px;margin-top:3px}
+.kal-card{padding:14px}
+.kal-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.kal-top h2{margin:0;font-family:var(--serif);font-weight:600;font-size:22px}
+.kal-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.kal-h{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:0 4px}
+.kal-c{min-height:104px;border:1px solid var(--line);border-radius:10px;background:var(--card-hi);padding:6px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-width:0}
+.kal-c:hover{border-color:#CFC9BC}
+.kal-c.other{opacity:.45}
+.kal-c.past{background:transparent}
+.kal-c.today{background:#fff;box-shadow:inset 0 0 0 2px var(--rose)}
+.kal-n{font-family:var(--mono);font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+.kal-c.today .kal-n{color:var(--ink);font-weight:700}
+.kal-n .kal-wd{display:none}
+.kal-c .av-it{padding:3px 6px;font-size:12px;cursor:pointer}
+.kal-c .av-it small{font-size:10.5px}
+.kal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted)}
+.kal-legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* Filter på oppgavesiden */
+.ftool{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;margin-top:-6px}
+.fsum{font-size:12.5px;color:var(--on-bg-muted)}
+.fbtn{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px;color:var(--ink)}
+.fbtn svg{width:15px;height:15px}
+.fbtn.on{background:var(--bar);color:var(--card);border-color:var(--bar)}
+.fbtn b{font-family:var(--mono);font-size:11px;background:var(--rose);color:#fff;border-radius:999px;padding:0 6px;line-height:17px}
+.fpanel{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 22px;padding:16px 18px}
+.fpanel .fg{display:flex;flex-direction:column;gap:7px;min-width:0}
+.fpanel .eyebrow{color:var(--muted)}
+.fpanel select{border-radius:999px;border:1px solid var(--line);background:var(--card);padding:6px 10px;font-size:13px;max-width:100%}
+.fpanel .ffoot{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:12px}
+.board.bstatus{grid-template-columns:repeat(3,minmax(232px,1fr)) minmax(190px,.72fr)}
+.col .closed-list{margin-top:4px}
+.col .closed-list .kc{margin-top:8px}
+@media (max-width:760px){
+  .kal-grid{grid-template-columns:minmax(0,1fr);gap:4px}
+  .kal-h,.kal-c.empty:not(.today),.kal-c.other{display:none}
+  .kal-c{min-height:0;flex-direction:row;flex-wrap:wrap;align-items:flex-start}
+  .kal-n{width:100%}.kal-n > span:first-child{display:none}.kal-n .kal-wd{display:inline}
+  .kal-c .av-it{flex:1 1 100%}
+  .tb-switch{margin-left:0}
+}
+@media (max-width:520px){
+  .tb-brand span:last-child{display:none}
+  .topbar{gap:6px}
+  .tb-links a,.tb-links button{padding:8px 7px;font-size:13px}
+  .tb-switch{gap:5px}
+  .tb-switch .sw-l{display:none}.tb-switch .sw-s{display:inline}
+  .tb-switch .sw{width:28px;height:16px}.tb-switch .sw::after{width:12px;height:12px}
+  .tb-switch[aria-checked="true"] .sw::after{transform:translateX(12px)}
+}
 
 /* ---------- Sidekolonne ---------- */
 .side{--on-bg:#ECE9E0;--on-bg-muted:#A3A398;display:flex;flex-direction:column;gap:16px;position:sticky;top:var(--topbar);height:calc(100vh - var(--topbar));overflow:auto;align-self:start;background:var(--side);padding:18px 14px 24px;scrollbar-width:thin}
@@ -263,7 +324,14 @@ button{cursor:pointer}
 .kc.p-Kritisk{--stripe:var(--red)}.kc.p-Høy{--stripe:var(--orange)}.kc.p-Middels{--stripe:#C9AE6B}.kc.p-Lav{--stripe:#A9B89D}
 .kc .kt{font-weight:600;font-size:13.5px;line-height:1.32;overflow-wrap:anywhere;margin-top:2px}
 .kc.isdone .kt{color:var(--muted);text-decoration:line-through}
-.kc .kf{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.kc .kf{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;min-width:0}
+.kc .kf .badge{font-size:10px;padding:2px 5px}
+.kc .kf .tag{font-size:10.5px;padding:1px 5px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc .kf .kstep{flex:none;margin-left:auto;display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:2px 7px;white-space:nowrap}
+.kc .kf .kstep svg{width:10px;height:10px}
+.kc .kf .kstep.ghosty{background:transparent;border-color:transparent;color:var(--muted);font-weight:500}
+.kc .kf .avbtn{flex:none}
+.kc.isdone .kf{flex-wrap:wrap;row-gap:4px}
 .kc .kf .av{margin-left:auto}
 .tag{font-size:11px;font-weight:600;color:var(--muted);background:#EFE6D9;border:1px solid var(--line);border-radius:6px;padding:1px 7px}
 .kc.pop{animation:pop .7s ease}
@@ -1068,7 +1136,7 @@ const FIXED_NOTES = [
 ];
 
 /* ===================================================================== */
-const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company"];
+const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events"];
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
@@ -1144,6 +1212,7 @@ const I = {
   globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
   link:'<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'
 };
+I.filter = '<path d="M4 6h16M7 12h10M10 18h4"/>';
 const ico = (n, sw = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]}</svg>`;
 
 const PAGES = [
@@ -1151,6 +1220,7 @@ const PAGES = [
   { id: "oppgaver", name: "Oppgaver", icon: "board", sub: "Alle oppgaver starter i «Må gjøres». Den som tar en oppgave, setter navnet sitt på og flytter den til «Pågår». Flere kan dele en oppgave." },
   { id: "milepaeler", name: "Milepæler", icon: "flag", sub: "Innleveringer og hendelser i STR466, høst 2026." },
   { id: "moter", name: "Møter", icon: "cal", sub: "Beslutninger og actionpunkter fra teammøtene." },
+  { id: "kalender", name: "Kalender", icon: "cal", sub: "Møter, arrangementer og milepæler. Det du legger inn her, vises også under Avtaler på forsiden." },
   ...AREAS.map(a => ({ id: a.id, name: a.name, icon: a.icon, sub: a.desc, area: true })),
   { id: "kontakter", name: "Kontakter", icon: "users", sub: "Folk og organisasjoner vi bør snakke med. Koble oppgaver til kontaktene, f.eks. «Kontakt advokaten»." }
 ];
@@ -1195,7 +1265,7 @@ function relText(n) { if (n === 0) return "I dag"; if (n === 1) return "I morgen
 /* ---------- Tilstand og lagring ---------- */
 const S = {};
 const UI = {
-  page: "hjem", weekOffset: 0, filter: "all", boardMode: "status", addingCol: null, addingLeadCol: null,
+  page: "hjem", weekOffset: 0, fWho: "all", fDue: "all", filterOpen: false, mine: false, boardMode: "status", addingCol: null, addingLeadCol: null,
   me: "", lastDone: null, seedState: "", sync: "Kobler til …", whatIdx: 0, winDraft: null, email: ""
 };
 /* Bare personlige innstillinger lagres i nettleseren. Selve dataene ligger i Supabase. */
@@ -1228,10 +1298,10 @@ function loadFromArrays(src) {
 function toArrays() { const o = {}; for (const c of COLLS) o[c] = Object.values(S[c] || {}); return o; }
 
 (function initState() {
-  try { const p = JSON.parse(lsGet(LS_PREF) || "{}"); UI.me = p.me || ""; UI.boardMode = p.boardMode || "status"; } catch (e) {}
+  try { const p = JSON.parse(lsGet(LS_PREF) || "{}"); UI.me = p.me || ""; UI.boardMode = p.boardMode || "status"; UI.mine = !!p.mine && !!UI.me; } catch (e) {}
   loadFromArrays({});
 })();
-const savePref = () => lsSet(LS_PREF, JSON.stringify({ me: UI.me, boardMode: UI.boardMode }));
+const savePref = () => lsSet(LS_PREF, JSON.stringify({ me: UI.me, boardMode: UI.boardMode, mine: UI.mine }));
 
 /* ---------- Supabase ----------
    Den offentlige nøkkelen er ment å ligge i nettleseren. Tilgangen styres av
@@ -1683,10 +1753,10 @@ function releaseWaiting(doneId) {
   ready.forEach(t => put("tasks", Object.assign(clone(t), { status: "Må gjøres" })));
   if (ready.length) setTimeout(() => toast(`Klar til å starte: ${joinNames(ready.map(t => "«" + t.title + "»"))}. ${ready.length === 1 ? "Den" : "De"} ligger nå i «Må gjøres».`), 1200);
 }
-function dueBadge(t) {
+function dueBadge(t, short) {
   if (!t.due) return t.dueText ? `<span class="badge t-none">${ph(t.dueText)}</span>` : `<span class="badge t-none">Ingen frist</span>`;
   const tone = taskTone(t);
-  return `<span class="badge t-${tone}">${isDone(t) ? "Ferdig" : fmtDate(t.due)}</span>`;
+  return `<span class="badge t-${tone}">${isDone(t) ? "Ferdig" : fmtDate(t.due, !short)}</span>`;
 }
 const bar = (pct, cls = "") => `<div class="bar ${cls}"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>`;
 function metric(label, val, pct, cls) { return `<div class="metric"><div class="mh"><span>${label}</span><span class="mv">${val}</span></div>${bar(pct, cls)}</div>`; }
@@ -1747,8 +1817,9 @@ function renderSide() {
         || '<p class="w-none">Ingen flere frister denne uken.</p>'}
       ${dl.length > shown.length ? `<button class="w-more" data-act="go" data-p="oppgaver">+ ${dl.length - shown.length} til</button>` : ""}</div>`;
   const openCount = tasks().filter(t => !isDone(t)).length;
-  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["drift", "Drift"]]
-    .map(([id, l]) => `<a href="#${id}" class="${UI.page === id ? "on" : ""}"${UI.page === id ? ' aria-current="page"' : ""}>${l}</a>`).join("") + `<button type="button" data-act="aiToggle">Assistent</button>`;
+  document.getElementById("tblinks").innerHTML = [["hjem", "Oversikt"], ["kalender", "Kalender"]]
+    .map(([id, l]) => `<a href="#${id}" class="${UI.page === id ? "on" : ""}"${UI.page === id ? ' aria-current="page"' : ""}>${l}</a>`).join("") + `<button type="button" data-act="aiToggle">Assistent</button>`
+    + `<button type="button" class="tb-switch" role="switch" aria-checked="${UI.mine ? "true" : "false"}" data-act="mineToggle" title="${UI.mine ? "Viser bare dine oppgaver og avtaler (" + esc(UI.me) + "). Klikk for å vise alle." : "Vis bare dine viktigste oppgaver og dine avtaler"}"><span class="sw" aria-hidden="true"></span><span class="sw-l">Bare mine</span><span class="sw-s">Mine</span></button>`;
   const counts = { oppgaver: openCount, kontakter: arr("contacts").length };
   AREAS.forEach(a => { counts[a.id] = areaTasks(a.id).length; });
   document.getElementById("nav").innerHTML = NAV.map(g => (g.label ? `<span class="nav-label">${g.label}</span>` : "") + g.items.map(id => {
@@ -1788,7 +1859,7 @@ function headRight(id) {
     return { oppgaver: btn("newTask", "Ny oppgave"), moter: meetingsHead(), funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), juridisk: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
       milepaeler: btn("newMs", "Ny milepæl"), partnere: btn("newContact", "Ny partner", 'data-area="marked"'), finansiering: btn("newFund", "Nytt trinn"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
-  return { hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
+  return { kalender: btn("newAvtale", "Ny avtale"), hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
     okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: meetingsHead() }[id] || "";
 }
 
@@ -1799,14 +1870,15 @@ VIEWS.hjem = function () {
   const today = todayISO();
   // Ukens viktigste oppgaver: velges av teamet (feltet focus), ikke regnet ut automatisk. Bare hvem og hva.
   const openAll = tasks().filter(t => !isDone(t));
-  const top = focusTasks().filter(t => !isDone(t));
-  const wk = mondayOf(today), doneWeek = focusTasks().filter(t => isDone(t) && t.doneAt && toUTC(t.doneAt) >= toUTC(wk));
+  const mineOnly = UI.mine && UI.me, myF = () => focusTasks().filter(t => !mineOnly || ownersOf(t).includes(UI.me));
+  const top = myF().filter(t => !isDone(t));
+  const wk = mondayOf(today), doneWeek = myF().filter(t => isDone(t) && t.doneAt && toUTC(t.doneAt) >= toUTC(wk));
   const fkRow = t => { const done = isDone(t);
     return `<div class="fk-box${done ? " done" : ""}"><button class="fk-check${done ? " on" : ""}" data-act="toggleDone" data-id="${t.id}" aria-label="${done ? "Marker som ikke ferdig" : "Marker som ferdig"}">${ico("check", 3)}</button>
       <button class="fk-main" data-act="openTaskInArea" data-id="${t.id}"><b>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}</b><span>${ph(t.title)}</span>${t.due && !done ? `<small class="mono">${fmtDate(t.due)}</small>` : ""}</button>
       ${ownersOf(t).length ? avatars(t, true) : ""}${done ? "" : `<button class="fk-x" data-act="unFocus" data-id="${t.id}" aria-label="Fjern fra ukens viktigste" title="Fjern fra listen">×</button>`}</div>`; };
-  const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2></div>${top.length < 5 ? '<button class="mini" data-act="pickFocus">+ Legg til</button>' : ""}</div>
-    <div class="fk-list">${top.map(fkRow).join("") || `<div class="empty">Ingen valgt ennå. Legg til de viktigste oppgavene etter møtet.</div>`}</div>
+  const topCard = `<div class="card"><div class="card-head"><div><h2>${mineOnly ? "Dine viktigste oppgaver" : "Ukens viktigste oppgaver"}</h2></div>${focusTasks().filter(t => !isDone(t)).length < 5 ? '<button class="mini" data-act="pickFocus">+ Legg til</button>' : ""}</div>
+    <div class="fk-list">${top.map(fkRow).join("") || `<div class="empty">${mineOnly ? "Du har ingen av ukens viktigste oppgaver." : "Ingen valgt ennå. Legg til de viktigste oppgavene etter møtet."}</div>`}</div>
     ${doneWeek.length ? `<details class="closed-list fk-done"${keepOpen("fokus-ferdig")}><summary>Fullført denne uken (${doneWeek.length})</summary><div class="fk-list">${doneWeek.map(fkRow).join("")}</div></details>` : ""}
     <div class="card-foot">${miniBtn("go", `Se alle oppgaver (${openAll.length})`, 'data-p="drift.oppgaver"')}</div></div>`;
 
@@ -1847,19 +1919,80 @@ VIEWS.hjem = function () {
 
   return `<div class="grid-top3">${topCard}${fristCard}${avtalerCard()}</div>
     ${goalsCard()}
-    ${statusCard}
-    ${followUpCard()}`;
+    ${statusCard}`;
 };
 
 /* ---------- Avtaler på forsiden: møter, vurderinger, innleveringer og arrangementer de neste to ukene (man–fre) ---------- */
+const EVENT_TYPES = ["Møte", "Arrangement", "Annet"];
+const EVENT_COL = { "Møte": "var(--rose)", "Arrangement": "#6F8FA6", "Annet": "#A3A398" };
+const mineView = () => !!(UI.mine && UI.me);
 function avtaler(iso) {
-  const out = [];
-  arr("meetings").filter(m => m.date === iso).sort((a, b) => (a.time || "99").localeCompare(b.time || "99"))
-    .forEach(m => out.push({ act: "editMeeting", id: m.id, title: m.title || "Møte", kind: m.time ? "Møte · kl. " + m.time : "Møte", col: "var(--rose)" }));
+  const out = [], mine = mineView(), mineOk = x => !mine || (x.attendees || []).includes(UI.me);
+  const timed = [];
+  arr("meetings").filter(m => m.date === iso && mineOk(m))
+    .forEach(m => timed.push({ t: m.time, act: "editMeeting", id: m.id, title: m.title || "Møte", kind: m.time ? "Møte · kl. " + m.time : "Møte", col: EVENT_COL["Møte"], who: m.attendees || [] }));
+  arr("events").filter(e => e.date === iso && mineOk(e))
+    .forEach(e => timed.push({ t: e.time, act: "editEvent", id: e.id, title: e.title || e.type, kind: (e.type || "Annet") + (e.time ? " · kl. " + e.time + (e.endTime ? "–" + e.endTime : "") : "") + (e.place ? " · " + e.place : ""), col: EVENT_COL[e.type] || EVENT_COL.Annet, who: e.attendees || [] }));
+  timed.sort((a, b) => (a.t || "99").localeCompare(b.t || "99")).forEach(x => out.push(x));
   milestones().filter(m => !msClosed(m) && m.date && (m.date === iso || (m.end && toUTC(m.date) <= toUTC(iso) && toUTC(iso) <= toUTC(m.end))))
     .forEach(m => out.push({ act: "editMs", id: m.id, title: m.title, kind: m.type, col: m.type === "Innlevering" || m.type === "Vurdering" ? "var(--red)" : "var(--green)" }));
   return out;
 }
+const avItem = x => `<button class="av-it" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><b>${esc(x.title)}</b><small>${esc(x.kind)}</small>${(x.who || []).length ? `<span class="av-who">${x.who.map(p => avatar(p, true)).join("")}</span>` : ""}</button>`;
+
+/* ---------- Kalender: hele måneden, mandag til fredag ---------- */
+VIEWS.kalender = function () {
+  const today = todayISO(), ym = UI.kalMonth || today.slice(0, 7), [y, mo] = ym.split("-").map(Number);
+  const first = ym + "-01", last = ym + "-" + String(new Date(Date.UTC(y, mo, 0)).getUTCDate()).padStart(2, "0");
+  let cells = "";
+  for (let wk = mondayOf(first); toUTC(wk) <= toUTC(last); wk = addDays(wk, 7)) {
+    for (let i = 0; i < 5; i++) {
+      const iso = addDays(wk, i), d = dOf(iso), other = !iso.startsWith(ym), past = toUTC(iso) < toUTC(today);
+      let it = avtaler(iso);
+      // Lørdag og søndag vises på fredagen, så ingenting blir borte
+      if (i === 4) for (const k of [5, 6]) { const w = addDays(wk, k), wd = dOf(w); avtaler(w).forEach(x => it.push(Object.assign({}, x, { kind: WD[wd.getUTCDay()] + " " + wd.getUTCDate() + ". · " + x.kind }))); }
+      cells += `<div class="kal-c${iso === today ? " today" : ""}${other ? " other" : ""}${past ? " past" : ""}${it.length ? "" : " empty"}" data-act="newAvtale" data-d="${iso}" title="Ny avtale ${fmtDate(iso)}">
+        <span class="kal-n"><span>${iso === today ? "I dag" : d.getUTCDate() + "."}</span><span class="kal-wd">${WDL[d.getUTCDay()]} ${d.getUTCDate()}. ${MON[d.getUTCMonth()]}</span></span>${it.map(avItem).join("")}</div>`;
+    }
+  }
+  const name = MONL[mo - 1][0].toUpperCase() + MONL[mo - 1].slice(1);
+  return `<div class="card kal-card"><div class="kal-top"><h2>${name} <span class="muted" style="font-weight:500">${y}</span></h2>
+      <div class="weeknav">${ym !== today.slice(0, 7) ? `<button class="mini" data-act="kalNav" data-d="0">I dag</button>` : ""}<button class="iconbtn" data-act="kalNav" data-d="-1" aria-label="Forrige måned">${ico("left", 2.2)}</button><button class="iconbtn" data-act="kalNav" data-d="1" aria-label="Neste måned">${ico("right", 2.2)}</button></div></div>
+    ${mineView() ? `<p class="muted" style="margin:-4px 0 10px;font-size:13px">Viser bare avtaler der ${esc(UI.me)} er med, og alle milepæler. Slå av «Bare mine» øverst for å se alt.</p>` : ""}
+    <div class="kal-grid">${["man", "tir", "ons", "tor", "fre"].map(d => `<span class="kal-h">${d}</span>`).join("")}${cells}</div>
+    <div class="kal-legend"><span><i style="background:${EVENT_COL["Møte"]}"></i>Møte</span><span><i style="background:${EVENT_COL.Arrangement}"></i>Arrangement</span><span><i style="background:var(--red)"></i>Innlevering og vurdering</span><span><i style="background:var(--green)"></i>Andre milepæler</span><span>Trykk på en dag for å legge inn en avtale.</span></div></div>`;
+};
+// Ny avtale: møter lagres som møter (vises også under Drift › Møter), andre avtaler i «events»
+function avtaleForm(e, isNew) {
+  const isMeeting = !isNew && e.coll === "meetings";
+  const fields = [
+    ...(isNew ? [{ k: "type", label: "Type", type: "select", opts: EVENT_TYPES }] : [{ k: "type", label: "Type", type: "select", opts: EVENT_TYPES.filter(t => t !== "Møte") }]),
+    { k: "title", label: "Tittel", ph: "F.eks. Teammøte eller konferanse" },
+    { k: "date", label: "Dato", type: "date" },
+    { k: "time", label: "Fra kl.", type: "time" },
+    { k: "endTime", label: "Til kl.", type: "time" },
+    { k: "place", label: "Sted", ph: "Valgfritt" },
+    { k: "attendees", label: "Hvem skal være med?", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
+    { k: "note", label: "Notat", type: "textarea", full: true }
+  ];
+  openForm({
+    title: isNew ? "Ny avtale" : "Rediger avtale", value: e, fields,
+    onSave: v => {
+      if (!v.title) return formError("Avtalen trenger en tittel.");
+      if (!v.date) return formError("Velg en dato.");
+      if (v.endTime && v.time && v.endTime < v.time) return formError("«Til kl.» må være etter «Fra kl.».");
+      if (isNew && v.type === "Møte") {
+        put("meetings", { id: uid("mt"), title: v.title, date: v.date, time: v.time || "", endTime: v.endTime || "", place: v.place || "", with: "Team", attendees: v.attendees, decisions: v.note || "", actions: [], link: "" });
+      } else {
+        const o = Object.assign(clone(e), { type: v.type, title: v.title, date: v.date, time: v.time || "", endTime: v.endTime || "", place: v.place || "", attendees: v.attendees, note: v.note || "" });
+        delete o.coll; put("events", o);
+      }
+      closeModal(); toast("Avtalen er lagret.");
+    },
+    onDelete: isNew || isMeeting ? null : () => { del("events", e.id); closeModal(); }
+  });
+}
+
 function avtalerCard() {
   const today = todayISO(), start = addDays(mondayOf(today), (UI.wpOffset || 0) * 7);
   const week = w => {
@@ -1867,10 +2000,10 @@ function avtalerCard() {
     return `<div class="av-week"><p class="av-wl">Uke ${isoWeek(mon)}</p>${[0, 1, 2, 3, 4].map(i => {
       const iso = addDays(mon, i), d = dOf(iso), it = avtaler(iso), past = toUTC(iso) < toUTC(today);
       return `<div class="av-day${iso === today ? " today" : ""}${past ? " past" : ""}${it.length ? "" : " av-empty"}"><span class="av-d mono">${iso === today ? "I dag" : WD[d.getUTCDay()] + " " + d.getUTCDate() + "."}</span>
-        <span class="av-items">${it.map(x => `<button class="av-it" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><b>${esc(x.title)}</b><small>${esc(x.kind)}</small></button>`).join("") || '<span class="av-none">–</span>'}</span></div>`;
+        <span class="av-items">${it.map(x => `${avItem(x)}`).join("") || '<span class="av-none">–</span>'}</span></div>`;
     }).join("")}</div>`;
   };
-  return `<div class="card av-card"><div class="card-head"><div><h2>Avtaler</h2></div>
+  return `<div class="card av-card"><div class="card-head"><div><h2><a class="h-link" href="#kalender" title="Åpne kalenderen">${mineView() ? "Dine avtaler" : "Avtaler"}${ico("right", 2.4)}</a></h2></div>
       <div class="weeknav"><button class="iconbtn" data-act="wpNav" data-d="-1" aria-label="Forrige uke">${ico("left", 2.2)}</button><button class="iconbtn" data-act="wpNav" data-d="1" aria-label="Neste uke">${ico("right", 2.2)}</button></div></div>
     ${UI.wpOffset ? `<button class="mini" data-act="wpNav" data-d="0" style="margin:-4px 0 8px">Tilbake til i dag</button>` : ""}${week(0)}${week(1)}</div>`;
 }
@@ -2064,30 +2197,32 @@ function followUpCard() {
 function taskFilter(t) {
   const today = todayISO(), mon = mondayOf(today), sun = addDays(mon, 6);
   if (UI.areaFilter) { const [fa, fs] = UI.areaFilter.split("."); if (t.area !== fa || (fs && t.sub !== fs)) return false; }
-  switch (UI.filter) {
-    case "mine": return UI.me ? ownersOf(t).includes(UI.me) : true;
-    case "unassigned": return !ownersOf(t).length;
-    case "week": return t.due && toUTC(t.due) >= toUTC(mon) && toUTC(t.due) <= toUTC(sun);
-    case "overdue": return !isDone(t) && t.due && daysUntil(t.due) < 0;
+  if (UI.fWho === "mine" && UI.me && !ownersOf(t).includes(UI.me)) return false;
+  if (UI.fWho === "unassigned" && ownersOf(t).length) return false;
+  const late = !isDone(t) && t.due && daysUntil(t.due) < 0;
+  switch (UI.fDue) {
+    case "week": return !!t.due && toUTC(t.due) >= toUTC(mon) && toUTC(t.due) <= toUTC(sun);
+    case "overdue": return !!late;
+    case "notdue": return !late;
     default: return true;
   }
 }
+const filterCount = () => (UI.fWho !== "all") + (UI.fDue !== "all") + !!UI.areaFilter;
+function resetFilters() { UI.fWho = "all"; UI.fDue = "all"; UI.areaFilter = ""; }
 function kcard(t, from) {
   const own = ownersOf(t), todo = t.status === "Må gjøres";
-  const step = todo ? (own.length ? "Start" : "Ta oppgaven") : NEXT_STEP[t.status][1];
+  const step = todo ? (own.length ? "Start" : "Ta oppgaven") : t.status === "Venter" ? "Start" : NEXT_STEP[t.status][1];
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
   return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="editTask" tabindex="0">
     ${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}
     <div class="kt" style="${isDone(t) ? "padding-right:26px" : ""}">${ph(t.title)}</div>
-    <div class="kf">${dueBadge(t)}${taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}</div>
+    <div class="kf">${t.due && !isDone(t) ? dueBadge(t, true) : ""}${taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button>${who}</div>
     ${own.length && !todo ? `<div class="kown">${esc(joinNames(own))}</div>` : ""}
     ${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}
-    ${isDone(t) ? "" : waitLine(t)}
-    <div class="kmove"><button class="mini${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}${todo ? " " + ico("right", 2.4) : ""}</button></div></div>`;
+    ${isDone(t) ? "" : waitLine(t)}</div>`;
 }
 VIEWS.oppgaver = function () {
   const ts = tasks().filter(taskFilter).sort(byPrioDue);
-  const F = [["all", "Alle"], ["mine", "Mine"], ["unassigned", "Ikke fordelt"], ["week", "Forfaller denne uken"], ["overdue", "Forfalt"]];
   const cols = UI.boardMode === "owner" ? [...PEOPLE.map(p => [p, p]), ["", "Ikke fordelt"]] : STATUSES.map(s => [s, s]);
   const openSorted = ts.filter(t => !isDone(t));
   const pedge = { Kritisk: "var(--red)", "Høy": "var(--orange)", Middels: "#C9AE6B", Lav: "#A9B89D" };
@@ -2098,24 +2233,35 @@ VIEWS.oppgaver = function () {
     </tbody></table></div><p class="muted" style="color:var(--on-bg-muted);margin:0">${ts.length - openSorted.length} ferdige oppgaver er skjult i listen.</p>`;
   const field = UI.boardMode === "owner" ? "owner" : "status";
   const board = cols.map(([key, label]) => {
-    const list = ts.filter(t => field === "owner" ? (key ? ownersOf(t).includes(key) : !ownersOf(t).length) : t.status === key);
+    let list = ts.filter(t => field === "owner" ? (key ? ownersOf(t).includes(key) : !ownersOf(t).length) : t.status === key), older = [];
+    // Ferdig-kolonnen viser bare det som ble ferdig denne uken. Resten ligger i en liste man kan åpne.
+    if (field === "status" && key === "Ferdig") { const wk = toUTC(mondayOf(todayISO())); older = list.filter(t => !t.doneAt || toUTC(t.doneAt) < wk); list = list.filter(t => !older.includes(t)); }
     const adding = UI.addingCol === field + ":" + key;
     return `<div class="col" data-drop="task" data-field="${field}" data-key="${esc(key)}">
       <div class="col-head"><b>${UI.boardMode === "owner" ? `<span style="display:inline-flex;gap:8px;align-items:center">${avatar(key, true)}${esc(label)}</span>` : esc(label)}</b><span class="mono">${list.length}</span></div>
       ${list.map(t => kcard(t, key)).join("")}
+      ${older.length ? `<details class="closed-list"${keepOpen("eldre-ferdige")}><summary>Eldre ferdige (${older.length})</summary>${older.map(t => kcard(t, key)).join("")}</details>` : ""}
       ${adding ? `<div class="addbox"><textarea id="add-input" placeholder="Tittel på kortet" data-field="${field}" data-key="${esc(key)}"></textarea><div class="row"><button class="btn" data-act="addCardSave">Legg til</button><button class="btn ghost" data-act="addCardCancel">Avbryt</button></div></div>`
         : `<button class="addcard" data-act="addCard" data-field="${field}" data-key="${esc(key)}">+ Legg til kort</button>`}</div>`;
   }).join("");
-  return `<div class="toolbar">
-      <div class="filterbar">${F.map(([k, l]) => `<button class="chip${UI.filter === k ? " on" : ""}" data-act="filter" data-f="${k}">${k === "overdue" ? '<span class="dot red"></span>' : k === "week" ? '<span class="dot orange"></span>' : k === "mine" ? ico("user") : ""}${l}${k === "mine" && UI.me ? ": " + esc(UI.me) : ""}</button>`).join("")}
-      ${(() => { const [fa, fs] = (UI.areaFilter || "").split("."), subs = SUBS[fa] || [];
-        return `<select id="area-filter" aria-label="Filtrer på område"><option value="">Alle områder</option>${AREAS.map(a => `<option value="${a.id}"${fa === a.id ? " selected" : ""}>${esc(a.name)}</option>`).join("")}</select>`
-          + (subs.length ? `<select id="sub-filter" aria-label="Filtrer på delområde"><option value="">Hele ${esc(AREA[fa].short)}</option>${subs.map(([k, l]) => `<option value="${k}"${fs === k ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>` : ""); })()}
-      ${UI.filter === "mine" ? `<select id="me-select" aria-label="Velg navn"><option value="">Hvem er du?</option>${PEOPLE.map(p => `<option${UI.me === p ? " selected" : ""}>${p}</option>`).join("")}</select>` : ""}</div>
-      <div class="seg" role="group" aria-label="Tavlevisning"><button class="${UI.boardMode === "status" ? "on" : ""}" data-act="mode" data-m="status">Tavle etter status</button><button class="${UI.boardMode === "owner" ? "on" : ""}" data-act="mode" data-m="owner">Tavle etter ansvarlig</button><button class="${UI.boardMode === "list" ? "on" : ""}" data-act="mode" data-m="list">Prioritert liste</button></div>
-    </div>
-    ${UI.filter === "mine" && !UI.me ? `<div class="card" style="padding:14px 18px">Velg navnet ditt i nedtrekkslisten for å se bare dine oppgaver. Valget huskes i denne nettleseren.</div>` : ""}
-    ${UI.boardMode === "list" ? listView : `<div class="board-scroll"><div class="board" style="--cols:${cols.length}">${board}</div></div>`}`;
+  const seg = (k, opts) => `<div class="seg2" role="group">${opts.map(([v, l]) => `<button type="button" class="${UI[k] === v ? "on" : ""}" data-act="fset" data-k="${k}" data-v="${v}">${l}</button>`).join("")}</div>`;
+  const [fa, fs] = (UI.areaFilter || "").split("."), subs = SUBS[fa] || [];
+  const WHO = [["all", "Alle"], ["mine", "Mine"], ["unassigned", "Ikke fordelt"]], DUE = [["all", "Alle"], ["week", "Denne uken"], ["overdue", "Forfalt"], ["notdue", "Ikke forfalt"]];
+  const MODES = [["status", "Status"], ["owner", "Ansvarlig"], ["list", "Liste"]];
+  const sum = [UI.fWho !== "all" ? (UI.fWho === "mine" ? "Mine" + (UI.me ? " (" + UI.me + ")" : "") : "Ikke fordelt") : "", fa && AREA[fa] ? AREA[fa].short + (fs ? " › " + subName(fa, fs) : "") : "", UI.fDue !== "all" ? DUE.find(x => x[0] === UI.fDue)[1] : ""].filter(Boolean);
+  const n = filterCount();
+  const panel = !UI.filterOpen ? "" : `<div class="card fpanel">
+      <div class="fg"><span class="eyebrow">Hvem</span>${seg("fWho", WHO)}
+        ${UI.fWho === "mine" ? `<select id="me-select" aria-label="Velg navn"><option value="">Hvem er du?</option>${PEOPLE.map(p => `<option${UI.me === p ? " selected" : ""}>${p}</option>`).join("")}</select>` : ""}</div>
+      <div class="fg"><span class="eyebrow">Område</span><select id="area-filter" aria-label="Filtrer på område"><option value="">Alle områder</option>${AREAS.map(a => `<option value="${a.id}"${fa === a.id ? " selected" : ""}>${esc(a.name)}</option>`).join("")}</select>
+        ${subs.length ? `<select id="sub-filter" aria-label="Filtrer på delområde"><option value="">Hele ${esc(AREA[fa].short)}</option>${subs.map(([k, l]) => `<option value="${k}"${fs === k ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>` : ""}</div>
+      <div class="fg"><span class="eyebrow">Frist</span>${seg("fDue", DUE)}</div>
+      <div class="fg"><span class="eyebrow">Visning</span><div class="seg2" role="group">${MODES.map(([m, l]) => `<button type="button" class="${UI.boardMode === m ? "on" : ""}" data-act="mode" data-m="${m}">${l}</button>`).join("")}</div></div>
+      <div class="ffoot">${n ? `<button class="btn ghost" data-act="fReset">Nullstill</button>` : ""}<button class="btn" data-act="filterToggle">Ferdig</button></div></div>`;
+  return `<div class="ftool">${sum.length ? `<span class="fsum">Filter: ${esc(sum.join(" · "))}</span>` : ""}<button class="fbtn${UI.filterOpen ? " on" : ""}" data-act="filterToggle" aria-expanded="${UI.filterOpen}">${ico("filter", 2)}Filter${n ? `<b>${n}</b>` : ""}</button></div>
+    ${panel}
+    ${UI.fWho === "mine" && !UI.me ? `<div class="card" style="padding:14px 18px">Velg navnet ditt under Filter › Hvem for å se bare dine oppgaver. Valget huskes i denne nettleseren.</div>` : ""}
+    ${UI.boardMode === "list" ? listView : `<div class="board-scroll"><div class="board${UI.boardMode === "status" ? " bstatus" : ""}" style="--cols:${cols.length}">${board}</div></div>`}`;
 };
 
 /* ----- MILEPÆLER ----- */
@@ -3241,13 +3387,23 @@ async function doImport() {
 const A = {
   go: el => { if (el.dataset.p) location.hash = el.dataset.p; },
   week: el => { UI.weekOffset += Number(el.dataset.d); render(true); },
-  chip: el => { UI.filter = el.dataset.f; location.hash = "oppgaver"; render(true); },
-  filter: el => { UI.filter = el.dataset.f; render(true); },
+  filterToggle: () => { UI.filterOpen = !UI.filterOpen; render(true); },
+  fset: el => { UI[el.dataset.k] = el.dataset.v; render(true); },
+  fReset: () => { resetFilters(); render(true); },
+  mineToggle: () => {
+    if (UI.mine) { UI.mine = false; savePref(); return render(true); }
+    if (UI.me) { UI.mine = true; savePref(); return render(true); }
+    openForm({ title: "Hvem er du?", value: { me: "" }, fields: [{ k: "me", label: "Velg navnet ditt", type: "select", opts: [["", "Velg …"], ...PEOPLE.map(p => [p, p])], hint: "Da viser forsiden og kalenderen bare dine viktigste oppgaver og dine avtaler. Valget huskes i denne nettleseren." }],
+      onSave: v => { if (!v.me) return formError("Velg et navn."); UI.me = v.me; UI.mine = true; savePref(); closeModal(); render(true); } });
+  },
+  newAvtale: (el, ev) => { if (ev && ev.target.closest && ev.target.closest(".av-it")) return; avtaleForm({ id: uid("ev"), type: "Møte", title: "", date: (el && el.dataset && el.dataset.d) || todayISO(), time: "", endTime: "", place: "", attendees: UI.me ? [UI.me] : [], note: "" }, true); },
+  editEvent: el => { const e = S.events[el.dataset.id]; if (e) avtaleForm(clone(e), false); },
+  kalNav: el => { const d = Number(el.dataset.d), cur = UI.kalMonth || todayISO().slice(0, 7); if (d === 0) UI.kalMonth = ""; else { const [y, m] = cur.split("-").map(Number), t = new Date(Date.UTC(y, m - 1 + d, 1)); UI.kalMonth = t.toISOString().slice(0, 7); } render(true); },
   mode: el => { UI.boardMode = el.dataset.m; savePref(); render(true); },
   tab: el => { location.hash = UI.page + (el.dataset.t === "oversikt" ? "" : "." + el.dataset.t); },
   editArea: el => areaForm(el.dataset.id),
   newTaskIn: el => taskForm(newTask({ area: el.dataset.area || (UI.areaFilter || "").split(".")[0], sub: el.dataset.sub || "" }), true),
-  areaTasks: el => { UI.areaFilter = el.dataset.area; UI.filter = "all"; location.hash = "oppgaver"; },
+  areaTasks: el => { resetFilters(); UI.areaFilter = el.dataset.area; location.hash = "oppgaver"; },
   editItem: el => { const i = S.items[el.dataset.id]; if (i) itemForm(clone(i), false); },
   newItem: el => { const kind = el.dataset.kind || "sak"; itemForm({ id: uid(kind === "funksjon" ? "fx" : "s"), kind, area: kind === "funksjon" ? "produkt" : (el.dataset.area || ""), sub: el.dataset.sub || "", title: "", status: el.dataset.status != null ? el.dataset.status : (kind === "funksjon" ? "Vurderes" : "Ikke startet"), owner: "", summary: "", next: "", note: "", link: "" }, true); },
   editDecision: el => { const d = S.decisions[el.dataset.id]; if (d) decisionForm(clone(d), false); },
@@ -3309,7 +3465,7 @@ const A = {
     location.hash = t.area && AREA[t.area] ? t.area + (hasSub ? "." + t.sub : "") : "drift.oppgaver";
     setTimeout(() => taskForm(clone(S.tasks[t.id]), false), 50);
   },
-  seeOverdue: () => { UI.filter = "overdue"; UI.areaFilter = ""; location.hash = "drift.oppgaver"; render(true); },
+  seeOverdue: () => { resetFilters(); UI.fDue = "overdue"; location.hash = "drift.oppgaver"; render(true); },
   addCard: el => { UI.addingCol = el.dataset.field + ":" + el.dataset.key; render(true); },
   addCardCancel: () => { UI.addingCol = null; render(true); },
   addCardSave: () => {
@@ -3318,7 +3474,7 @@ const A = {
     if (!title) { UI.addingCol = null; return render(true); }
     const want = field === "status" ? key : "Må gjøres", own = field === "owner" && key ? [key] : [];
     const t = newTask({ title, status: needsOwner(want) && !own.length ? "Må gjøres" : want, owners: own });
-    if (UI.filter !== "all" && !taskFilter(t)) UI.filter = "all";
+    if (filterCount() && !taskFilter(t)) resetFilters();
     inp.blur(); UI.addingCol = null; put("tasks", t); render(true);
     if (t.status !== want) openPicker(t.id, want); else toast("Kortet er lagt til.");
   },
