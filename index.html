@@ -2872,16 +2872,13 @@ function marketCharts() {
   const rev = paying().reduce((s, l) => s + num(l.price), 0);
   const fun = STAGES.slice(0, 5), reached = fun.map((s, i) => active.filter(l => STAGES.indexOf(l.stage) >= i).length), mx = Math.max(1, reached[0]);
   const funnel = fun.map((s, i) => `<div class="frow"><span class="fl">${s}</span><div class="ftrack"><i style="width:${Math.max(reached[i] ? 6 : 0, reached[i] / mx * 100)}%;opacity:${1 - i * 0.12}"></i></div><b class="mono">${reached[i]}</b><span class="fc mono">${i && reached[i - 1] ? Math.round(reached[i] / reached[i - 1] * 100) + " %" : ""}</span></div>`).join("");
-  const src = [...SOURCES, ""].map(s => [s || "Ikke oppgitt", leads.filter(l => (l.source || "") === s).length]).filter(([s, n]) => n || s !== "Ikke oppgitt");
-  const smx = Math.max(1, ...src.map(x => x[1]));
-  const sources = src.map(([s, n]) => `<div class="hb"><span>${esc(s)}</span><div class="hb-track"><i style="width:${n / smx * 100}%"></i></div><b class="mono">${n}</b></div>`).join("");
   const lost = leads.filter(l => l.stage === "Tapt").length;
   return `<div class="card"><div class="card-head"><div><h2>Salg i tall</h2><p class="sub">${leads.length ? `${leads.length} leads totalt${lost ? `, ${lost} tapt` : ""}` : "Grafene fylles når dere legger inn den første leaden under «Salg»."}</p></div><div class="row-btns">${miniBtn("go", "Salg", 'data-p="marked.salg"')}${miniBtn("go", "Pilot", 'data-p="marked.pilot"')}</div></div>
     <div class="tiles t3">
       <section class="gt"><span class="eyebrow">Pilotmål</span>${pilotDots(pay)}<div class="gt-big"><b class="mono">${pay}</b> av ${PILOT_GOAL} betaler</div><p class="sub">${kr(rev)} i omsetning${pay ? ` · snitt ${kr(rev / pay)}` : ""}</p></section>
       <section class="gt"><span class="eyebrow">Salgstrakt</span><div class="funnel">${funnel}</div></section>
-      <section class="gt"><span class="eyebrow">Leads per kilde</span><div class="hbars">${sources}</div></section>
-    </div></div>` + `<div class="card">${incomeSection()}</div>`;
+      ${incomeSection(true)}
+    </div></div>`;
 }
 
 /* Finansiering & Admin */
