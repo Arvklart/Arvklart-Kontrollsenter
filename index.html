@@ -709,6 +709,20 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .lg-row{grid-template-columns:minmax(0,1fr) auto 18px}
 @media (max-width:760px){.lg-row{grid-template-columns:minmax(0,1fr) auto 18px}.lg-row .badge{grid-column:2;grid-row:1}.lg-row .fx-chev{grid-column:3}}
 
+/* Ukens viktigste: hvem og hva */
+.fk-list{display:flex;flex-direction:column}
+.fk-row{display:flex;align-items:center;border-top:1px solid var(--line)}
+.fk-row:first-child{border-top:0}
+.fk-main{flex:1;min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;background:none;border:0;text-align:left;padding:10px 2px;color:var(--ink);font-size:14px}
+.fk-main b{font-weight:700;flex:none}
+.fk-main span{min-width:0;overflow-wrap:anywhere}
+.fk-main small{color:var(--muted);font-size:11.5px}
+.fk-main:hover span{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.fk-x{flex:none;width:26px;height:26px;border:0;background:none;border-radius:50%;color:var(--muted);font-size:17px;line-height:1;opacity:0;transition:opacity .15s}
+.fk-row:hover .fk-x,.fk-x:focus-visible{opacity:1}
+.fk-x:hover{background:var(--card-hi);color:var(--ink)}
+@media (hover:none){.fk-x{opacity:.6}}
+
 /* Kunnskapsbase: hovedtemaer */
 .kb-themes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;align-items:start}
 .kb-theme{display:flex;flex-direction:column;gap:6px;text-align:left;cursor:pointer;color:var(--ink);font:inherit}
@@ -1774,22 +1788,22 @@ const VIEWS = {};
 /* ----- HJEM ----- */
 VIEWS.hjem = function () {
   const today = todayISO();
-  const over = t => t.due && daysUntil(t.due) < 0 ? 1 : 0;
-  // Ukens viktigste oppgaver: regnes ut automatisk. Forfalte først, så prioritet og frist.
-  const openAll = tasks().filter(t => !isDone(t) && t.status !== "Venter");
-  const top = openAll.slice().sort((a, b) => over(b) - over(a) || byPrioDue(a, b)).slice(0, 5);
-  const topHtml = taskRows(top);
-  const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2></div><div class="row-btns" style="align-items:center"><span class="mono muted">${top.length}/${openAll.length}</span><button class="mini" data-act="quickAdd">+ Legg til</button></div></div>
-    <div class="scroll-list">${topHtml || `<div class="empty">Ingen åpne oppgaver. Godt jobbet!</div>`}</div>
-    ${openAll.length > top.length ? `<div class="card-foot">${miniBtn("go", `Se alle oppgaver (${openAll.length})`, 'data-p="oppgaver"')}</div>` : ""}</div>`;
+  // Ukens viktigste oppgaver: velges av teamet (feltet focus), ikke regnet ut automatisk. Bare hvem og hva.
+  const openAll = tasks().filter(t => !isDone(t));
+  const top = focusTasks().filter(t => !isDone(t));
+  const topHtml = top.map(t => `<div class="fk-row"><button class="fk-main" data-act="openTaskInArea" data-id="${t.id}"><b>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}</b><span>${ph(t.title)}</span>${t.due ? `<small class="mono">${fmtDate(t.due)}</small>` : ""}</button><button class="fk-x" data-act="unFocus" data-id="${t.id}" aria-label="Fjern fra ukens viktigste" title="Fjern fra listen">×</button></div>`).join("");
+  const topCard = `<div class="card"><div class="card-head"><div><h2>Ukens viktigste oppgaver</h2></div>${top.length < 5 ? '<button class="mini" data-act="pickFocus">+ Legg til</button>' : ""}</div>
+    <div class="fk-list">${topHtml || `<div class="empty">Ingen valgt ennå. Legg til de viktigste oppgavene etter møtet.</div>`}</div>
+    <div class="card-foot">${miniBtn("go", `Se alle oppgaver (${openAll.length})`, 'data-p="drift.oppgaver"')}</div></div>`;
 
   // Frister
   const mon = addDays(mondayOf(today), UI.weekOffset * 7), sun = addDays(mon, 6);
-  const inWeek = iso => iso && toUTC(iso) >= toUTC(mon) && toUTC(iso) <= toUTC(sun);
+  const from = UI.weekOffset === 0 ? today : mon;
+  const inWeek = iso => iso && toUTC(iso) >= toUTC(from) && toUTC(iso) <= toUTC(sun);
   const items = [];
-  milestones().forEach(m => { if (!m.date || m.status === "Ikke aktuell") return; const s = m.date, e = m.end || m.date; if (toUTC(e) >= toUTC(mon) && toUTC(s) <= toUTC(sun)) items.push({ kind: "ms", date: toUTC(s) < toUTC(mon) ? mon : s, m }); });
+  milestones().forEach(m => { if (!m.date || m.status === "Ikke aktuell") return; const s = m.date, e = m.end || m.date; if (!msClosed(m) && toUTC(e) >= toUTC(from) && toUTC(s) <= toUTC(sun)) items.push({ kind: "ms", date: toUTC(s) < toUTC(mon) ? mon : s, m }); });
   const isCur = UI.weekOffset === 0;
-  tasks().forEach(t => { if (!isDone(t) && t.due && (inWeek(t.due) || (isCur && toUTC(t.due) < toUTC(mon)))) items.push({ kind: "t", date: t.due, t }); });
+  tasks().forEach(t => { if (!isDone(t) && t.due && inWeek(t.due)) items.push({ kind: "t", date: t.due, t }); });
   items.sort((a, b) => toUTC(a.date) - toUTC(b.date) || (a.kind === "ms" ? -1 : 1));
   const fristHtml = items.map(it => {
     if (it.kind === "ms") {
@@ -1801,10 +1815,12 @@ VIEWS.hjem = function () {
     const tone = taskTone(t), edge = tone === "red" ? "var(--red)" : tone === "orange" ? "var(--orange)" : "var(--green)";
     return `<div class="lrow" data-act="editTask" data-id="${t.id}" style="border-left:3px solid ${edge}"><span class="lt"><b>${ph(t.title)}</b><small><span class="mono">${fmtDate(t.due)}</span> · ${ownersText(t)}</small></span><span class="badge t-${tone}">${d < 0 ? "Forfalt " + (-d) + " d" : relText(d)}</span></div>`;
   }).join("");
-  const fristCard = `<div class="card"><div class="card-head"><div><h2>Frister</h2><p class="sub">${UI.weekOffset === 0 ? "Denne uken" : UI.weekOffset === 1 ? "Neste uke" : UI.weekOffset === -1 ? "Forrige uke" : (UI.weekOffset > 0 ? "Om " + UI.weekOffset + " uker" : "For " + (-UI.weekOffset) + " uker siden")}</p></div>
+  const od = overdue().length;
+  const fristCard = `<div class="card"><div class="card-head"><div><h2>Frister</h2></div>
     <div class="weeknav"><button class="iconbtn" data-act="week" data-d="-1" aria-label="Forrige uke">${ico("left", 2.2)}</button><button class="iconbtn" data-act="week" data-d="1" aria-label="Neste uke">${ico("right", 2.2)}</button></div></div>
     <div class="weeklabel">Uke ${isoWeek(mon)} · ${fmtRange(mon, sun)}</div>
-    <div class="scroll-list">${fristHtml || `<div class="empty">Ingen frister denne uken.</div>`}</div></div>`;
+    <div class="scroll-list">${fristHtml || `<div class="empty">Ingen flere frister denne uken.</div>`}</div>
+    ${od ? `<div class="card-foot">${miniBtn("seeOverdue", `Se forfalte (${od})`)}</div>` : ""}</div>`;
 
   // Hvor står vi: én linje per område
   const statusCard = `<div class="card"><div class="card-head"><div><h2>Hvor står vi?</h2></div></div>
@@ -1824,7 +1840,8 @@ VIEWS.hjem = function () {
 /* ---------- Avtaler på forsiden: møter, vurderinger, innleveringer og arrangementer de neste to ukene (man–fre) ---------- */
 function avtaler(iso) {
   const out = [];
-  arr("meetings").filter(m => m.date === iso).forEach(m => out.push({ act: "editMeeting", id: m.id, title: m.title || "Møte", kind: "Møte", col: "var(--rose)" }));
+  arr("meetings").filter(m => m.date === iso).sort((a, b) => (a.time || "99").localeCompare(b.time || "99"))
+    .forEach(m => out.push({ act: "editMeeting", id: m.id, title: m.title || "Møte", kind: m.time ? "Møte · kl. " + m.time : "Møte", col: "var(--rose)" }));
   milestones().filter(m => !msClosed(m) && m.date && (m.date === iso || (m.end && toUTC(m.date) <= toUTC(iso) && toUTC(iso) <= toUTC(m.end))))
     .forEach(m => out.push({ act: "editMs", id: m.id, title: m.title, kind: m.type, col: m.type === "Innlevering" || m.type === "Vurdering" ? "var(--red)" : "var(--green)" }));
   return out;
@@ -1839,7 +1856,7 @@ function avtalerCard() {
         <span class="av-items">${it.map(x => `<button class="av-it" style="--wpc:${x.col}" data-act="${x.act}" data-id="${esc(x.id)}"><b>${esc(x.title)}</b><small>${esc(x.kind)}</small></button>`).join("") || '<span class="av-none">–</span>'}</span></div>`;
     }).join("")}</div>`;
   };
-  return `<div class="card av-card"><div class="card-head"><div><h2>Avtaler</h2><p class="sub">Neste to uker</p></div>
+  return `<div class="card av-card"><div class="card-head"><div><h2>Avtaler</h2></div>
       <div class="weeknav"><button class="iconbtn" data-act="wpNav" data-d="-1" aria-label="Forrige uke">${ico("left", 2.2)}</button><button class="iconbtn" data-act="wpNav" data-d="1" aria-label="Neste uke">${ico("right", 2.2)}</button></div></div>
     ${UI.wpOffset ? `<button class="mini" data-act="wpNav" data-d="0" style="margin:-4px 0 8px">Tilbake til i dag</button>` : ""}${week(0)}${week(1)}</div>`;
 }
@@ -2423,7 +2440,7 @@ VIEWS.moter = function () {
     const meta = [dec.length ? `${dec.length} ${dec.length === 1 ? "beslutning" : "beslutninger"}` : "", acts.length ? `${acts.length} actionpunkt${acts.length === 1 ? "" : "er"}` : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
-        <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}</em>
+        <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}${m.time ? " kl. " + esc(m.time) : ""}</em>
         <span class="mt-meta">${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
       ${open ? `<div class="mt-b">
         ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
@@ -2922,10 +2939,12 @@ function taskForm(t, isNew) {
       { k: "waitsOn", label: "Venter på", type: "multi", full: true, opts: waitOpts(t),
         hint: "Oppgaver eller milepæler som må bli ferdige først. Oppgaven settes da i «Venter», og flyttes tilbake til «Må gjøres» når alt den venter på er ferdig. " + AREA_FILTER_HINT },
       { k: "contacts", label: "Kontakter", type: "multi", full: true, opts: arr("contacts").sort((a, b) => (a.name || "").localeCompare(b.name || "")).map(c => [c.id, c.name + (c.org ? " (" + c.org + ")" : "")]), hint: arr("contacts").length ? "" : "Ingen kontakter ennå. Legg dem inn under Kontakter." },
-      { k: "note", label: "Notat", type: "textarea", full: true }
+      { k: "note", label: "Notat", type: "textarea", full: true },
+      { k: "focus", label: "Ukens viktigste", type: "check", text: "Vis på forsiden under «Ukens viktigste oppgaver» (maks 5)", full: true }
     ],
     onSave: v => {
       if (!v.title) return formError("Oppgaven trenger en tittel.");
+      if (v.focus && !t.focus && focusTasks().filter(x => !isDone(x) && x.id !== t.id).length >= 5) return formError("Ukens viktigste har allerede fem oppgaver. Fjern en først.");
       let gaveBack = false;
       if (needsOwner(v.status) && !v.owners.length) {
         if (isNew || v.status !== t.status) return formError(`Velg minst én ansvarlig før oppgaven settes til «${v.status}».`);
@@ -3128,6 +3147,7 @@ function meetingForm(m, isNew) {
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
     fields: [{ k: "title", label: "Tittel", ph: "Teammøte" }, { k: "date", label: "Dato", type: "date" },
+      { k: "time", label: "Klokkeslett", type: "time" },
       { k: "with", label: "Møte med", ph: "Velg eller skriv en ny samarbeidspartner", suggest: meetingPartners(), hint: "F.eks. Team eller HVL Skape. Skriv et nytt navn for å legge til en ny samarbeidspartner." },
       { k: "attendees", label: "Deltakere", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
       { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true },
@@ -3145,7 +3165,7 @@ function meetingForm(m, isNew) {
       }
       const old = m.actions || [];
       const actions = f.actionsText.split("\n").map(s => s.trim()).filter(Boolean).map(text => { const hit = old.find(a => a.text === text); return hit ? hit : { id: uid("a"), text, taskId: "" }; });
-      const o = Object.assign(clone(m), { title: f.title, date: f.date, with: f.with || "", attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", with: f.with || "", attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
       if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
     },
@@ -3262,12 +3282,20 @@ const A = {
   newTask: () => taskForm(newTask({ status: "Må gjøres" }), true),
   go2: el => A.go(el),
   pickFocus: () => {
-    const open = tasks().filter(t => !t.focus && !isDone(t)).sort(byPrioDue);
-    modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal"><h3>Velg fokusoppgave</h3><p class="muted" style="margin-top:-8px">${3 - focusTasks().length} plass${3 - focusTasks().length === 1 ? "" : "er"} ledig i ukens fokus.</p>
-      <div class="scroll-list" style="max-height:52vh">${open.map(t => `<div class="lrow" data-act="setFocus" data-id="${t.id}"><span class="lt"><b>${ph(t.title)}</b><small>${t.due ? fmtDate(t.due) : "Ingen frist"} · ${esc(t.prio)}</small></span><span class="badge t-${taskTone(t)}">${t.due ? relText(daysUntil(t.due)) : "–"}</span></div>`).join("")}</div>
+    const open = tasks().filter(t => !t.focus && !isDone(t)).sort(byPrioDue), free = 5 - focusTasks().filter(t => !isDone(t)).length;
+    modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-label="Legg til i ukens viktigste"><h3>Legg til i ukens viktigste</h3><p class="muted" style="margin-top:-8px">${free} ${free === 1 ? "plass" : "plasser"} ledig.</p>
+      <div class="scroll-list" style="max-height:52vh">${open.map(t => `<div class="lrow" data-act="setFocus" data-id="${t.id}"><span class="lt"><b>${ph(t.title)}</b><small>${esc(joinNames(ownersOf(t)) || "Ikke fordelt")}${t.area && AREA[t.area] ? " · " + esc(AREA[t.area].short) : ""}</small></span></div>`).join("") || '<div class="empty">Ingen flere åpne oppgaver.</div>'}</div>
       <div class="modal-foot"><div class="r"><button class="btn ghost" data-act="closeModal">Lukk</button></div></div></div></div>`;
   },
-  setFocus: el => { if (focusTasks().length >= 3) { toast("Ukens fokus har allerede tre oppgaver.", true); return closeModal(); } const t = clone(S.tasks[el.dataset.id]); t.focus = true; put("tasks", t); closeModal(); },
+  setFocus: el => { if (focusTasks().filter(t => !isDone(t)).length >= 5) { toast("Ukens viktigste har allerede fem oppgaver.", true); return closeModal(); } const t = clone(S.tasks[el.dataset.id]); t.focus = true; put("tasks", t); closeModal(); },
+  unFocus: el => { const t = clone(S.tasks[el.dataset.id]); if (!t) return; t.focus = false; put("tasks", t); },
+  openTaskInArea: el => {
+    const t = S.tasks[el.dataset.id]; if (!t) return;
+    const hasSub = t.sub && (SUBS[t.area] || []).some(x => x[0] === t.sub);
+    location.hash = t.area && AREA[t.area] ? t.area + (hasSub ? "." + t.sub : "") : "drift.oppgaver";
+    setTimeout(() => taskForm(clone(S.tasks[t.id]), false), 50);
+  },
+  seeOverdue: () => { UI.filter = "overdue"; UI.areaFilter = ""; location.hash = "drift.oppgaver"; render(true); },
   addCard: el => { UI.addingCol = el.dataset.field + ":" + el.dataset.key; render(true); },
   addCardCancel: () => { UI.addingCol = null; render(true); },
   addCardSave: () => {
