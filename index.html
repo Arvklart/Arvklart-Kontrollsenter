@@ -361,7 +361,10 @@ button{cursor:pointer}
 .kst.done .kbox{background:var(--green);border-color:var(--green)}
 .kst-add{display:flex;gap:6px}
 .kst-add input{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12.5px;background:#fff}
-.kexp-foot{display:flex;justify-content:flex-end}
+.kexp-foot{display:flex;justify-content:flex-end;gap:6px}
+.kexp-foot .kgo{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;background:var(--bar);color:var(--card);border-color:var(--bar)}
+.kexp-foot .kgo svg{width:11px;height:11px}
+.kexp-foot .kgo.ghosty{background:var(--card);color:var(--ink);border-color:#CDBBA4}
 .kc[aria-expanded="true"]{box-shadow:0 4px 14px rgba(45,30,18,.14)}
 .kprog{display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:10.5px;color:var(--muted);background:var(--card-hi);border:1px solid var(--line);border-radius:999px;padding:1px 6px}
 .kprog svg{width:10px;height:10px}
@@ -2377,12 +2380,11 @@ function prioGroups(list, key) {
   return PRIOS.map(box).join("");
 }
 // Når man trykker på et oppgavekort, forlenges det med deloppgavene og en «Rediger»-knapp
-function kExpand(t) {
+function kExpand(t, step) {
   const st = t.steps || [];
   return `<div class="kexp" data-act="noop">
     ${st.length ? `<div class="ksteps">${st.map(x => `<button type="button" class="kst${x.done ? " done" : ""}" data-act="kStep" data-id="${t.id}" data-s="${x.id}" aria-pressed="${!!x.done}"><span class="kbox">${x.done ? ico("check", 3) : ""}</span><span>${esc(x.text)}</span></button>`).join("")}</div>` : '<span class="pk-empty">Ingen deloppgaver ennå.</span>'}
-    <div class="kst-add"><input class="kstep-new" data-id="${t.id}" type="text" placeholder="Ny deloppgave" autocomplete="off" aria-label="Ny deloppgave"><button type="button" class="mini" data-act="kStepAdd" data-id="${t.id}">Legg til</button></div>
-    <div class="kexp-foot">${miniBtn("editTask", "Rediger", `data-id="${t.id}"`)}</div></div>`;
+    <div class="kexp-foot">${miniBtn("editTask", "Rediger", `data-id="${t.id}"`)}<button class="mini kgo${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button></div></div>`;
 }
 function kcard(t, from, opts = {}) {
   const own = ownersOf(t), todo = t.status === "Må gjøres";
@@ -2390,9 +2392,9 @@ function kcard(t, from, opts = {}) {
   const who = (todo && !own.length) ? "" : `<button class="avbtn" data-act="assign" data-id="${t.id}" aria-label="Endre ansvarlige" title="${own.length ? "Ansvarlig: " + esc(joinNames(own)) + ". Klikk for å endre" : "Klikk for å fordele"}">${avatars(t, true)}</button>`;
   return `<div class="kc p-${esc(t.prio)}${isDone(t) ? " isdone" : ""}" draggable="true" data-drag="task" data-id="${t.id}" data-from="${esc(from || "")}" data-act="kToggle" tabindex="0" aria-expanded="${!!(UI.kOpen || {})[t.id]}">
     <div class="kbody"><div class="kt">${ph(t.title)}</div></div>
-    <div class="kside">${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}${(t.steps || []).length && !isDone(t) ? `<span class="kprog${t.steps.every(x => x.done) ? " all" : ""}" title="Deloppgaver">${ico("check", 2.6)}${t.steps.filter(x => x.done).length}/${t.steps.length}</span>` : ""}${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}<button class="mini kstep${t.status === "Ferdig" ? " ghosty" : ""}" data-act="nextStep" data-id="${t.id}">${t.status === "Pågår" ? ico("check", 2.4) : ""}${step}</button></div>
+    <div class="kside">${isDone(t) ? `<span class="stamp">${ico("check", 3)}</span>` : ""}${t.due && !isDone(t) ? dueBadge(t, true) : ""}${opts.hideTag ? "" : opts.subOnly ? (t.sub && subName(t.area, t.sub) ? `<span class="tag atag">${esc(subName(t.area, t.sub))}</span>` : "") : taskAreaTag(t)}${UI.boardMode === "owner" ? `<span class="pill s-${esc(t.status)}">${esc(t.status)}</span>` : ""}${who}</div>
     ${(t.contacts || []).length || (!isDone(t) && waitIds(t).length) ? `<div class="kfull">${(t.contacts || []).length ? `<div class="kown">Kontakt: ${esc(t.contacts.map(contactName).filter(Boolean).join(", "))}</div>` : ""}${isDone(t) ? "" : waitLine(t)}</div>` : ""}
-    ${(UI.kOpen || {})[t.id] ? kExpand(t) : ""}</div>`;
+    ${(UI.kOpen || {})[t.id] ? kExpand(t, step) : ""}</div>`;
 }
 VIEWS.oppgaver = function () {
   const ts = tasks().filter(taskFilter).sort(byPrioDue);
