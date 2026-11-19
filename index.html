@@ -722,6 +722,26 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 @media (max-width:980px){.grid-wallet{grid-template-columns:minmax(0,1fr)}}
 
 /* Finansieringsstige */
+.mod-foot{display:flex;justify-content:flex-end;margin-top:4px}
+.mod-foot .btn{display:inline-flex;align-items:center;gap:7px}
+.mod-foot .btn svg{width:15px;height:15px}
+.mod-list{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.mod-row{display:flex;align-items:center;gap:6px;background:var(--card-hi);border:1px solid var(--line);border-radius:10px;padding:6px 8px 6px 12px}
+.mod-row span{flex:1;font-weight:600;font-size:13.5px}
+.mod-row .iconbtn:first-of-type svg,.mod-row .iconbtn:nth-of-type(2) svg{transform:rotate(90deg)}
+.mod-row .iconbtn[disabled]{opacity:.3;cursor:default}
+.mod-lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-top:6px}
+.mod-add{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--card);border:1px dashed #CDBBA4;border-radius:10px;padding:8px 10px}
+.mod-add:hover{background:#fff;border-style:solid}
+.mod-add b{font-size:13px;display:inline-flex;align-items:center;gap:5px}
+.mod-add b svg{width:13px;height:13px}
+.mod-add small{font-size:11.5px;color:var(--muted)}
+.mod-add.new{background:var(--card-hi)}
+.wbig{display:flex;align-items:baseline;gap:8px}
+.wbig b{font-size:40px;font-weight:700;line-height:1.1}
+.wbig span{color:var(--muted);font-size:14px}
+.wchart{width:100%;height:auto;max-height:210px;display:block}
+.wnote{margin:0;white-space:pre-wrap;line-height:1.5}
 .fboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start}
 .fbox{border-radius:14px;background:var(--card-hi);border:1px solid var(--line);border-top:4px solid var(--bar);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0}
 .fbox:hover{border-color:#CDBBA4;border-top-color:var(--bar)}
@@ -1275,7 +1295,7 @@ const FIXED_NOTES = [
 ];
 
 /* ===================================================================== */
-const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events"];
+const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets"];
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
@@ -2895,24 +2915,102 @@ function areaOverview(id) {
       <button class="pi-edit" type="button" data-act="editArea" data-id="${id}">Oppdater${st.by ? ` · sist av ${esc(st.by)}` : ""}</button></aside>`;
   const wrap = body => `<div class="ov-wrap"><div class="ov-main">${body}</div>${statusCard}</div>`;
 
-  const main = { drift: () => "", produkt: () => "", marked: marketCharts, finans: fundingView, research: () => "", kurs: kursCard, jus: jusCard }[id]();
-
-  const allArea = tasks().filter(t => t.area === id);
-  const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
-
-  const saker = arr("items").filter(i => i.kind === "sak" && i.area === id).sort((a, b) => (a.status === "Ferdig") - (b.status === "Ferdig") || (a.title || "").localeCompare(b.title || ""));
-  // Produkt & Tech, Salg og partnere og Drift har alltid boksen «Saker og forslag» nederst
-  const sf = ["produkt", "marked", "drift"].includes(id);
-  const sakerBox = (saker.length || sf) && id !== "finans" ? cardBox(sf ? "Saker og forslag" : "Saker", "",
-    `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || `<div class="empty">${sf ? "Ingen saker eller forslag ennå." : "Ingen saker ennå."}</div>`}</div>`,
-    miniBtn("newItem", sf ? "+ Sak eller forslag" : "+ Sak", `data-kind="sak" data-area="${id}"`)) : "";
-
-  const noTasks = !allArea.length ? `<p class="quiet">Ingen oppgaver i området ennå. ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${id}"`)}</p>` : "";
-  if (id === "research") return wrap(tasksBox + noTasks + main + sakerBox + extrasCard(id));
-  // Kontakter ligger under Kontakter, og dokumentene har egen fane på Produkt & Tech og Salg og partnere
-  const extras = id === "produkt" ? "" : extrasCard(id, "", id === "marked" ? { noContacts: true, noDocs: true } : {});
-  return wrap(main + tasksBox + noTasks + (sf ? extras + sakerBox : sakerBox + extras));
+  const body = areaMods(id).map(m => renderMod(id, m)).join("");
+  return wrap(body + `<div class="mod-foot"><button class="btn" data-act="editMods" data-area="${id}">${ico("gear")}Endre moduler</button></div>`);
 }
+
+/* ---------- Moduler på områdesidene ----------
+   Hver oversikt er en liste med moduler. Teamet kan legge til, fjerne og flytte dem («Endre moduler»).
+   Oppsettet lagres i «layouts» (én rad per område) og gjelder alle. Egne moduler (nøkkeltall, graf, notat) ligger i «widgets». */
+const MOD_DEFAULT = { drift: ["tasks", "extras", "saker"], produkt: ["tasks", "saker"], marked: ["salgstall", "tasks", "extras", "saker"], research: ["tasks", "extras"], finans: ["funding", "tasks", "extras"] };
+const MODS = {
+  tasks: { label: "Oppgaver", help: "Må gjøres og pågår, med bryter for ventende", render: id => { const all = tasks().filter(t => t.area === id);
+    return all.length ? tasksBlock(all, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : `<p class="quiet">Ingen oppgaver i området ennå. ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${id}"`)}</p>`; } },
+  saker: { label: "Saker og forslag", help: "Åpne saker og forslag i området", render: id => sakerModule(id) },
+  extras: { label: "Beslutninger og dokumenter", help: "Det som ikke har egen fane", render: id => extrasCard(id, "", { noContacts: true, noDocs: (SUBS[id] || []).some(x => x[0] === "dokumenter") }) },
+  beslutninger: { label: "Beslutninger", help: "Alle beslutninger i området", render: id => decisionsCard(id) },
+  dokumenter: { label: "Dokumenter", help: "Alle dokumenter i området", render: id => docsCard(id) },
+  kontakter: { label: "Kontakter", help: "Kontaktene i området, som liste", render: id => { const l = contactsIn(id).sort((a, b) => (a.name || "").localeCompare(b.name || "", "nb")); return l.length ? contactRows(l) : cardBox("Kontakter", "", '<div class="empty">Ingen kontakter i området.</div>'); } },
+  salgstall: { label: "Salg i tall", help: "Pilotmål, salgstrakt og inntekter siste 3 mnd", render: () => marketCharts() },
+  inntekter: { label: "Totale inntekter", help: "Inntektsgraf med valg av periode", render: () => `<div class="card">${incomeSection()}</div>` },
+  funding: { label: "Søknader, tilskudd og saker", help: "Finansieringsboksene", render: () => fundingView() },
+  milepaeler: { label: "Milepæler fremover", help: "Åpne milepæler med fremdrift", render: () => driftCard() },
+  kunnskap: { label: "Kunnskap i korte trekk", help: "Siste notater, hypoteser og intervjuer", render: () => knowCard() },
+  funksjoner: { label: "Funksjoner", help: "Funksjonsoversikten", render: () => featuresView() }
+};
+function areaMods(id) {
+  const lay = (S.layouts || {})[id];
+  const list = lay && Array.isArray(lay.mods) ? lay.mods : (MOD_DEFAULT[id] || ["tasks", "saker"]);
+  return list.filter(k => MODS[k] || (k.startsWith("w:") && (S.widgets || {})[k.slice(2)]));
+}
+function renderMod(id, k) { return k.startsWith("w:") ? widgetCard(S.widgets[k.slice(2)]) : MODS[k].render(id); }
+function sakerModule(id) {
+  const saker = arr("items").filter(i => i.kind === "sak" && i.area === id && !(id === "finans" && !i.sub)).sort((a, b) => (a.status === "Ferdig") - (b.status === "Ferdig") || (a.title || "").localeCompare(b.title || ""));
+  return cardBox("Saker og forslag", "", `<div class="mini-list">${saker.map(i => `<div class="lrow" data-act="editItem" data-id="${i.id}"><span class="lt"><b>${esc(i.title)}</b><small>${ph(i.summary || "")}${i.next ? `${i.summary ? " · " : ""}Neste: ${esc(i.next)}` : ""}${i.owner ? ` · ${esc(i.owner)}` : ""}</small></span>${itemBadge(i)}</div>`).join("") || '<div class="empty">Ingen saker eller forslag ennå.</div>'}</div>`,
+    miniBtn("newItem", "+ Sak eller forslag", `data-kind="sak" data-area="${id}"`));
+}
+// Egne moduler: nøkkeltall, graf (tall dere skriver inn selv) eller notat
+const W_TYPES = [["tall", "Nøkkeltall"], ["graf", "Graf"], ["notat", "Notat"]];
+function parsePoints(txt) {
+  return String(txt || "").split("\n").map(l => l.trim()).filter(Boolean).map(l => { const m = l.match(/^(.*?)[:;=]\s*(-?[\d\s.,]+)\s*$/); return m ? { label: m[1].trim(), value: Number(m[2].replace(/\s/g, "").replace(",", ".")) || 0 } : null; }).filter(Boolean);
+}
+function barChart(points, unit) {
+  if (!points.length) return '<div class="empty">Ingen tall ennå. Trykk «Rediger» og skriv inn tallene.</div>';
+  const W = 560, H = 190, L = 8, B = 26, T = 18, n = points.length, max = Math.max(1, ...points.map(p => p.value)), bw = Math.min(56, (W - L * 2) / n * 0.62), step = (W - L * 2) / n;
+  const bars = points.map((p, i) => { const h = Math.max(0, p.value / max * (H - T - B)), x = L + step * i + (step - bw) / 2, y = H - B - h;
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="5" fill="var(--inc)"><title>${esc(p.label)}: ${p.value.toLocaleString("nb-NO")}${unit ? " " + esc(unit) : ""}</title></rect>
+      <text x="${(x + bw / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="11" fill="var(--ink)">${p.value.toLocaleString("nb-NO")}</text>
+      <text x="${(x + bw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle" font-family="Inter, sans-serif" font-size="10.5" fill="var(--muted)">${esc(p.label.length > 12 ? p.label.slice(0, 11) + "…" : p.label)}</text>`; }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" class="wchart" role="img" aria-label="Graf">${`<line x1="${L}" x2="${W - L}" y1="${H - B}" y2="${H - B}" stroke="var(--line)"/>`}${bars}</svg>`;
+}
+function widgetCard(w) {
+  const edit = miniBtn("editWidget", "Rediger", `data-id="${w.id}"`);
+  if (w.type === "tall") return `<div class="card wcard"><div class="card-head"><div><h2>${esc(w.title || "Nøkkeltall")}</h2></div>${edit}</div>
+    <div class="wbig"><b class="mono">${w.value !== "" && w.value != null ? esc(w.value) : "–"}</b>${w.unit ? `<span>${esc(w.unit)}</span>` : ""}</div>${w.text ? `<p class="sub">${ph(w.text)}</p>` : ""}</div>`;
+  if (w.type === "graf") return `<div class="card wcard"><div class="card-head"><div><h2>${esc(w.title || "Graf")}</h2>${w.unit ? `<p class="sub">${esc(w.unit)}</p>` : ""}</div>${edit}</div>${barChart(parsePoints(w.points), w.unit)}${w.text ? `<p class="sub" style="margin-top:8px">${ph(w.text)}</p>` : ""}</div>`;
+  return `<div class="card wcard"><div class="card-head"><div><h2>${esc(w.title || "Notat")}</h2></div>${edit}</div><p class="wnote">${w.text ? ph(w.text) : '<span class="muted">Tomt notat.</span>'}</p></div>`;
+}
+function widgetForm(w, isNew, area) {
+  openForm({ title: isNew ? "Ny egen modul" : "Rediger modul", value: w,
+    fields: [{ k: "type", label: "Type", type: "select", opts: W_TYPES }, { k: "title", label: "Tittel", ph: "F.eks. Intervjuer per uke" },
+      { k: "value", label: "Tall", ph: "F.eks. 12" }, { k: "unit", label: "Enhet eller forklaring", ph: "F.eks. intervjuer" },
+      { k: "points", label: "Tall til grafen (én linje per søyle)", type: "textarea", full: true, ph: "Uke 45: 3\nUke 46: 5\nUke 47: 4", hint: "Skriv navn, kolon og tall på hver linje." },
+      { k: "text", label: "Tekst", type: "textarea", full: true }],
+    onSave: v => {
+      if (!v.title) return formError("Modulen trenger en tittel.");
+      if (v.type === "graf" && v.points && !parsePoints(v.points).length) return formError("Fant ingen tall. Skriv f.eks. «Uke 45: 3» på hver linje.");
+      const o = Object.assign(clone(w), v); put("widgets", o);
+      if (isNew) { const lay = clone((S.layouts || {})[area] || { id: area, mods: areaMods(area) }); lay.mods = [...areaMods(area), "w:" + o.id]; put("layouts", lay); }
+      closeModal(); toast(isNew ? "Modulen er lagt til nederst på siden." : "Modulen er oppdatert.");
+    },
+    onDelete: isNew ? null : () => { for (const lay of arr("layouts")) if ((lay.mods || []).includes("w:" + w.id)) put("layouts", Object.assign(clone(lay), { mods: lay.mods.filter(k => k !== "w:" + w.id) })); del("widgets", w.id); closeModal(); }
+  });
+  const sel = document.getElementById("f-type");
+  const sync = () => { const t = sel.value, show = { value: t === "tall", unit: t !== "notat", points: t === "graf" };
+    for (const k of ["value", "unit", "points"]) document.getElementById("f-" + k).closest(".fl").hidden = !show[k];
+    document.querySelector('label[for="f-text"], #f-text').closest(".fl").firstChild.textContent = t === "notat" ? "Tekst" : "Kort forklaring (valgfritt)"; };
+  sel.addEventListener("change", sync); sync();
+}
+// «Endre moduler»: liste over modulene på siden, med flytt opp/ned og fjern, og en meny for å legge til nye
+function modsEditor(area) {
+  const cur = areaMods(area), name = k => k.startsWith("w:") ? ((S.widgets[k.slice(2)] || {}).title || "Egen modul") + " (egen)" : MODS[k].label;
+  const lib = Object.entries(MODS).filter(([k]) => !cur.includes(k));
+  const own = arr("widgets").filter(w => !cur.includes("w:" + w.id));
+  modalEl.innerHTML = `<div class="modal-bg" data-act="modalBg"><div class="modal" role="dialog" aria-modal="true" aria-label="Endre moduler"><h3>Endre moduler: ${esc(areaName(area))}</h3>
+    <p class="muted" style="margin:-6px 0 12px;font-size:13px">Endringene gjelder for hele teamet og lagres med en gang. Statuslappen til høyre er alltid med.</p>
+    <span class="eyebrow">På siden nå</span>
+    <div class="mod-list">${cur.map((k, i) => `<div class="mod-row"><span>${esc(name(k))}</span>
+      <button class="iconbtn" data-act="modMove" data-area="${area}" data-k="${esc(k)}" data-d="-1" aria-label="Flytt opp"${i ? "" : " disabled"}>${ico("left", 2.2)}</button>
+      <button class="iconbtn" data-act="modMove" data-area="${area}" data-k="${esc(k)}" data-d="1" aria-label="Flytt ned"${i < cur.length - 1 ? "" : " disabled"}>${ico("right", 2.2)}</button>
+      <button class="iconbtn" data-act="modRemove" data-area="${area}" data-k="${esc(k)}" aria-label="Fjern fra siden">×</button></div>`).join("") || '<div class="empty">Ingen moduler.</div>'}</div>
+    <span class="eyebrow" style="display:block;margin-top:16px">Legg til</span>
+    <div class="mod-lib">${lib.map(([k, m]) => `<button class="mod-add" data-act="modAdd" data-area="${area}" data-k="${k}"><b>${esc(m.label)}</b><small>${esc(m.help)}</small></button>`).join("")}
+      ${own.map(w => `<button class="mod-add" data-act="modAdd" data-area="${area}" data-k="w:${w.id}"><b>${esc(w.title)}</b><small>Egen modul</small></button>`).join("")}
+      <button class="mod-add new" data-act="newWidget" data-area="${area}"><b>${ico("plus")} Lag egen modul</b><small>Nøkkeltall, graf eller notat</small></button></div>
+    <div class="modal-foot"><button class="btn ghost" data-act="modReset" data-area="${area}">Tilbakestill</button><div class="r"><button class="btn" data-act="closeModal">Ferdig</button></div></div></div></div>`;
+}
+function setMods(area, mods) { const lay = clone((S.layouts || {})[area] || { id: area }); lay.mods = mods; put("layouts", lay); modsEditor(area); }
+
 
 /* Kontakter, beslutninger og dokumenter i ett kort, bare de delene som har innhold */
 function extrasCard(id, sub, opt = {}) {
@@ -3870,6 +3968,13 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  editMods: el => modsEditor(el.dataset.area),
+  modMove: el => { const a = el.dataset.area, m = areaMods(a), i = m.indexOf(el.dataset.k), j = i + Number(el.dataset.d); if (i < 0 || j < 0 || j >= m.length) return; [m[i], m[j]] = [m[j], m[i]]; setMods(a, m); },
+  modRemove: el => { const a = el.dataset.area; setMods(a, areaMods(a).filter(k => k !== el.dataset.k)); },
+  modAdd: el => { const a = el.dataset.area; setMods(a, [...areaMods(a), el.dataset.k]); },
+  modReset: el => { const a = el.dataset.area; if ((S.layouts || {})[a]) del("layouts", a); modsEditor(a); },
+  newWidget: el => widgetForm({ id: uid("w"), type: "tall", title: "", value: "", unit: "", points: "", text: "" }, true, el.dataset.area),
+  editWidget: el => { const w = S.widgets[el.dataset.id]; if (w) widgetForm(clone(w), false); },
   kToggle: el => { UI.kOpen = UI.kOpen || {}; UI.kOpen[el.dataset.id] = !UI.kOpen[el.dataset.id]; render(true); },
   kStep: el => { const t = clone(S.tasks[el.dataset.id]); if (!t) return; const x = (t.steps || []).find(y => y.id === el.dataset.s); if (!x) return; x.done = !x.done; put("tasks", t);
     if (x.done && t.steps.every(y => y.done) && !isDone(t)) toast("Alle deloppgavene er gjort. Husk å markere oppgaven som ferdig."); },
