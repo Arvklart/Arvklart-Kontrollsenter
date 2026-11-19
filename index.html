@@ -534,6 +534,20 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 /* Områdesider */
 .as-row{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
 .as-top{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+/* Områdestatus som en liten gul lapp til høyre */
+.ov-wrap{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:18px;align-items:start}
+.ov-main{display:flex;flex-direction:column;gap:inherit;min-width:0;row-gap:16px}
+.postit{position:sticky;top:calc(var(--topbar) + 16px);background:#F6E7A8;color:#3A3420;padding:16px 16px 14px;border-radius:2px 2px 14px 2px;box-shadow:0 1px 1px rgba(0,0,0,.08),0 8px 18px rgba(60,45,10,.16);transform:rotate(1.2deg);cursor:pointer}
+.postit::before{content:"";position:absolute;left:50%;top:-9px;width:62px;height:18px;margin-left:-31px;background:rgba(255,255,255,.55);transform:rotate(-3deg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.postit:hover{transform:rotate(0deg)}
+.postit .pi-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.postit .pi-h b{font-family:var(--serif);font-size:16px;font-weight:600}
+.postit .pi-d{font-family:var(--mono);font-size:11px;color:#7A6A35}
+.postit .pi-d.old{color:var(--red-ink)}
+.postit p{margin:0 0 10px;font-size:13.5px;line-height:1.45;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:7;overflow:hidden}
+.postit .light{margin-bottom:8px}
+.postit .pi-edit{font-size:12px;font-weight:600;color:#6A5A22;text-decoration:underline;text-underline-offset:3px;background:none;border:0;padding:0}
+@media (max-width:980px){.ov-wrap{grid-template-columns:minmax(0,1fr)}.postit{position:relative;top:0;transform:none;max-width:420px}}
 .quiet{color:var(--on-bg-muted);margin:0;display:flex;gap:10px;align-items:center}
 .extras{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:20px}
 .extras .eyebrow{display:block;margin-bottom:8px}
@@ -1912,7 +1926,7 @@ VIEWS.hjem = function () {
   const statusCard = `<div class="card"><div class="card-head"><div><h2>Hvor står vi?</h2></div></div>
     <div class="srows">${AREAS.map(a => {
       const st = S.areas[a.id] || {}, nt = areaTasks(a.id)[0];
-      return `<div class="srow" data-act="go" data-p="${a.id}" tabindex="0"><span class="sname">${ico(a.icon)}${esc(a.name)}</span>${lightPill(st.light)}
+      return `<div class="srow" data-act="go" data-p="${a.id}" tabindex="0"><span class="sname">${ico(a.icon)}${esc(a.name)}</span>${statusPill(st)}
         <span class="stext" title="${esc(st.text || "")}">${st.text ? ph(st.text) : '<span class="muted">Ingen status skrevet</span>'}</span>
         <span class="snext">${nt ? `<span class="muted">Neste:</span> ${ph(nt.title)}` : '<span class="muted">Ingen åpne oppgaver</span>'}</span></div>`;
     }).join("")}</div></div>`;
@@ -2618,6 +2632,10 @@ VIEWS.moter = function () {
 const AREA = Object.fromEntries(AREAS.map(a => [a.id, a]));
 const areaName = id => (AREA[id] || {}).name || "";
 const areaTag = id => id && AREA[id] ? `<span class="tag atag">${esc(AREA[id].short)}</span>` : "";
+const fmtYear = iso => { const d = dOf(iso); return d.getUTCDate() + ". " + MON[d.getUTCMonth()] + " " + d.getUTCFullYear(); };
+// Når ingen har vurdert området, vises datoen for siste endring (eller 1. jan 2026) i stedet for «Ikke vurdert»
+const statusDate = st => fmtYear(st.updated || "2026-01-01");
+function statusPill(st) { return st.light ? lightPill(st.light) : `<span class="light t-none"><i></i>${statusDate(st)}</span>`; }
 function lightPill(key) { const [label, tone] = LIGHTS[key || ""] || LIGHTS[""]; return `<span class="light t-${tone}"><i></i>${label}</span>`; }
 function areaTasks(id) { return tasks().filter(t => !isDone(t) && t.area === id).sort(byPrioDue); }
 const contactsIn = id => arr("contacts").filter(c => (c.areas || []).includes(id));
@@ -2701,11 +2719,13 @@ const miniBtn = (act, label, attrs = "") => `<button class="mini" data-act="${ac
 /* Områdeside: status øverst, så det som er viktig for området, og bare de delene som har innhold */
 function areaOverview(id) {
   const st = S.areas[id] || {}, open = areaTasks(id);
-  const upd = st.updated ? `Oppdatert ${fmtDate(st.updated)}${st.by ? " av " + esc(st.by) : ""}` : "Ikke oppdatert ennå";
-  const statusCard = `<div class="card area-status l-${st.light || "none"}"><div class="as-row">
-      <div style="min-width:0"><div class="as-top">${lightPill(st.light)}<span class="muted" style="font-size:12px">${upd}</span></div>
-      <p class="status-text">${st.text ? ph(st.text) : '<span class="muted">Skriv to–tre setninger om hvor dere står.</span>'}</p></div>
-      <div class="row-btns">${miniBtn("editArea", "Oppdater status", `data-id="${id}"`)}${miniBtn("areaAdd", "+ Legg til", `data-area="${id}"`)}</div></div></div>`;
+  const old = !st.updated || daysUntil(st.updated) < -14;
+  const statusCard = `<aside class="postit" data-act="editArea" data-id="${id}" title="Trykk for å oppdatere">
+      <div class="pi-h"><b>Hvor står vi?</b><span class="pi-d mono${old ? " old" : ""}">${statusDate(st)}</span></div>
+      ${st.light ? lightPill(st.light) : ""}
+      <p>${st.text ? ph(st.text) : "Ingen status skrevet ennå."}</p>
+      <button class="pi-edit" type="button" data-act="editArea" data-id="${id}">Oppdater${st.by ? ` · sist av ${esc(st.by)}` : ""}</button></aside>`;
+  const wrap = body => `<div class="ov-wrap"><div class="ov-main">${body}</div>${statusCard}</div>`;
 
   const main = { student: () => "", drift: driftCard, produkt: featuresView, marked: marketCharts, finans: moneyCard, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
 
@@ -2718,8 +2738,8 @@ function areaOverview(id) {
     miniBtn("newItem", "+ Sak", `data-kind="sak" data-area="${id}"`)) : "";
 
   const noTasks = !allArea.length ? `<p class="quiet">Ingen oppgaver i området ennå. ${miniBtn("newTaskIn", "+ Oppgave", `data-area="${id}"`)}</p>` : "";
-  if (id === "research") return tasksBox + noTasks + statusCard + main + sakerBox + extrasCard(id);
-  return statusCard + main + tasksBox + noTasks + sakerBox + extrasCard(id);
+  if (id === "research") return wrap(tasksBox + noTasks + main + sakerBox + extrasCard(id));
+  return wrap(main + tasksBox + noTasks + sakerBox + extrasCard(id));
 }
 
 /* Kontakter, beslutninger og dokumenter i ett kort, bare de delene som har innhold */
