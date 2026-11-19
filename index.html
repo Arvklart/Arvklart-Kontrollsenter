@@ -1051,7 +1051,8 @@ const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
   { id: "produkt", name: "Produkt & Tech", short: "Produkt", icon: "cpu", desc: "Hva løsningen gjør i dag, hva vi bygger, hva vi vurderer og hva vi har droppet." },
   { id: "marked", name: "Salg og partnere", short: "Salg", icon: "trend", desc: "Pilotfamilier, kanaler, pris og partnere." },
-  { id: "research", name: "Marked og data", short: "Marked", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser, intervjuer og juridiske avklaringer." }
+  { id: "research", name: "Marked og data", short: "Marked", icon: "flask", desc: "Det vi vet: kunnskapsbase, hypoteser, intervjuer og juridiske avklaringer." },
+  { id: "student", name: "STUD-ENT", short: "STUD-ENT", icon: "book", desc: "Søknaden til STUD-ENT: oppgaver og status." }
 ];
 /* Delområder: egne faner på områdesiden. Oppgaver kan kobles til område og delområde. */
 const SUBS = { drift: [["oppgaver", "Oppgaver"], ["milepaeler", "Milepæler"], ["moter", "Møter"], ["okonomi", "Budsjett"], ["selskap", "Selskap"]], marked: [["salg", "Salg"], ["pilot", "Pilot"], ["partnere", "Partnernettverk"], ["finansiering", "Finansiering"]], research: [["kunnskap", "Kunnskapsbase"], ["hyp", "Hypoteser"], ["int", "Intervjuer"], ["juridisk", "Juridisk"]] };
@@ -2529,7 +2530,7 @@ function areaOverview(id) {
       <p class="status-text">${st.text ? ph(st.text) : '<span class="muted">Skriv to–tre setninger om hvor dere står.</span>'}</p></div>
       <div class="row-btns">${miniBtn("editArea", "Oppdater status", `data-id="${id}"`)}${miniBtn("areaAdd", "+ Legg til", `data-area="${id}"`)}</div></div></div>`;
 
-  const main = { drift: driftCard, produkt: featuresView, marked: marketCharts, finans: moneyCard, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
+  const main = { student: () => "", drift: driftCard, produkt: featuresView, marked: marketCharts, finans: moneyCard, research: knowCard, kurs: kursCard, jus: jusCard }[id]();
 
   const allArea = tasks().filter(t => t.area === id);
   const tasksBox = allArea.length ? tasksBlock(allArea, { area: id, subOnly: true, title: "Oppgaver i " + esc(areaName(id)) }) : "";
