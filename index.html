@@ -803,16 +803,20 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vst-due input{border:1px solid var(--line);border-radius:8px;padding:2px 4px;font-size:11.5px;font-family:var(--mono);background:var(--card-hi);max-width:118px}
 .vph-foot{font-size:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.sub-list{display:flex;flex-direction:column;gap:8px}
-.sub-row{display:grid;grid-template-columns:30px minmax(140px,1fr) minmax(140px,1fr) minmax(0,1.6fr);gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--card-hi);border:1px solid var(--line);cursor:pointer}
+.sub-list{display:flex;flex-direction:column;gap:6px}
+.sub-head,.sub-row{display:grid;grid-template-columns:minmax(170px,1.1fr) minmax(140px,1fr) minmax(140px,1fr) minmax(0,1.5fr);gap:14px;align-items:center;padding:9px 12px}
+.sub-head{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-block:2px}
+.sub-row{border-radius:12px;background:var(--card-hi);border:1px solid var(--line);cursor:pointer;font-size:13px}
 .sub-row:hover{border-color:#CDBBA4}
-.sub-row .clogo{width:30px;height:30px}
-.sub-main{display:flex;flex-direction:column;gap:2px;min-width:0}
-.sub-main .linkout{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sub-login{display:flex;flex-direction:column;font-size:13px;min-width:0;overflow-wrap:anywhere}
-.sub-login .muted{font-size:11px}
-.sub-note{font-size:13px;color:var(--muted);white-space:pre-wrap;min-width:0;overflow-wrap:anywhere}
-@media (max-width:760px){.sub-row{grid-template-columns:30px minmax(0,1fr)}.sub-login,.sub-note{grid-column:2}}
+.sub-row > div{min-width:0}
+.sub-name{display:flex;align-items:center;gap:10px}
+.sub-name b{font-size:14px;overflow-wrap:anywhere}
+.sub-row .clogo{width:28px;height:28px;flex:none}
+.sub-link .linkout{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub-login{overflow-wrap:anywhere}
+.sub-lab{display:none;color:var(--muted)}
+.sub-note{color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+@media (max-width:760px){.sub-head{display:none}.sub-row{grid-template-columns:minmax(0,1fr);gap:4px}.sub-lab{display:inline}}
 .fboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start}
 .fbox{border-radius:14px;background:var(--card-hi);border:1px solid var(--line);border-top:4px solid var(--bar);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0}
 .fbox:hover{border-color:#CDBBA4;border-top-color:var(--bar)}
@@ -2696,12 +2700,14 @@ VIEWS.selskap = function () {
 function subscriptionsView() {
   const list = arr("subscriptions").sort((a, b) => (a.platform || "").localeCompare(b.platform || "", "nb"));
   const rows = list.map(x => { const dom = cleanDomain(x.url);
-    return `<div class="sub-row" data-act="editSubscription" data-id="${x.id}" tabindex="0">${orgLogo({ org: x.platform, website: x.url }, "sm")}
-      <div class="sub-main"><b>${esc(x.platform)}</b>${isUrl(x.url) ? `<a class="linkout" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(dom || x.url)} ↗</a>` : ""}</div>
-      <div class="sub-login">${x.login ? `<span class="muted">Innlogging</span><span class="selectable">${esc(x.login)}</span>` : ""}</div>
-      <div class="sub-note">${x.note ? ph(x.note) : ""}</div></div>`; }).join("");
+    const none = '<span class="muted">–</span>';
+    return `<div class="sub-row" data-act="editSubscription" data-id="${x.id}" tabindex="0">
+      <div class="sub-name">${orgLogo({ org: x.platform, website: x.url }, "sm")}<b>${esc(x.platform)}</b></div>
+      <div class="sub-link">${isUrl(x.url) ? `<a class="linkout" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(dom || x.url)} ↗</a>` : none}</div>
+      <div class="sub-login"><span class="sub-lab">Innlogging: </span>${x.login ? `<span class="selectable">${esc(x.login)}</span>` : none}</div>
+      <div class="sub-note">${x.note ? ph(x.note) : none}</div></div>`; }).join("");
   return `<div class="card"><div class="card-head"><div><h2>Abonnement</h2><p class="sub">Plattformene vi bruker. Ikke skriv passord her.</p></div>${miniBtn("newSubscription", "+ Abonnement")}</div>
-    ${rows ? `<div class="sub-list">${rows}</div>` : '<div class="empty">Ingen abonnement ennå. Legg inn plattformene dere bruker, med lenke og notater.</div>'}</div>`;
+    ${rows ? `<div class="sub-list"><div class="sub-head"><span>Plattform</span><span>Lenke</span><span>Innlogging</span><span>Notater</span></div>${rows}</div>` : '<div class="empty">Ingen abonnement ennå. Legg inn plattformene dere bruker, med lenke og notater.</div>'}</div>`;
 }
 function subscriptionForm(x, isNew) {
   openForm({ title: isNew ? "Nytt abonnement" : "Rediger abonnement", value: x,
