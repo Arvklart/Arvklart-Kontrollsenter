@@ -844,6 +844,9 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 #claude-panel{display:flex;flex-direction:column;gap:8px}
 #claude-panel[hidden]{display:none}
 #claude-text{min-height:140px}
+.act-t{cursor:pointer;border-radius:6px}
+.act-t:hover{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.act-note{display:block;font-size:11.5px;color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:46ch}
 .act-x{flex:none;opacity:.6}
 .act-x:hover{opacity:1}
 .form-panel{display:flex;flex-direction:column;gap:10px}
@@ -1603,9 +1606,11 @@ function normActions(m) {
 const ownersLabel = o => !o || !o.length ? "" : o.length >= PEOPLE.length && PEOPLE.every(p => o.includes(p)) ? "Hele teamet" : joinNames(o);
 // Én linje per actionpunkt i skjemaet: «Bård: Fikse dokumentet», «Bård og Julie: …», «Hele teamet: …»
 function parseActionLine(line) {
+  let note = "", bar = line.indexOf(" | ");
+  if (bar > 0) { note = line.slice(bar + 3).replace(/^notat:\s*/i, "").trim(); line = line.slice(0, bar); }
   const i = line.indexOf(":");
-  if (i > 0) { const own = parseOwners(line.slice(0, i)); if (own) return { owners: own, text: stripNum(line.slice(i + 1)) }; }
-  return { owners: [], text: stripNum(line) };
+  if (i > 0) { const own = parseOwners(line.slice(0, i)); if (own) return { owners: own, text: stripNum(line.slice(i + 1)), note }; }
+  return { owners: [], text: stripNum(line), note };
 }
 // Kort dato i møtelisten: 05.11.26
 const shortDate = iso => { const [y, m, d] = iso.split("-"); return `${d}.${m}.${y.slice(2)}`; };
@@ -3066,7 +3071,7 @@ VIEWS.moter = function () {
           ${m.fileId || isUrl(m.link) ? `<div class="mt-docrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}</div>` : ""}
         ${m.prepNote ? `<div class="mt-agenda"><span class="eyebrow">Agenda og innspill</span><p>${ph(m.prepNote)}</p></div>` : ""}
         <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
-        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action${a.taskId && S.tasks[a.taskId] && isDone(S.tasks[a.taskId]) ? " done" : ""}">${ownerBadge(a.owners)}<span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}${hiddenActs ? `<p class="muted" style="font-size:12px;margin:2px 0 0">${hiddenActs} punkt${hiddenActs === 1 ? "" : "er"} for andre er skjult.</p>` : ""}</div></div></div>
+        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action${a.taskId && S.tasks[a.taskId] && isDone(S.tasks[a.taskId]) ? " done" : ""}">${ownerBadge(a.owners)}<span class="act-t" data-act="actionEdit" data-mid="${m.id}" data-aid="${a.id}" title="Trykk for å redigere">${esc(a.text)}${a.note ? `<small class="act-note">${esc(a.note)}</small>` : ""}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}${hiddenActs ? `<p class="muted" style="font-size:12px;margin:2px 0 0">${hiddenActs} punkt${hiddenActs === 1 ? "" : "er"} for andre er skjult.</p>` : ""}</div></div></div>
         <div class="card-foot" style="margin-top:0">${miniBtn("editMeeting", "Rediger", `data-id="${m.id}"`)}</div></div>` : ""}</div>`;
   }).join("");
   return `<div class="card mt-list">${rows}</div>`;
@@ -4117,7 +4122,7 @@ function interviewForm(i, isNew) {
   });
 }
 function meetingForm(m, isNew) {
-  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => (ownersLabel(a.owners) ? ownersLabel(a.owners) + ": " : "") + a.text).join("\n"), with: meetingWith(m) });
+  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => (ownersLabel(a.owners) ? ownersLabel(a.owners) + ": " : "") + a.text + (a.note ? " | " + a.note.replace(/\n/g, " ") : "")).join("\n"), with: meetingWith(m) });
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
     fields: [{ k: "title", label: "Tittel", ph: "F.eks. Teammøte" }, { k: "date", label: "Dato", type: "date" },
@@ -4174,7 +4179,7 @@ DELTAKERE: [navn fra teamet som var med, skilt med komma]
 BESLUTNINGER:
 - [én beslutning per linje]
 ACTIONPUNKTER:
-- [Navn]: [oppgaven]
+- [Navn]: [kort oppgave] | [utdyping, valgfritt]
 AGENDA:
 - [hovedtemaene i møtet, kort]
 
@@ -4182,7 +4187,7 @@ Regler:
 1. Ta bare med det som faktisk ble sagt. Ikke dikt opp navn, tall, datoer eller avtaler. Er noe uklart, skriv [BEKREFT …].
 2. En beslutning er noe teamet ble enige om. Skriv den som en kort, hel setning.
 3. Et actionpunkt er noe en eller flere skal gjøre etter møtet. Start hver linje med hvem som har ansvaret, bare fornavn fra teamet: ${PEOPLE.join(", ")}. Flere personer skrives «Bård og Julie: …». Gjelder det alle, skriv «Hele teamet: …». Er det ingen tydelig ansvarlig, skriv «Hele teamet: …» og legg til [BEKREFT ansvarlig].
-4. Skriv actionpunktet som en konkret oppgave som starter med et verb, f.eks. «Bård: Sende utkastet av aksjonæravtalen til teamet». Ta med frist i teksten hvis den ble nevnt.
+4. Skriv actionpunktet kort og konkret, helst under ti ord, og start med et verb, f.eks. «Bård: Sende utkast til aksjonæravtale». Bakgrunn, detaljer og frist skrives etter « | » på samme linje, f.eks. «Bård: Sende utkast til aksjonæravtale | Til hele teamet før fredag. Juridisk gjennomgang avklares senere.» Utdypingen blir et notat og vises i liten skrift.
 5. Grupper actionpunktene etter person i denne rekkefølgen: ${PEOPLE.join(", ")}, og til slutt Hele teamet.
 6. Ingen nummerering. Én linje per punkt.
 7. Ikke ta med personopplysninger om andre enn teamet utover navn på organisasjoner og kontaktpersoner som er nødvendig for oppgaven.
@@ -4402,7 +4407,7 @@ const A = {
   editMeeting: el => { const m = S.meetings[el.dataset.id]; if (m) meetingForm(clone(m), false); },
   actionToTask: el => {
     const m = clone(S.meetings[el.dataset.mid]); const a = m.actions.find(x => x.id === el.dataset.aid); if (!a) return;
-    const t = newTask({ title: a.text, status: "Må gjøres", owners: [...(a.owners || [])], note: `Fra møte ${m.date ? fmtDate(m.date) : ""}`.trim() });
+    const t = newTask({ title: a.text, status: "Må gjøres", owners: [...(a.owners || [])], note: [a.note || "", `Fra møte ${m.date ? fmtDate(m.date) : ""}`.trim()].filter(Boolean).join("\n\n") });
     put("tasks", t); a.taskId = t.id; put("meetings", m); toast("Actionpunktet er lagt til som oppgave i «Må gjøres».");
   },
   saveWin: () => {
@@ -4474,6 +4479,23 @@ const A = {
     const n = Object.keys(r).filter(k => k !== "lists" && r[k]).length + Object.keys(L).length;
     if (msg) msg.textContent = n ? "Fylt ut. Se over feltene og trykk Lagre." : "Fant ikke noe å fylle ut. Sjekk at svaret følger formatet fra prompten.";
     if (n) document.getElementById("claude-panel").hidden = true;
+  },
+  actionEdit: el => {
+    const m = S.meetings[el.dataset.mid]; if (!m) return; const a = (m.actions || []).find(x => x.id === el.dataset.aid); if (!a) return;
+    openForm({ title: "Actionpunkt", value: { text: a.text, owners: a.owners || [], note: a.note || "" },
+      fields: [{ k: "text", label: "Actionpunkt", full: true, ph: "Kort og konkret, f.eks. Sende tilbud til De Bergenske" },
+        { k: "owners", label: "Ansvarlige", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
+        { k: "note", label: "Notat", type: "textarea", full: true, ph: "Utdyping, bakgrunn eller frist" }],
+      onSave: v => {
+        if (!v.text) return formError("Skriv hva som skal gjøres.");
+        const o = clone(S.meetings[m.id]), x = o.actions.find(y => y.id === a.id); if (!x) return closeModal();
+        const oldText = x.text; Object.assign(x, { text: v.text, owners: v.owners, note: v.note });
+        put("meetings", o);
+        // Er punktet gjort om til en oppgave med samme tittel, følger tittelen med
+        const t = x.taskId && S.tasks[x.taskId]; if (t && t.title === oldText && oldText !== v.text) put("tasks", Object.assign(clone(t), { title: v.text }));
+        closeModal();
+      },
+      onDelete: () => { const o = clone(S.meetings[m.id]); o.actions = o.actions.filter(y => y.id !== a.id); put("meetings", o); closeModal(); } });
   },
   actionDel: el => { const m = clone(S.meetings[el.dataset.mid]); if (!m) return; m.actions = (m.actions || []).filter(a => a.id !== el.dataset.aid); put("meetings", m); },
   toggleMtFuture: () => { UI.mtFuture = !UI.mtFuture; render(true); },
