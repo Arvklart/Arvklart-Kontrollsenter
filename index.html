@@ -764,7 +764,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .wbig span{color:var(--muted);font-size:14px}
 .wchart{width:100%;height:auto;max-height:210px;display:block}
 .wnote{margin:0;white-space:pre-wrap;line-height:1.5}
-.vd-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) minmax(0,1fr);gap:14px;align-items:stretch}
+.vd-grid{display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.2fr) minmax(0,1.05fr);gap:14px;align-items:stretch}
 .vd-tile{cursor:pointer}
 .vd-tile:hover{border-color:#CDBBA4}
 .vd-ring{position:relative;width:132px;height:132px;margin:8px auto 0}
@@ -774,6 +774,12 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vd-ring-t span{font-size:12px;color:var(--muted)}
 .vd-line{width:100%;height:auto;margin-top:6px}
 .vd-empty{margin-top:14px;font-size:13px;color:var(--muted)}
+.vd-bars{margin-top:12px;gap:12px}
+.vd-bars .hb{grid-template-columns:104px minmax(0,1fr) auto;cursor:pointer}
+.vd-bars .hb-track{height:12px;border-radius:6px}
+.vd-bars .hb-track i{background:var(--green);border-radius:6px}
+.vd-bars b{font-size:13px}
+.vd-bars b small{color:var(--muted);font-weight:500;font-size:11px}
 .vd-nums{display:flex;flex-direction:column;gap:10px;margin-top:8px}
 .vd-num{display:flex;align-items:baseline;gap:10px}
 .vd-num b{font-size:22px;min-width:44px}
@@ -3312,6 +3318,7 @@ function validationView() {
 }
 /* Fremdrift øverst på STUD-ENT: begravelsesbyråer (ring mot målet), svar på undersøkelsen over tid,
    og tall for sykehjem, dybdeintervjuer og partnere. Alt regnes ut fra registreringene. */
+const addMonths = (iso, n) => { const d = dOf(iso.slice(0, 7) + "-01"); return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + n, 1)).toISOString().slice(0, 10); };
 function valDashboard() {
   const A_ = id => (S.validation || {})[id];
   const byra = A_("vA01"), survey = A_("vA02"), intv = A_("vA03"), part = A_("vA07"), home = A_("vA08");
@@ -3327,24 +3334,29 @@ function valDashboard() {
   let line = "";
   if (survey) {
     const logs = valLogs(survey.id).filter(l => l.date).sort((a, b) => a.date.localeCompare(b.date)), total = valCount(survey);
-    let chart = '<div class="vd-empty">Ingen svar registrert ennå.</div>';
-    if (logs.length) {
-      const today = todayISO(), start = logs[0].date, days = Math.max(1, Math.round((toUTC(today) - toUTC(start)) / 864e5));
-      const pts = []; let cum = 0; logs.forEach(l => { cum += logQty(l); pts.push([l.date, cum]); }); pts.push([today, cum]);
-      const W = 320, H = 120, L = 28, R = 8, T = 10, B = 22, max = Math.max(1, cum);
-      const X = d => L + (toUTC(d) - toUTC(start)) / 864e5 / days * (W - L - R), Y = v => T + (1 - v / max) * (H - T - B);
-      const path = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" ");
-      chart = `<svg viewBox="0 0 ${W} ${H}" class="vd-line" role="img" aria-label="Svar på undersøkelsen over tid">
-        <line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)"/><line x1="${L}" x2="${W - R}" y1="${Y(max)}" y2="${Y(max)}" stroke="var(--line)" stroke-dasharray="3 3"/>
-        <text x="${L - 6}" y="${Y(max) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${max}</text><text x="${L - 6}" y="${Y(0) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">0</text>
-        <path d="${path}" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round"/>
-        ${pts.slice(0, -1).map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="var(--green)"><title>${fmtDate(p[0], false)}: ${p[1]} svar</title></circle>`).join("")}
-        <text x="${L}" y="${H - 6}" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${fmtDate(start, false)}</text><text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">I dag</text></svg>`;
-    }
+    // Som inntektsgrafen: antall svar (samlet) oppover, månedene bortover, fra desember 2026
+    const startM = "2026-12-01", lastLog = logs.length ? logs[logs.length - 1].date : startM, endRef = [todayISO(), lastLog].sort().pop();
+    let endM = addMonths(startM, 5); while (toUTC(endM) < toUTC(endRef)) endM = addMonths(endM, 1);
+    const days = Math.round((toUTC(addMonths(endM, 1)) - toUTC(startM)) / 864e5);
+    const W = 360, H = 150, L = 34, R = 10, T = 12, B = 24, before = logs.filter(l => l.date < startM).reduce((n, l) => n + logQty(l), 0);
+    const maxV = niceMax(Math.max(total, 10)), X = d => L + Math.max(0, Math.min(days, (toUTC(d) - toUTC(startM)) / 864e5)) / days * (W - L - R), Y = v => T + (1 - v / maxV) * (H - T - B);
+    const grid = [0, .5, 1].map(f => { const v = Math.round(maxV * f), y = Y(v); return `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="var(--line)"/><text x="${L - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${v}</text>`; }).join("");
+    let months = "", m = startM; while (toUTC(m) <= toUTC(endM)) { const d = dOf(m); months += `<text x="${X(m)}" y="${H - 7}" text-anchor="${m === startM ? "start" : "middle"}" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${MON[d.getUTCMonth()][0].toUpperCase() + MON[d.getUTCMonth()].slice(1)}</text>`; m = addMonths(m, 1); }
+    const stop = [todayISO(), startM, lastLog].sort().pop();
+    let cum = before; const pts = [[startM, cum]];
+    logs.filter(l => l.date >= startM).forEach(l => { pts.push([l.date, cum]); cum += logQty(l); pts.push([l.date, cum]); });
+    pts.push([stop, cum]);
+    const line_ = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" ");
+    const area = `${line_} L${X(stop).toFixed(1)} ${Y(0)} L${X(startM)} ${Y(0)} Z`;
+    const chart = `<svg viewBox="0 0 ${W} ${H}" class="vd-line" role="img" aria-label="Svar på markedsundersøkelsen per måned">
+      <defs><linearGradient id="vdfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--inc)" stop-opacity=".28"/><stop offset="1" stop-color="var(--inc)" stop-opacity="0"/></linearGradient></defs>
+      ${grid}${total ? `<path d="${area}" fill="url(#vdfill)"/><path d="${line_}" fill="none" stroke="var(--inc)" stroke-width="2.2" stroke-linejoin="round"/>` : ""}${months}</svg>${total ? "" : '<div class="vd-empty">Ingen svar registrert ennå.</div>'}`;
     line = `<section class="gt vd-tile vd-wide" ${open(survey.id)}><span class="eyebrow">Svar på markedsundersøkelsen</span><div class="gt-big"><b class="mono">${total}</b> svar${survey.goal ? ` av ${survey.goal}` : ""}</div>${chart}</section>`;
   }
-  const num = (a, label) => a ? `<div class="vd-num" ${open(a.id)}><b class="mono">${valCount(a)}${a.goal ? `<small> / ${a.goal}</small>` : ""}</b><span>${label}</span></div>` : "";
-  const nums = `<section class="gt vd-tile"><span class="eyebrow">Andre kontakter</span><div class="vd-nums">${num(home, "Private sykehjem kontaktet")}${num(intv, "Dybdeintervjuer med arvinger")}${num(part, "Andre relevante partnere")}</div></section>`;
+  const rows = [[home, "Private sykehjem"], [intv, "Dybdeintervjuer"], [part, "Andre partnere"]].filter(x => x[0]);
+  const bmax = Math.max(1, ...rows.map(([a]) => Math.max(valCount(a), a.goal || 0)));
+  const nums = `<section class="gt vd-tile"><span class="eyebrow">Andre kontakter</span><div class="hbars vd-bars">${rows.map(([a, label]) => { const n = valCount(a);
+    return `<div class="hb" ${open(a.id)} title="${esc(a.title)}"><span>${label}</span><div class="hb-track"><i style="width:${n / bmax * 100}%"></i></div><b class="mono">${n}${a.goal ? `<small>/${a.goal}</small>` : ""}</b></div>`; }).join("")}</div></section>`;
   return `<div class="card"><div class="card-head"><div><h2>Fremdrift</h2></div></div><div class="vd-grid">${ring}${line}${nums}</div></div>`;
 }
 function valForm(a) {
