@@ -1080,7 +1080,11 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .mt-h{width:100%;display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;padding:14px 2px;background:none;border:0;text-align:left;color:var(--ink)}
 .mt-h:hover .mt-title{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
 .mt-title{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.25}
-.mt-date{font-style:italic;font-size:13px;color:var(--muted)}
+.mt-date{font-style:italic;font-size:13px;color:var(--muted);font-family:var(--mono)}
+.act-ring{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
+.act-ring svg{width:20px;height:20px}
+.act-ring b{font-size:11.5px;font-weight:600}
+.action.done > span:not(.act-own){text-decoration:line-through;color:var(--muted)}
 .mt-meta{margin-left:auto;font-size:12px;color:var(--muted);display:inline-flex;gap:8px;align-items:center}
 .mt-h .fx-chev{align-self:center}
 .mt-item.open .fx-chev{transform:rotate(180deg)}
@@ -1568,6 +1572,17 @@ function parseActionLine(line) {
   const i = line.indexOf(":");
   if (i > 0) { const own = parseOwners(line.slice(0, i)); if (own) return { owners: own, text: stripNum(line.slice(i + 1)) }; }
   return { owners: [], text: stripNum(line) };
+}
+// Kort dato i møtelisten: 05-11-26
+const shortDate = iso => { const [y, m, d] = iso.split("-"); return `${d}-${m}-${y.slice(2)}`; };
+/* Fremdrift på actionpunktene (fra og med møtet 19. november): andelen punkter der oppgaven er ferdig.
+   Punktene er koblet til oppgavene via taskId, så ringen følger oppgavene automatisk. */
+const ACT_RING_FROM = "2026-11-19";
+function actRing(m) {
+  const acts = m.actions || []; if (!acts.length || !m.date || m.date < ACT_RING_FROM) return "";
+  const done = acts.filter(a => a.taskId && S.tasks[a.taskId] && isDone(S.tasks[a.taskId])).length, pct = Math.round(done / acts.length * 100);
+  const r = 8, c = 2 * Math.PI * r;
+  return `<span class="act-ring" title="${done} av ${acts.length} actionpunkter er ferdige"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="${r}" fill="none" stroke="var(--line)" stroke-width="3.5"/>${done ? `<circle cx="10" cy="10" r="${r}" fill="none" stroke="var(--green)" stroke-width="3.5" stroke-dasharray="${(c * done / acts.length).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 10 10)" stroke-linecap="${pct === 100 ? "butt" : "round"}"/>` : ""}</svg><b class="mono">${pct} %</b></span>`;
 }
 function ownerBadge(o) {
   if (!o || !o.length) return '<span class="act-own"></span>';
@@ -2989,8 +3004,8 @@ VIEWS.moter = function () {
     const meta = [m.prepNote || m.prepFileId || isUrl(m.prepLink) ? "forberedelse" : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
-        <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}${m.time ? " kl. " + esc(m.time) : ""}</em>
-        <span class="mt-meta">${m.date > today ? '<span class="badge t-orange">Kommende</span> ' : ""}${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
+        <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? shortDate(m.date) : "uten dato"}</em>
+        <span class="mt-meta">${m.date > today ? '<span class="badge t-orange">Kommende</span> ' : ""}${esc(meta)}${actRing(m)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
       ${open ? `<div class="mt-b">
         ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
         ${m.place ? `<p class="mt-place"><span class="muted">Hvor:</span> ${esc(m.place)}</p>` : ""}
@@ -2999,7 +3014,7 @@ VIEWS.moter = function () {
           ${m.fileId || isUrl(m.link) ? `<div class="mt-docrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}</div>` : ""}
         ${m.prepNote ? `<div class="mt-agenda"><span class="eyebrow">Agenda og innspill</span><p>${ph(m.prepNote)}</p></div>` : ""}
         <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
-        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action">${ownerBadge(a.owners)}<span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}${hiddenActs ? `<p class="muted" style="font-size:12px;margin:2px 0 0">${hiddenActs} punkt${hiddenActs === 1 ? "" : "er"} for andre er skjult.</p>` : ""}</div></div></div>
+        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action${a.taskId && S.tasks[a.taskId] && isDone(S.tasks[a.taskId]) ? " done" : ""}">${ownerBadge(a.owners)}<span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}${hiddenActs ? `<p class="muted" style="font-size:12px;margin:2px 0 0">${hiddenActs} punkt${hiddenActs === 1 ? "" : "er"} for andre er skjult.</p>` : ""}</div></div></div>
         <div class="card-foot" style="margin-top:0">${miniBtn("editMeeting", "Rediger", `data-id="${m.id}"`)}</div></div>` : ""}</div>`;
   }).join("");
   return `<div class="card mt-list">${rows}</div>`;
