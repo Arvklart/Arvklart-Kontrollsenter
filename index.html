@@ -1617,8 +1617,9 @@ const shortDate = iso => { const [y, m, d] = iso.split("-"); return `${d}.${m}.$
 /* Fremdrift på actionpunktene (fra og med møtet 19. november): andelen punkter der oppgaven er ferdig.
    Punktene er koblet til oppgavene via taskId, så ringen følger oppgavene automatisk. */
 const ACT_RING_FROM = "2026-11-19";
+const ringOn = m => typeof m.ring === "boolean" ? m.ring : !!(m.date && m.date >= ACT_RING_FROM);
 function actRing(m) {
-  const acts = m.actions || []; if (!acts.length || !m.date || m.date < ACT_RING_FROM) return "";
+  const acts = m.actions || []; if (!acts.length || !ringOn(m)) return "";
   const done = acts.filter(a => a.taskId && S.tasks[a.taskId] && isDone(S.tasks[a.taskId])).length, pct = Math.round(done / acts.length * 100);
   const r = 8, c = 2 * Math.PI * r;
   return `<span class="act-ring" title="${done} av ${acts.length} actionpunkter er ferdige"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="${r}" fill="none" stroke="var(--line)" stroke-width="3.5"/>${done ? `<circle cx="10" cy="10" r="${r}" fill="none" stroke="var(--green)" stroke-width="3.5" stroke-dasharray="${(c * done / acts.length).toFixed(2)} ${c.toFixed(2)}" transform="rotate(-90 10 10)" stroke-linecap="${pct === 100 ? "butt" : "round"}"/>` : ""}</svg><b class="mono">${pct} %</b></span>`;
@@ -3776,7 +3777,7 @@ function fieldHtml(f, v) {
   if (f.type === "file") return `<label class="${cls}">${f.label}<input type="file" id="${id}" accept="${esc(f.accept || "")}">${hint}</label>`;
   if (f.type === "textarea") return `<label class="${cls}">${f.label}<textarea id="${id}" ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}>${esc(v)}</textarea>${hint}</label>`;
   if (f.type === "select") return `<label class="${cls}">${f.label}<select id="${id}">${f.opts.map(o => { const [val, lab] = Array.isArray(o) ? o : [o, o || "–"]; return `<option value="${esc(val)}"${String(v ?? "") === String(val) ? " selected" : ""}>${esc(lab)}</option>`; }).join("")}</select>${hint}</label>`;
-  if (f.type === "check") return `<label class="${cls}"><span class="checks"><label><input type="checkbox" id="${id}"${v ? " checked" : ""}> ${f.text || f.label}</label></span>${hint}</label>`;
+  if (f.type === "check") return `<label class="${cls}">${f.text && f.k === "ring" ? f.label : ""}<span class="checks"><label><input type="checkbox" id="${id}"${v ? " checked" : ""}> ${f.text || f.label}</label></span>${hint}</label>`;
   if (f.type === "multi") return `<div class="${cls}" style="display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted)">${f.label}<span class="checks" id="${id}-list">${f.opts.map(([val, lab, area]) => `<label${area !== undefined ? ` data-area="${esc(area)}"` : ""}><input type="checkbox" name="${id}" value="${esc(val)}"${(v || []).includes(val) ? " checked" : ""}> ${esc(lab)}</label>`).join("")}<span class="muted checks-empty" hidden>Ingen i dette området.</span></span>${hint}</div>`;
   const dl = f.suggest && f.suggest.length ? `<datalist id="${id}-dl">${f.suggest.map(x => `<option value="${esc(x)}"></option>`).join("")}</datalist>` : "";
   return `<label class="${cls}">${f.label}<input type="${f.type || "text"}" id="${id}" value="${esc(v ?? "")}" ${f.type === "number" ? 'step="any" min="0" inputmode="decimal"' : ""} ${f.ph ? `placeholder="${esc(f.ph)}"` : ""}${dl ? ` list="${id}-dl" autocomplete="off"` : ""}>${dl}${hint}</label>`;
@@ -4122,14 +4123,15 @@ function interviewForm(i, isNew) {
   });
 }
 function meetingForm(m, isNew) {
-  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => (ownersLabel(a.owners) ? ownersLabel(a.owners) + ": " : "") + a.text + (a.note ? " | " + a.note.replace(/\n/g, " ") : "")).join("\n"), with: meetingWith(m) });
+  const v = Object.assign({}, m, { ring: isNew && typeof m.ring !== "boolean" ? true : ringOn(m), actionsText: (m.actions || []).map(a => (ownersLabel(a.owners) ? ownersLabel(a.owners) + ": " : "") + a.text + (a.note ? " | " + a.note.replace(/\n/g, " ") : "")).join("\n"), with: meetingWith(m) });
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
     fields: [{ k: "title", label: "Tittel", ph: "F.eks. Teammøte" }, { k: "date", label: "Dato", type: "date" },
       { k: "time", label: "Fra kl.", type: "time" }, { k: "endTime", label: "Til kl.", type: "time" },
       { k: "with", label: "Møte med", ph: "Velg eller skriv", suggest: meetingPartners() },
       { k: "place", label: "Hvor", ph: "F.eks. Teams eller et sted" },
-      { k: "attendees", label: "Deltakere", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
+      { k: "attendees", label: "Deltakere", type: "multi", opts: PEOPLE.map(p => [p, p]) },
+      { k: "ring", label: "Progresjon", type: "check", text: "Vis fremdriftsring" },
       { k: "prepNote", label: "Forberedelse og agenda", type: "textarea", full: true, ph: "Agenda og innspill", group: "prep" },
       { k: "prepFile", label: "Forberedelse (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true, group: "prep",
         hint: m.prepFileName ? `Nå: ${esc(m.prepFileName)}. Velg en ny fil for å bytte.` : "" },
@@ -4150,7 +4152,7 @@ function meetingForm(m, isNew) {
       }
       const old = m.actions || [];
       const actions = f.actionsText.split("\n").map(s => s.trim().replace(/^[-•*]\s*/, "")).filter(Boolean).map(line => { const p = parseActionLine(line), hit = old.find(a => a.text === p.text); return Object.assign(hit ? clone(hit) : { id: uid("a"), taskId: "" }, p); });
-      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, place: f.place || "", prepNote: f.prepNote || "", prepLink: f.prepLink || "", decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, ring: !!f.ring, place: f.place || "", prepNote: f.prepNote || "", prepLink: f.prepLink || "", decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
       if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
     },
