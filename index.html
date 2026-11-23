@@ -1077,9 +1077,11 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .head-select{border-radius:999px;border:1px solid var(--line);background:var(--card);padding:7px 12px;font-size:13px;color:var(--ink);max-width:220px}
 .mt-item{border-bottom:1px solid var(--line)}
 .mt-item:last-child{border-bottom:0}
-.mt-h{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 78px 74px 150px 18px;align-items:center;gap:4px 12px;padding:14px 2px;background:none;border:0;text-align:left;color:var(--ink)}
+.mt-h{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 74px 150px 18px;align-items:center;gap:4px 12px;padding:14px 2px;background:none;border:0;text-align:left;color:var(--ink)}
 .mt-ring{display:flex;align-items:center}
-@media (max-width:640px){.mt-h{grid-template-columns:minmax(0,1fr) 70px 18px}.mt-ring,.mt-meta{grid-column:1/-1}.mt-ring:empty,.mt-meta:empty{display:none}.mt-h .fx-chev{grid-row:1;grid-column:3}}
+.mt-tt{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;min-width:0}
+.mt-h .mt-meta{justify-self:end}
+@media (max-width:640px){.mt-h{grid-template-columns:minmax(0,1fr) auto 18px}.mt-h .mt-meta{grid-column:1/-1;justify-self:start}.mt-meta:empty{display:none}}
 .mt-h:hover .mt-title{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
 .mt-title{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.25}
 .mt-date{font-style:italic;font-size:13px;color:var(--muted);font-family:var(--mono)}
@@ -1575,8 +1577,8 @@ function parseActionLine(line) {
   if (i > 0) { const own = parseOwners(line.slice(0, i)); if (own) return { owners: own, text: stripNum(line.slice(i + 1)) }; }
   return { owners: [], text: stripNum(line) };
 }
-// Kort dato i møtelisten: 05-11-26
-const shortDate = iso => { const [y, m, d] = iso.split("-"); return `${d}-${m}-${y.slice(2)}`; };
+// Kort dato i møtelisten: 05.11.26
+const shortDate = iso => { const [y, m, d] = iso.split("-"); return `${d}.${m}.${y.slice(2)}`; };
 /* Fremdrift på actionpunktene (fra og med møtet 19. november): andelen punkter der oppgaven er ferdig.
    Punktene er koblet til oppgavene via taskId, så ringen følger oppgavene automatisk. */
 const ACT_RING_FROM = "2026-11-19";
@@ -3006,7 +3008,7 @@ VIEWS.moter = function () {
     const meta = [m.prepNote || m.prepFileId || isUrl(m.prepLink) ? "forberedelse" : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
-        <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? shortDate(m.date) : "uten dato"}</em>
+        <span class="mt-tt"><span class="mt-title">${esc(m.title || "Teammøte")}</span> <em class="mt-date">${m.date ? shortDate(m.date) : "uten dato"}</em></span>
         <span class="mt-ring">${actRing(m)}</span><span class="mt-meta">${m.date > today ? '<span class="badge t-orange">Kommende</span> ' : ""}${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
       ${open ? `<div class="mt-b">
         ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
