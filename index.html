@@ -803,6 +803,8 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vst-due input{border:1px solid var(--line);border-radius:8px;padding:2px 4px;font-size:11.5px;font-family:var(--mono);background:var(--card-hi);max-width:118px}
 .vph-foot{font-size:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.mt-prep{display:flex;flex-direction:column;gap:6px;background:var(--card-hi);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.mt-prep p{margin:0;white-space:pre-wrap;line-height:1.45}
 .sub-list{display:flex;flex-direction:column;gap:6px}
 .sub-head,.sub-row{display:grid;grid-template-columns:minmax(170px,1.1fr) minmax(140px,1fr) minmax(140px,1fr) minmax(0,1.5fr);gap:14px;align-items:center;padding:9px 12px}
 .sub-head{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-block:2px}
@@ -2117,7 +2119,8 @@ function renderMain() {
 }
 function meetingsHead() {
   const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
-  return `<div class="row-btns" style="align-items:center"><select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>`;
+  const sw = `<button type="button" class="wait-sw" role="switch" aria-checked="${!!UI.mtFuture}" data-act="toggleMtFuture" style="color:var(--on-bg)"><span class="sw" aria-hidden="true"></span>Vis kommende</button>`;
+  return `<div class="row-btns" style="align-items:center">${sw}<select id="mt-filter" class="head-select" aria-label="Filtrer møter"><option value="">Alle møter</option>${meetingPartners().map(w => `<option${UI.mtWith === w ? " selected" : ""}>${esc(w)}</option>`).join("")}</select>${btn("newMeeting", "Nytt møte")}</div>`;
 }
 function headRight(id) {
   const btn = (act, label, attrs = "") => `<button class="btn light" data-act="${act}" ${attrs}>${ico("plus")}${label}</button>`;
@@ -2921,10 +2924,11 @@ function meetingWith(m) {
 }
 const meetingPartners = () => [...new Set(arr("meetings").map(meetingWith))].sort((a, b) => a === "Team" ? -1 : b === "Team" ? 1 : a.localeCompare(b, "nb"));
 VIEWS.moter = function () {
-  const all = arr("meetings").sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  const today = todayISO();
+  const all = arr("meetings").filter(m => UI.mtFuture || !m.date || m.date <= today).sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   if (UI.mtWith && !all.some(m => meetingWith(m) === UI.mtWith)) UI.mtWith = "";
   const ms = UI.mtWith ? all.filter(m => meetingWith(m) === UI.mtWith) : all;
-  if (!ms.length) return `<div class="card"><div class="empty">Ingen møter registrert ennå.</div></div>`;
+  if (!ms.length) return `<div class="card"><div class="empty">${UI.mtFuture ? "Ingen møter registrert ennå." : "Ingen gjennomførte møter ennå."}</div></div>`;
   // Kompakte linjer: tittel og dato. Trykk for å se deltakere, referat, beslutninger og actionpunkter.
   const rows = ms.map(m => {
     const open = xpOpen(m.id), dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean), acts = m.actions || [];
@@ -2932,9 +2936,10 @@ VIEWS.moter = function () {
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
         <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}${m.time ? " kl. " + esc(m.time) : ""}</em>
-        <span class="mt-meta">${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
+        <span class="mt-meta">${m.date > today ? '<span class="badge t-orange">Kommende</span> ' : ""}${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
       ${open ? `<div class="mt-b">
         ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
+        ${m.prepNote || m.prepFileId || isUrl(m.prepLink) ? `<div class="mt-prep"><span class="eyebrow">Forberedelse</span>${m.prepNote ? `<p>${ph(m.prepNote)}</p>` : ""}<div class="refrow" style="margin:0">${m.prepFileId ? fileLink(m.prepFileId, m.prepFileName) : ""}${isUrl(m.prepLink) ? `<a class="linkout" href="${esc(m.prepLink)}" target="_blank" rel="noopener">Åpne forberedelsen ↗</a>` : ""}</div></div>` : ""}
         ${m.fileId || isUrl(m.link) ? `<div class="refrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}
         <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
         <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action"><span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}</div>`).join("") || '<p class="muted">Ingen.</p>'}</div></div></div>
@@ -3947,22 +3952,27 @@ function meetingForm(m, isNew) {
       { k: "time", label: "Fra kl.", type: "time" }, { k: "endTime", label: "Til kl.", type: "time" },
       { k: "with", label: "Møte med", ph: "Velg eller skriv en ny samarbeidspartner", suggest: meetingPartners(), hint: "F.eks. Team eller HVL Skape. Skriv et nytt navn for å legge til en ny samarbeidspartner." },
       { k: "attendees", label: "Deltakere", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
+      { k: "prepNote", label: "Forberedelse og agenda", type: "textarea", full: true, ph: "Hva vil vi snakke om? F.eks. spørsmål til kunden eller intervjumal." },
+      { k: "prepFile", label: "Forberedelse (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true,
+        hint: (m.prepFileName ? `Nå: ${esc(m.prepFileName)}. Velg en ny fil for å bytte. ` : "") + UPLOAD_HINT },
+      { k: "prepLink", label: "Lenke til forberedelse (f.eks. Google Docs)", full: true, ph: "https://" },
       { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true },
       { k: "actionsText", label: "Actionpunkter (én per linje)", type: "textarea", full: true, hint: "Hvert actionpunkt kan gjøres om til en oppgave fra møtekortet." },
       { k: "file", label: "Møtereferat (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true,
         hint: (m.fileName ? `Nå: ${esc(m.fileName)}. Velg en ny fil for å bytte. ` : "") + UPLOAD_HINT },
       { k: "link", label: "Lenke til referatet (f.eks. Google Docs)", full: true, ph: "https://" }],
     onSave: async f => {
-      if (f.link && !isUrl(f.link)) return formError("Lenken må starte med https://");
+      if ((f.link && !isUrl(f.link)) || (f.prepLink && !isUrl(f.prepLink))) return formError("Lenken må starte med https://");
       let fileInfo = {};
-      if (f.file) {
+      for (const [k, idK, nameK] of [["file", "fileId", "fileName"], ["prepFile", "prepFileId", "prepFileName"]]) {
+        if (!f[k]) continue;
         const btn = modalEl.querySelector('[data-act="saveModal"]'); btn.disabled = true; btn.textContent = "Laster opp …";
-        try { const r = await uploadFile(f.file); fileInfo = { fileId: r.id, fileName: r.name }; }
+        try { const r = await uploadFile(f[k]); fileInfo[idK] = r.id; fileInfo[nameK] = r.name; }
         catch (e) { btn.disabled = false; btn.textContent = "Lagre"; return formError(e.message); }
       }
       const old = m.actions || [];
       const actions = f.actionsText.split("\n").map(s => s.trim()).filter(Boolean).map(text => { const hit = old.find(a => a.text === text); return hit ? hit : { id: uid("a"), text, taskId: "" }; });
-      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, prepNote: f.prepNote || "", prepLink: f.prepLink || "", decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
       if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
     },
@@ -4200,6 +4210,7 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  toggleMtFuture: () => { UI.mtFuture = !UI.mtFuture; render(true); },
   newSubscription: () => subscriptionForm({ id: uid("ab"), platform: "", url: "", login: "", note: "" }, true),
   editSubscription: el => { const x = S.subscriptions[el.dataset.id]; if (x) subscriptionForm(clone(x), false); },
   editVal: el => { const a = S.validation[el.dataset.id]; if (a) valForm(clone(a)); },
