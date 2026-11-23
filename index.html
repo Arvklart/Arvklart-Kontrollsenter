@@ -803,6 +803,16 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vst-due input{border:1px solid var(--line);border-radius:8px;padding:2px 4px;font-size:11.5px;font-family:var(--mono);background:var(--card-hi);max-width:118px}
 .vph-foot{font-size:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.sub-list{display:flex;flex-direction:column;gap:8px}
+.sub-row{display:grid;grid-template-columns:30px minmax(140px,1fr) minmax(140px,1fr) minmax(0,1.6fr);gap:12px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--card-hi);border:1px solid var(--line);cursor:pointer}
+.sub-row:hover{border-color:#CDBBA4}
+.sub-row .clogo{width:30px;height:30px}
+.sub-main{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sub-main .linkout{font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub-login{display:flex;flex-direction:column;font-size:13px;min-width:0;overflow-wrap:anywhere}
+.sub-login .muted{font-size:11px}
+.sub-note{font-size:13px;color:var(--muted);white-space:pre-wrap;min-width:0;overflow-wrap:anywhere}
+@media (max-width:760px){.sub-row{grid-template-columns:30px minmax(0,1fr)}.sub-login,.sub-note{grid-column:2}}
 .fboxes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start}
 .fbox{border-radius:14px;background:var(--card-hi);border:1px solid var(--line);border-top:4px solid var(--bar);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;min-width:0}
 .fbox:hover{border-color:#CDBBA4;border-top-color:var(--bar)}
@@ -1356,7 +1366,7 @@ const FIXED_NOTES = [
 ];
 
 /* ===================================================================== */
-const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets","validation","valLog"];
+const COLLS = ["meta","milestones","tasks","hypotheses","budget","funding","interviews","leads","meetings","wins","wallet","expenses","areas","items","decisions","docs","knowledge","contacts","legal","companyDocs","company","events","layouts","widgets","validation","valLog","subscriptions"];
 /* Hovedområdene. Oppgaver er handlingslaget på tvers og kobles til ett område. */
 const AREAS = [
   { id: "drift", name: "Drift", short: "Drift", icon: "gear", desc: "Milepæler, innleveringer og fremdrift." },
@@ -2108,6 +2118,7 @@ function headRight(id) {
     return { oppgaver: btn("newTask", "Ny oppgave"), moter: meetingsHead(), funksjoner: btn("newItem", "Ny funksjon", 'data-kind="funksjon"'), beslutninger: btn("newDecision", "Ny beslutning", `data-area="${id}"`), dokumenter: btn("newDoc", "Nytt dokument", `data-area="${id}"`), salg: btn("newLead", "Ny lead"), jus: btn("newLegal", "Nytt spørsmål"), juridisk: btn("newLegal", "Nytt spørsmål"), selskap: btn("newCdoc", "Nytt dokument"), pilot: btn("newTaskIn", "Ny oppgave", `data-area="marked" data-sub="pilot"`), okonomi: btn("newBudget", "Ny budsjettpost"),
       milepaeler: btn("newMs", "Ny milepæl"), partnere: btn("newContact", "Ny partner", 'data-area="marked"'), finansiering: btn("newFund", "Nytt trinn"), kunnskap: btn("newKb", "Nytt notat"), hyp: btn("newHyp", "Ny hypotese"), int: btn("newInterview", "Nytt intervju") }[UI.sub] || btn("newTaskIn", "Ny oppgave", `data-area="${id}"`);
   }
+  if (id === "selskap" && UI.sub === "abonnement") return btn("newSubscription", "Nytt abonnement");
   return { selskap: btn("newCdoc", "Nytt dokument"), kalender: btn("newAvtale", "Ny avtale"), hjem: btn("quickAdd", "Legg til"), kontakter: btn("newContact", "Ny kontakt"), oppgaver: btn("newTask", "Ny oppgave"), milepaeler: btn("newMs", "Ny milepæl"), salg: btn("newLead", "Ny lead"),
     okonomi: btn("newBudget", "Ny budsjettpost"), hypoteser: btn("newHyp", "Ny hypotese"), intervjuer: btn("newInterview", "Nytt intervju"), moter: meetingsHead() }[id] || "";
 }
@@ -2675,9 +2686,36 @@ function legalView() {
 
 // Selskap er en egen side under Kontakter i sidekolonnen (lå før som fane under Drift)
 VIEWS.selskap = function () {
+  const sub = UI.sub === "abonnement" ? "abonnement" : "oversikt";
+  const tabs = `<div class="tabs" role="tablist">${[["oversikt", "Oversikt"], ["abonnement", "Abonnement"]].map(([k, l]) => `<button class="tab${sub === k ? " on" : ""}" data-act="tab" data-t="${k}" role="tab" aria-selected="${sub === k}">${l}</button>`).join("")}</div>`;
+  if (sub === "abonnement") return tabs + subscriptionsView();
   const ts = tasks().filter(t => t.area === "drift" && t.sub === "selskap");
-  return selskapView() + (ts.length ? tasksBlock(ts, { area: "drift", sub: "selskap", hideTag: true, title: "Oppgaver om selskapet" }) : "");
+  return tabs + selskapView() + (ts.length ? tasksBlock(ts, { area: "drift", sub: "selskap", hideTag: true, title: "Oppgaver om selskapet" }) : "");
 };
+/* Abonnement: plattformene vi bruker, med lenke, innlogging (uten passord) og notater. Samlingen «subscriptions». */
+function subscriptionsView() {
+  const list = arr("subscriptions").sort((a, b) => (a.platform || "").localeCompare(b.platform || "", "nb"));
+  const rows = list.map(x => { const dom = cleanDomain(x.url);
+    return `<div class="sub-row" data-act="editSubscription" data-id="${x.id}" tabindex="0">${orgLogo({ org: x.platform, website: x.url }, "sm")}
+      <div class="sub-main"><b>${esc(x.platform)}</b>${isUrl(x.url) ? `<a class="linkout" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(dom || x.url)} ↗</a>` : ""}</div>
+      <div class="sub-login">${x.login ? `<span class="muted">Innlogging</span><span class="selectable">${esc(x.login)}</span>` : ""}</div>
+      <div class="sub-note">${x.note ? ph(x.note) : ""}</div></div>`; }).join("");
+  return `<div class="card"><div class="card-head"><div><h2>Abonnement</h2><p class="sub">Plattformene vi bruker. Ikke skriv passord her.</p></div>${miniBtn("newSubscription", "+ Abonnement")}</div>
+    ${rows ? `<div class="sub-list">${rows}</div>` : '<div class="empty">Ingen abonnement ennå. Legg inn plattformene dere bruker, med lenke og notater.</div>'}</div>`;
+}
+function subscriptionForm(x, isNew) {
+  openForm({ title: isNew ? "Nytt abonnement" : "Rediger abonnement", value: x,
+    fields: [{ k: "platform", label: "Plattform", full: true, ph: "F.eks. Canva, Google Workspace, Vercel" },
+      { k: "url", label: "Lenke til plattformen", full: true, ph: "https://" },
+      { k: "login", label: "Innlogging", full: true, ph: "F.eks. brukernavn eller e-post", hint: "Ikke lagre passord her. Skriv heller hvor passordet ligger, for eksempel i en felles passordbehandler." },
+      { k: "note", label: "Notater", type: "textarea", full: true, ph: "F.eks. pris, hvem som betaler, når det fornyes" }],
+    onSave: v => {
+      if (!v.platform) return formError("Skriv navnet på plattformen.");
+      if (v.url && !isUrl(v.url)) return formError("Lenken må starte med https://");
+      put("subscriptions", Object.assign(clone(x), v)); closeModal();
+    },
+    onDelete: isNew ? null : () => { del("subscriptions", x.id); closeModal(); } });
+}
 function selskapView() {
   const info = (S.company || {}).info || {};
   const infoCard = `<div class="card"><div class="card-head"><div><h2>Selskapsinformasjon</h2></div>${miniBtn("editCompany", "Rediger")}</div>
@@ -4139,6 +4177,8 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  newSubscription: () => subscriptionForm({ id: uid("ab"), platform: "", url: "", login: "", note: "" }, true),
+  editSubscription: el => { const x = S.subscriptions[el.dataset.id]; if (x) subscriptionForm(clone(x), false); },
   editVal: el => { const a = S.validation[el.dataset.id]; if (a) valForm(clone(a)); },
   editCrit: el => { const c = S.validation[el.dataset.id]; if (c) critForm(clone(c)); },
   editPhase: el => { const f = S.validation[el.dataset.id]; if (f) phaseForm(clone(f)); },
