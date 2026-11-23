@@ -49,9 +49,10 @@ Brukerne er ikke tekniske. Forklar kort og med enkle ord på norsk hva du gjør 
 
 ## Design (skal beholdes)
 
-- Varm brun bakgrunn (`#6E5847`), kremhvite kort (`#F0E8DC`) med 22px avrundede hjørner og mørk brun tekst (`#3B2F27`). Alle farger er CSS-variabler i `:root`.
+- Lys bakgrunn (`#EEEBE4`), mørkegrønn sidekolonne og topplinje (`#1B2B22`), hvite kort (`#FCFBF8`) med 16px avrundede hjørner og mørk tekst (`#22231F`). Gull (`--rose: #B39752`) som aksent. Alle farger er CSS-variabler i `:root`.
+- Topplinjen har Oversikt, Kalender, Assistent og «Bare mine»-bryteren. Nederst i sidekolonnen ligger Drive-knappen (lenken ligger i `meta/links`, ikke i koden).
 - Skrifter: Fraunces (overskrifter), Inter (brødtekst), JetBrains Mono (tall og datoer).
-- Rosa nedtellingskort med vippefliser øverst i sidekolonnen.
+- Områder: Drift, Produkt og Tech, Salg og partnere, Marked og data, Finansiering (med fanen STUD-ENT). Selskap (Oversikt og Abonnement) ligger under Kontakter.
 - Logoen (huset) er en base64-maske i `.logo-mark` og får samme farge som teksten rundt.
 - Fargekode: rød = kritisk eller forfalt, oransje = snart, grønn = i rute eller ferdig.
 - Plassholdere skrives som `[FYLL INN …]` eller `[BEKREFT …]` og vises som gule felt.
