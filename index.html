@@ -764,6 +764,22 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .wbig span{color:var(--muted);font-size:14px}
 .wchart{width:100%;height:auto;max-height:210px;display:block}
 .wnote{margin:0;white-space:pre-wrap;line-height:1.5}
+.vd-grid{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr) minmax(0,1fr);gap:14px;align-items:stretch}
+.vd-tile{cursor:pointer}
+.vd-tile:hover{border-color:#CDBBA4}
+.vd-ring{position:relative;width:132px;height:132px;margin:8px auto 0}
+.vd-ring svg{width:100%;height:100%}
+.vd-ring-t{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.vd-ring-t b{font-size:28px;line-height:1}
+.vd-ring-t span{font-size:12px;color:var(--muted)}
+.vd-line{width:100%;height:auto;margin-top:6px}
+.vd-empty{margin-top:14px;font-size:13px;color:var(--muted)}
+.vd-nums{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.vd-num{display:flex;align-items:baseline;gap:10px}
+.vd-num b{font-size:22px;min-width:44px}
+.vd-num b small{font-size:13px;color:var(--muted);font-weight:500}
+.vd-num span{font-size:13px;color:var(--muted)}
+@media (max-width:980px){.vd-grid{grid-template-columns:minmax(0,1fr)}}
 .vtable td{vertical-align:top}
 .vtable tbody tr{cursor:pointer}
 .vtable tbody tr:hover td{background:#fff}
@@ -3250,7 +3266,8 @@ const VAL_STATUS = ["Ikke startet", "Pågår", "Ferdig"];
 const valOf = k => arr("validation").filter(d => d.kind === k).sort((a, b) => (a.n || 0) - (b.n || 0));
 // Registreringer (hvem vi har ringt, intervjuet osv.) ligger i «valLog», én rad per registrering
 const valLogs = id => arr("valLog").filter(l => l.act === id).sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.created || "").localeCompare(a.created || ""));
-const valCount = a => valLogs(a.id).length;
+const logQty = l => Math.max(1, Number(l.qty) || 1);
+const valCount = a => valLogs(a.id).reduce((n, l) => n + logQty(l), 0);
 function valProgress(a) {
   const n = valCount(a);
   if (a.goal) return `<div class="vprog"><span class="mono"><b>${n}</b> / ${a.goal}${a.unit ? " " + esc(a.unit) : ""}</span>${bar(n / a.goal * 100, n >= a.goal ? "green" : "")}</div>`;
@@ -3270,7 +3287,7 @@ function validationView() {
       <td><span class="badge ${tone[a.status] || "t-none"}">${esc(a.status || "Ikke startet")}</span></td></tr>
     ${open ? `<tr class="vexp"><td></td><td colspan="5"><div class="vlog" data-act="noop">
       <div class="vlog-h"><b>Registrert (${logs.length})</b><span class="row-btns">${miniBtn("editVal", "Rediger aktivitet", `data-id="${a.id}"`)}<button class="mini vreg" data-act="vLogNew" data-id="${a.id}">${ico("plus", 2.4)}Registrer</button></span></div>
-      ${logs.length ? `<div class="vlog-list">${logs.map(l => `<button class="vlog-row" data-act="vLogEdit" data-id="${l.id}"><span class="mono muted">${l.date ? fmtDate(l.date, false) : "–"}</span><b>${esc(l.name)}</b><span class="mono">${esc(l.phone || "")}</span><span class="muted">${esc(l.note || "")}</span>${l.by ? avatar(l.by, true) : ""}</button>`).join("")}</div>`
+      ${logs.length ? `<div class="vlog-list">${logs.map(l => `<button class="vlog-row" data-act="vLogEdit" data-id="${l.id}"><span class="mono muted">${l.date ? fmtDate(l.date, false) : "–"}</span><b>${esc(l.name)}${logQty(l) > 1 ? ` <span class="muted mono">×${logQty(l)}</span>` : ""}</b><span class="mono">${esc(l.phone || "")}</span><span class="muted">${esc(l.note || "")}</span>${l.by ? avatar(l.by, true) : ""}</button>`).join("")}</div>`
         : '<p class="pk-empty" style="margin:0">Ingen registrert ennå. Trykk «Registrer» når dere har ringt, kontaktet eller intervjuet noen.</p>'}</div></td></tr>` : ""}`; }).join("");
   const critRows = crits.map(c => {
     const a = c.act ? (S.validation || {})[c.act] : null, cur = a ? valCount(a) : null, ok = c.goal && cur != null && cur >= c.goal;
@@ -3284,7 +3301,7 @@ function validationView() {
         <button class="step-x" data-act="vStepDel" data-id="${f.id}" data-s="${x.id}" aria-label="Fjern steget">×</button></div>`).join("") || '<span class="pk-empty">Ingen steg ennå.</span>'}</div>
       <div class="kst-add"><input class="vstep-new" data-id="${f.id}" type="text" placeholder="Nytt steg" autocomplete="off" aria-label="Nytt steg i ${esc(f.name)}"><button class="mini" data-act="vStepAdd" data-id="${f.id}">Legg til</button></div>
       <div class="vph-foot muted">${done} av ${st.length} ferdig</div></div>`; }).join("");
-  return `<div class="card"><div class="card-head"><div><h2>Markedsvalidering for STUD-ENT</h2>${info ? `<p class="sub">${ph(info.purpose)}</p>` : ""}</div>${info ? miniBtn("editValInfo", "Rediger", `data-id="${info.id}"`) : ""}</div>
+  return valDashboard() + `<div class="card"><div class="card-head"><div><h2>Markedsvalidering for STUD-ENT</h2>${info ? `<p class="sub">${ph(info.purpose)}</p>` : ""}</div>${info ? miniBtn("editValInfo", "Rediger", `data-id="${info.id}"`) : ""}</div>
       ${info && (info.learn || []).length ? `<details class="closed-list"${keepOpen("val-laere")}><summary>Hva vi skal lære (${info.learn.length})</summary><ul class="vlearn">${info.learn.map(l => `<li>${ph(l)}</li>`).join("")}</ul></details>` : ""}</div>
     <div class="card"><div class="card-head"><div><h2>Aktiviteter</h2><p class="sub">Trykk på en aktivitet for å se og registrere hvem dere har ringt, kontaktet eller intervjuet.</p></div></div>
       <div class="tablewrap"><table class="vtable"><thead><tr><th>#</th><th>Aktivitet</th><th>Mål og resultat</th><th>Ansvarlig</th><th>Fremdrift</th><th>Status</th></tr></thead><tbody>${actRows}</tbody></table></div></div>
@@ -3292,6 +3309,43 @@ function validationView() {
       <div class="tablewrap"><table class="vtable"><thead><tr><th>Hva vi måler</th><th>Kriterium</th><th>Nå</th><th></th></tr></thead><tbody>${critRows}</tbody></table></div></div>
     <div class="card"><div class="card-head"><div><h2>Fremdriftsplan</h2><p class="sub">Sett periode for hver fase og frist for hvert steg.</p></div></div>
       <div class="vphases">${phaseCards}</div></div>`;
+}
+/* Fremdrift øverst på STUD-ENT: begravelsesbyråer (ring mot målet), svar på undersøkelsen over tid,
+   og tall for sykehjem, dybdeintervjuer og partnere. Alt regnes ut fra registreringene. */
+function valDashboard() {
+  const A_ = id => (S.validation || {})[id];
+  const byra = A_("vA01"), survey = A_("vA02"), intv = A_("vA03"), part = A_("vA07"), home = A_("vA08");
+  if (!byra && !survey) return "";
+  const open = id => `data-act="vOpenAct" data-id="${id}"`;
+  let ring = "";
+  if (byra) {
+    const n = valCount(byra), goal = byra.goal || 50, pct = Math.min(1, n / goal), r = 42, c = 2 * Math.PI * r;
+    ring = `<section class="gt vd-tile" ${open(byra.id)}><span class="eyebrow">Begravelsesbyråer kontaktet</span>
+      <div class="vd-ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--line)" stroke-width="11"/>${n ? `<circle cx="50" cy="50" r="${r}" fill="none" stroke="var(--green)" stroke-width="11" stroke-dasharray="${(c * pct).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 50 50)" stroke-linecap="round"/>` : ""}</svg>
+      <div class="vd-ring-t"><b class="mono">${n}</b><span>av ${goal}</span></div></div></section>`;
+  }
+  let line = "";
+  if (survey) {
+    const logs = valLogs(survey.id).filter(l => l.date).sort((a, b) => a.date.localeCompare(b.date)), total = valCount(survey);
+    let chart = '<div class="vd-empty">Ingen svar registrert ennå.</div>';
+    if (logs.length) {
+      const today = todayISO(), start = logs[0].date, days = Math.max(1, Math.round((toUTC(today) - toUTC(start)) / 864e5));
+      const pts = []; let cum = 0; logs.forEach(l => { cum += logQty(l); pts.push([l.date, cum]); }); pts.push([today, cum]);
+      const W = 320, H = 120, L = 28, R = 8, T = 10, B = 22, max = Math.max(1, cum);
+      const X = d => L + (toUTC(d) - toUTC(start)) / 864e5 / days * (W - L - R), Y = v => T + (1 - v / max) * (H - T - B);
+      const path = pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join(" ");
+      chart = `<svg viewBox="0 0 ${W} ${H}" class="vd-line" role="img" aria-label="Svar på undersøkelsen over tid">
+        <line x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)"/><line x1="${L}" x2="${W - R}" y1="${Y(max)}" y2="${Y(max)}" stroke="var(--line)" stroke-dasharray="3 3"/>
+        <text x="${L - 6}" y="${Y(max) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${max}</text><text x="${L - 6}" y="${Y(0) + 4}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">0</text>
+        <path d="${path}" fill="none" stroke="var(--green)" stroke-width="2.2" stroke-linejoin="round"/>
+        ${pts.slice(0, -1).map(p => `<circle cx="${X(p[0]).toFixed(1)}" cy="${Y(p[1]).toFixed(1)}" r="3" fill="var(--green)"><title>${fmtDate(p[0], false)}: ${p[1]} svar</title></circle>`).join("")}
+        <text x="${L}" y="${H - 6}" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">${fmtDate(start, false)}</text><text x="${W - R}" y="${H - 6}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="Inter, sans-serif">I dag</text></svg>`;
+    }
+    line = `<section class="gt vd-tile vd-wide" ${open(survey.id)}><span class="eyebrow">Svar på markedsundersøkelsen</span><div class="gt-big"><b class="mono">${total}</b> svar${survey.goal ? ` av ${survey.goal}` : ""}</div>${chart}</section>`;
+  }
+  const num = (a, label) => a ? `<div class="vd-num" ${open(a.id)}><b class="mono">${valCount(a)}${a.goal ? `<small> / ${a.goal}</small>` : ""}</b><span>${label}</span></div>` : "";
+  const nums = `<section class="gt vd-tile"><span class="eyebrow">Andre kontakter</span><div class="vd-nums">${num(home, "Private sykehjem kontaktet")}${num(intv, "Dybdeintervjuer med arvinger")}${num(part, "Andre relevante partnere")}</div></section>`;
+  return `<div class="card"><div class="card-head"><div><h2>Fremdrift</h2></div></div><div class="vd-grid">${ring}${line}${nums}</div></div>`;
 }
 function valForm(a) {
   openForm({ title: "Aktivitet " + a.n, value: a,
@@ -3307,7 +3361,8 @@ function valForm(a) {
 function valLogForm(l, isNew) {
   const a = S.validation[l.act] || {};
   openForm({ title: (isNew ? "Registrer: " : "Endre: ") + (a.title || ""), value: l,
-    fields: [{ k: "name", label: "Navn", full: true, ph: "Person eller firma" }, { k: "phone", label: "Telefon", type: "tel", ph: "Valgfritt" },
+    fields: [{ k: "name", label: "Navn eller kilde", full: true, ph: "Person, firma eller f.eks. «Svar uke 47»" }, { k: "phone", label: "Telefon", type: "tel", ph: "Valgfritt" },
+      { k: "qty", label: "Antall", type: "number", hint: "Vanligvis 1. Bruk høyere tall for f.eks. flere svar på undersøkelsen på én gang." },
       { k: "date", label: "Dato", type: "date" }, { k: "by", label: "Hvem i teamet", type: "select", opts: personOpts() },
       { k: "note", label: "Resultat og notat", type: "textarea", full: true, ph: "F.eks. ikke svar, ring igjen tirsdag, positiv til å anbefale" }],
     onSave: v => {
@@ -3315,7 +3370,7 @@ function valLogForm(l, isNew) {
       const norm = x => String(x || "").toLowerCase().replace(/\s+/g, " ").trim(), digits = x => String(x || "").replace(/\D/g, "");
       const dup = valLogs(l.act).find(o => o.id !== l.id && (norm(o.name) === norm(v.name) || (digits(v.phone).length >= 8 && digits(o.phone) === digits(v.phone))));
       if (dup && modalCtx.dupFor !== dup.id) { modalCtx.dupFor = dup.id; return formError(`${dup.name} er allerede registrert${dup.by ? " av " + dup.by : ""}${dup.date ? " " + fmtDate(dup.date, false) : ""}. Trykk «Lagre» igjen for å registrere likevel.`); }
-      put("valLog", Object.assign(clone(l), v)); closeModal();
+      put("valLog", Object.assign(clone(l), v, { qty: Math.max(1, Math.round(v.qty || 1)) })); closeModal();
       if (isNew && a.status === "Ikke startet") put("validation", Object.assign(clone(a), { status: "Pågår" }));
       toast(isNew ? `${v.name} er registrert.` : "Endringen er lagret.");
     },
@@ -4383,8 +4438,9 @@ const A = {
   editCrit: el => { const c = S.validation[el.dataset.id]; if (c) critForm(clone(c)); },
   editPhase: el => { const f = S.validation[el.dataset.id]; if (f) phaseForm(clone(f)); },
   editValInfo: el => { const i = S.validation[el.dataset.id]; if (i) valInfoForm(clone(i)); },
+  vOpenAct: el => { UI.vOpen = UI.vOpen || {}; UI.vOpen[el.dataset.id] = true; render(true); const row = main.querySelector(`.vrow[data-id="${el.dataset.id}"]`); if (row) row.scrollIntoView({ behavior: "smooth", block: "center" }); },
   vToggle: el => { UI.vOpen = UI.vOpen || {}; UI.vOpen[el.dataset.id] = !UI.vOpen[el.dataset.id]; render(true); },
-  vLogNew: el => valLogForm({ id: uid("vl"), act: el.dataset.id, name: "", phone: "", date: todayISO(), by: UI.me || "", note: "", created: new Date().toISOString() }, true),
+  vLogNew: el => valLogForm({ id: uid("vl"), act: el.dataset.id, name: "", phone: "", qty: 1, date: todayISO(), by: UI.me || "", note: "", created: new Date().toISOString() }, true),
   vLogEdit: el => { const l = S.valLog[el.dataset.id]; if (l) valLogForm(clone(l), false); },
   vStepDone: el => vStepChange(el.dataset.id, el.dataset.s, f => { const x = f.steps.find(y => y.id === el.dataset.s); if (x) x.done = !x.done; }),
   vStepDel: el => vStepChange(el.dataset.id, el.dataset.s, f => { f.steps = f.steps.filter(y => y.id !== el.dataset.s); }),
