@@ -803,8 +803,14 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .vst-due input{border:1px solid var(--line);border-radius:8px;padding:2px 4px;font-size:11.5px;font-family:var(--mono);background:var(--card-hi);max-width:118px}
 .vph-foot{font-size:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.mt-prep{display:flex;flex-direction:column;gap:6px;background:var(--card-hi);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.mt-prep p{margin:0;white-space:pre-wrap;line-height:1.45}
+.mt-docs{flex-direction:column;align-items:stretch;gap:6px}
+.mt-docrow{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.mt-docrow .eyebrow{min-width:96px}
+.mt-agenda p{margin:4px 0 0;white-space:pre-wrap;line-height:1.45}
+.mt-place{margin:0;font-size:13px}
+.act-x{flex:none;opacity:.6}
+.act-x:hover{opacity:1}
+.form-panel{display:flex;flex-direction:column;gap:10px}
 .sub-list{display:flex;flex-direction:column;gap:6px}
 .sub-head,.sub-row{display:grid;grid-template-columns:minmax(170px,1.1fr) minmax(140px,1fr) minmax(140px,1fr) minmax(0,1.5fr);gap:14px;align-items:center;padding:9px 12px}
 .sub-head{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-block:2px}
@@ -2199,7 +2205,7 @@ function avtaler(iso) {
   const out = [], mine = mineView(), mineOk = x => !mine || (x.attendees || []).includes(UI.me);
   const timed = [];
   arr("meetings").filter(m => m.date === iso && mineOk(m))
-    .forEach(m => timed.push({ t: m.time, act: "editMeeting", id: m.id, title: m.title || "Møte", kind: m.time ? "Møte · kl. " + m.time + (m.endTime ? "–" + m.endTime : "") : "Møte", col: EVENT_COL["Møte"], who: m.attendees || [] }));
+    .forEach(m => timed.push({ t: m.time, act: "editMeeting", id: m.id, title: m.title || "Møte", kind: (m.time ? "Møte · kl. " + m.time + (m.endTime ? "–" + m.endTime : "") : "Møte") + (m.place ? " · " + m.place : ""), col: EVENT_COL["Møte"], who: m.attendees || [] }));
   arr("events").filter(e => e.date === iso && mineOk(e))
     .forEach(e => timed.push({ t: e.time, act: "editEvent", id: e.id, title: e.title || e.type, kind: (e.type || "Annet") + (e.time ? " · kl. " + e.time + (e.endTime ? "–" + e.endTime : "") : "") + (e.place ? " · " + e.place : ""), col: EVENT_COL[e.type] || EVENT_COL.Annet, who: e.attendees || [] }));
   timed.sort((a, b) => (a.t || "99").localeCompare(b.t || "99")).forEach(x => out.push(x));
@@ -2932,17 +2938,20 @@ VIEWS.moter = function () {
   // Kompakte linjer: tittel og dato. Trykk for å se deltakere, referat, beslutninger og actionpunkter.
   const rows = ms.map(m => {
     const open = xpOpen(m.id), dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean), acts = m.actions || [];
-    const meta = [dec.length ? `${dec.length} ${dec.length === 1 ? "beslutning" : "beslutninger"}` : "", acts.length ? `${acts.length} actionpunkt${acts.length === 1 ? "" : "er"}` : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
+    const meta = [m.prepNote || m.prepFileId || isUrl(m.prepLink) ? "forberedelse" : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
         <span class="mt-title">${esc(m.title || "Teammøte")}</span><em class="mt-date">${m.date ? fmtDate(m.date) : "uten dato"}${m.time ? " kl. " + esc(m.time) : ""}</em>
         <span class="mt-meta">${m.date > today ? '<span class="badge t-orange">Kommende</span> ' : ""}${esc(meta)}</span><span class="fx-chev">${ico("down", 2)}</span></button>
       ${open ? `<div class="mt-b">
         ${(m.attendees || []).length ? `<div class="mt-who">${(m.attendees || []).map(a => avatar(a, true)).join("")}<span class="muted">${(m.attendees || []).map(esc).join(", ")}</span></div>` : ""}
-        ${m.prepNote || m.prepFileId || isUrl(m.prepLink) ? `<div class="mt-prep"><span class="eyebrow">Forberedelse</span>${m.prepNote ? `<p>${ph(m.prepNote)}</p>` : ""}<div class="refrow" style="margin:0">${m.prepFileId ? fileLink(m.prepFileId, m.prepFileName) : ""}${isUrl(m.prepLink) ? `<a class="linkout" href="${esc(m.prepLink)}" target="_blank" rel="noopener">Åpne forberedelsen ↗</a>` : ""}</div></div>` : ""}
-        ${m.fileId || isUrl(m.link) ? `<div class="refrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}
+        ${m.place ? `<p class="mt-place"><span class="muted">Hvor:</span> ${esc(m.place)}</p>` : ""}
+        ${m.prepFileId || isUrl(m.prepLink) || m.fileId || isUrl(m.link) ? `<div class="refrow mt-docs">
+          ${m.prepFileId || isUrl(m.prepLink) ? `<div class="mt-docrow"><span class="eyebrow">Forberedelse</span>${m.prepFileId ? fileLink(m.prepFileId, m.prepFileName) : ""}${isUrl(m.prepLink) ? `<a class="linkout" href="${esc(m.prepLink)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}
+          ${m.fileId || isUrl(m.link) ? `<div class="mt-docrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}</div>` : ""}
+        ${m.prepNote ? `<div class="mt-agenda"><span class="eyebrow">Agenda og innspill</span><p>${ph(m.prepNote)}</p></div>` : ""}
         <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
-        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action"><span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}</div>`).join("") || '<p class="muted">Ingen.</p>'}</div></div></div>
+        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action"><span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}</div></div></div>
         <div class="card-foot" style="margin-top:0">${miniBtn("editMeeting", "Rediger", `data-id="${m.id}"`)}</div></div>` : ""}</div>`;
   }).join("");
   return `<div class="card mt-list">${rows}</div>`;
@@ -3948,19 +3957,20 @@ function meetingForm(m, isNew) {
   const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => a.text).join("\n"), with: meetingWith(m) });
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
-    fields: [{ k: "title", label: "Tittel", ph: "Teammøte" }, { k: "date", label: "Dato", type: "date" },
+    fields: [{ k: "title", label: "Tittel", ph: "F.eks. Teammøte" }, { k: "date", label: "Dato", type: "date" },
       { k: "time", label: "Fra kl.", type: "time" }, { k: "endTime", label: "Til kl.", type: "time" },
-      { k: "with", label: "Møte med", ph: "Velg eller skriv en ny samarbeidspartner", suggest: meetingPartners(), hint: "F.eks. Team eller HVL Skape. Skriv et nytt navn for å legge til en ny samarbeidspartner." },
+      { k: "with", label: "Møte med", ph: "Velg eller skriv", suggest: meetingPartners() },
+      { k: "place", label: "Hvor", ph: "F.eks. Teams eller et sted" },
       { k: "attendees", label: "Deltakere", type: "multi", full: true, opts: PEOPLE.map(p => [p, p]) },
-      { k: "prepNote", label: "Forberedelse og agenda", type: "textarea", full: true, ph: "Hva vil vi snakke om? F.eks. spørsmål til kunden eller intervjumal." },
-      { k: "prepFile", label: "Forberedelse (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true,
-        hint: (m.prepFileName ? `Nå: ${esc(m.prepFileName)}. Velg en ny fil for å bytte. ` : "") + UPLOAD_HINT },
-      { k: "prepLink", label: "Lenke til forberedelse (f.eks. Google Docs)", full: true, ph: "https://" },
-      { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true },
-      { k: "actionsText", label: "Actionpunkter (én per linje)", type: "textarea", full: true, hint: "Hvert actionpunkt kan gjøres om til en oppgave fra møtekortet." },
-      { k: "file", label: "Møtereferat (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true,
-        hint: (m.fileName ? `Nå: ${esc(m.fileName)}. Velg en ny fil for å bytte. ` : "") + UPLOAD_HINT },
-      { k: "link", label: "Lenke til referatet (f.eks. Google Docs)", full: true, ph: "https://" }],
+      { k: "prepNote", label: "Forberedelse og agenda", type: "textarea", full: true, ph: "Agenda og innspill", group: "prep" },
+      { k: "prepFile", label: "Forberedelse (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true, group: "prep",
+        hint: m.prepFileName ? `Nå: ${esc(m.prepFileName)}. Velg en ny fil for å bytte.` : "" },
+      { k: "prepLink", label: "Lenke til forberedelse (f.eks. Google Docs)", full: true, ph: "https://", group: "prep" },
+      { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true, group: "dec" },
+      { k: "actionsText", label: "Actionpunkter (én per linje)", type: "textarea", full: true, group: "act" },
+      { k: "file", label: "Møtereferat (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true, group: "ref",
+        hint: m.fileName ? `Nå: ${esc(m.fileName)}. Velg en ny fil for å bytte.` : "" },
+      { k: "link", label: "Lenke til referatet (f.eks. Google Docs)", full: true, ph: "https://", group: "ref" }],
     onSave: async f => {
       if ((f.link && !isUrl(f.link)) || (f.prepLink && !isUrl(f.prepLink))) return formError("Lenken må starte med https://");
       let fileInfo = {};
@@ -3972,12 +3982,32 @@ function meetingForm(m, isNew) {
       }
       const old = m.actions || [];
       const actions = f.actionsText.split("\n").map(s => s.trim()).filter(Boolean).map(text => { const hit = old.find(a => a.text === text); return hit ? hit : { id: uid("a"), text, taskId: "" }; });
-      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, prepNote: f.prepNote || "", prepLink: f.prepLink || "", decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
+      const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, place: f.place || "", prepNote: f.prepNote || "", prepLink: f.prepLink || "", decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
       if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
     },
     onDelete: isNew ? null : () => { del("meetings", m.id); closeModal(); }
   });
+  groupFields([["prep", "Forberedelse og agenda"], ["dec", "Beslutninger"], ["act", "Actionpunkter"], ["ref", "Møtereferat"]]);
+}
+// Samler felt med «group» bak knapper som åpner dem (uttrekkbare deler i skjemaet). En prikk viser at delen har innhold.
+function groupFields(groups) {
+  const form = document.getElementById("mform"); if (!form || !modalCtx) return;
+  const box = document.createElement("div"); box.className = "fl full";
+  box.innerHTML = `<div class="pk-btns">${groups.map(([g, l]) => `<button type="button" class="pk-btn" data-act="pkToggle" data-p="${g}" aria-expanded="false">${esc(l)}<b id="pkn-${g}" hidden>•</b>${ico("down", 2.2)}</button>`).join("")}</div>`;
+  for (const [g] of groups) {
+    const panel = document.createElement("div"); panel.className = "pk-panel form-panel"; panel.id = "pk-" + g; panel.hidden = true;
+    let filled = false;
+    for (const f of modalCtx.fields.filter(x => x.group === g)) {
+      const el = document.getElementById("f-" + f.k); if (!el) continue;
+      const fl = el.closest(".fl"); panel.appendChild(fl);
+      if (f.type !== "file" && String(modalCtx.value[f.k] || "").trim()) filled = true;
+    }
+    const v = modalCtx.value; if ((g === "prep" && v.prepFileId) || (g === "ref" && v.fileId)) filled = true;
+    box.appendChild(panel);
+    const dot = box.querySelector("#pkn-" + g); if (dot) dot.hidden = !filled;
+  }
+  const err = document.getElementById("form-err"); form.insertBefore(box, err);
 }
 
 /* ---------- Hva gjør vi nå? ---------- */
@@ -4157,7 +4187,7 @@ const A = {
   newHyp: () => hypForm({ id: uid("h"), n: Math.max(0, ...arr("hypotheses").map(h => h.n || 0)) + 1, title: "", falsifier: "", test: "", result: "", decision: "", evidence: "Antagelse", status: "Ikke testet" }, true),
   editInterview: el => { const i = S.interviews[el.dataset.id]; if (i) interviewForm(clone(i), false); },
   newInterview: () => { const nr = Math.max(0, ...arr("interviews").map(i => i.nr || 0)) + 1; interviewForm({ id: uid("i"), nr, title: "Intervju " + String(nr).padStart(2, "0"), date: todayISO(), segment: "", findings: "", owner: UI.me || "", hyps: [], files: [], link: "" }, true); },
-  newMeeting: el => { const w = UI.mtWith || "Team"; meetingForm({ id: uid("mt"), title: w === "Team" ? "Teammøte" : w + ": ", date: (el && el.dataset && el.dataset.d) || todayISO(), with: w, attendees: [...PEOPLE], decisions: "", actions: [] }, true); },
+  newMeeting: el => { const w = UI.mtWith || "Team"; meetingForm({ id: uid("mt"), title: "", date: (el && el.dataset && el.dataset.d) || todayISO(), with: w, attendees: [...PEOPLE], decisions: "", actions: [] }, true); },
   editMeeting: el => { const m = S.meetings[el.dataset.id]; if (m) meetingForm(clone(m), false); },
   actionToTask: el => {
     const m = clone(S.meetings[el.dataset.mid]); const a = m.actions.find(x => x.id === el.dataset.aid); if (!a) return;
@@ -4210,6 +4240,7 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  actionDel: el => { const m = clone(S.meetings[el.dataset.mid]); if (!m) return; m.actions = (m.actions || []).filter(a => a.id !== el.dataset.aid); put("meetings", m); },
   toggleMtFuture: () => { UI.mtFuture = !UI.mtFuture; render(true); },
   newSubscription: () => subscriptionForm({ id: uid("ab"), platform: "", url: "", login: "", note: "" }, true),
   editSubscription: el => { const x = S.subscriptions[el.dataset.id]; if (x) subscriptionForm(clone(x), false); },
