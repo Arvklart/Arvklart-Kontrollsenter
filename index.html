@@ -2723,7 +2723,7 @@ function subscriptionsView() {
       <div class="sub-link">${isUrl(x.url) ? `<a class="linkout" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(dom || x.url)} ↗</a>` : none}</div>
       <div class="sub-login"><span class="sub-lab">Innlogging: </span>${x.login ? `<span class="selectable">${esc(x.login)}</span>` : none}</div>
       <div class="sub-note">${x.note ? ph(x.note) : none}</div></div>`; }).join("");
-  return `<div class="card"><div class="card-head"><div><h2>Abonnement</h2><p class="sub">Plattformene vi bruker. Ikke skriv passord her.</p></div>${miniBtn("newSubscription", "+ Abonnement")}</div>
+  return `<div class="card"><div class="card-head"><div><h2>Abonnement</h2></div>${miniBtn("newSubscription", "+ Abonnement")}</div>
     ${rows ? `<div class="sub-list"><div class="sub-head"><span>Plattform</span><span>Lenke</span><span>Innlogging</span><span>Notater</span></div>${rows}</div>` : '<div class="empty">Ingen abonnement ennå. Legg inn plattformene dere bruker, med lenke og notater.</div>'}</div>`;
 }
 function subscriptionForm(x, isNew) {
