@@ -811,6 +811,9 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .act-x{flex:none;opacity:.6}
 .act-x:hover{opacity:1}
 .form-panel{display:flex;flex-direction:column;gap:10px}
+.pk-btns.sm{gap:5px}
+.pk-btns.sm .pk-btn{font-size:11.5px;padding:4px 9px;gap:4px}
+.pk-btns.sm .pk-btn svg{width:11px;height:11px}
 .sub-list{display:flex;flex-direction:column;gap:6px}
 .sub-head,.sub-row{display:grid;grid-template-columns:minmax(170px,1.1fr) minmax(140px,1fr) minmax(140px,1fr) minmax(0,1.5fr);gap:14px;align-items:center;padding:9px 12px}
 .sub-head{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;padding-block:2px}
@@ -3994,7 +3997,7 @@ function meetingForm(m, isNew) {
 function groupFields(groups) {
   const form = document.getElementById("mform"); if (!form || !modalCtx) return;
   const box = document.createElement("div"); box.className = "fl full";
-  box.innerHTML = `<div class="pk-btns">${groups.map(([g, l]) => `<button type="button" class="pk-btn" data-act="pkToggle" data-p="${g}" aria-expanded="false">${esc(l)}<b id="pkn-${g}" hidden>•</b>${ico("down", 2.2)}</button>`).join("")}</div>`;
+  box.innerHTML = `<div class="pk-btns sm">${groups.map(([g, l]) => `<button type="button" class="pk-btn" data-act="pkToggle" data-p="${g}" aria-expanded="false">${esc(l)}<b id="pkn-${g}" hidden>•</b>${ico("down", 2.2)}</button>`).join("")}</div>`;
   for (const [g] of groups) {
     const panel = document.createElement("div"); panel.className = "pk-panel form-panel"; panel.id = "pk-" + g; panel.hidden = true;
     let filled = false;
