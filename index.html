@@ -1586,13 +1586,17 @@ function parseOwners(str) {
 }
 const stripNum = t => String(t || "").replace(/^\s*\d+[.)]\s+/, "").trim();
 function normActions(m) {
+  // Deltakere med fullt navn («Bård Jakobsen Rinnan») vises med fornavnet fra teamet
+  if (Array.isArray(m.attendees)) m.attendees = [...new Set(m.attendees.map(a => PEOPLE.find(p => String(a).trim().split(/\s+/)[0].toLowerCase() === p.toLowerCase()) || a))];
   if (!Array.isArray(m.actions)) { m.actions = []; return m; }
   if (m.actions.some(a => Array.isArray(a.owners))) return m;
   let cur = [], out = [];
   for (const a of m.actions) {
     const head = parseOwners(String(a.text || "").replace(/:$/, ""));
     if (head && !a.taskId) { cur = head; continue; }
-    out.push(Object.assign({}, a, { text: stripNum(a.text), owners: [...cur] }));
+    // «Andrea: …» eller «Bård og Julie: …» i starten av punktet gir eier direkte
+    const p = parseActionLine(String(a.text || ""));
+    out.push(Object.assign({}, a, p.owners.length ? p : { text: stripNum(a.text), owners: [...cur] }));
   }
   m.actions = out; return m;
 }
