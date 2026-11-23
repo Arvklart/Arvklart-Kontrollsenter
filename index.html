@@ -808,6 +808,16 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .mt-docrow .eyebrow{min-width:96px}
 .mt-agenda p{margin:4px 0 0;white-space:pre-wrap;line-height:1.45}
 .mt-place{margin:0;font-size:13px}
+.act-own{flex:none;display:flex;gap:2px;min-width:22px}
+.act-own .av{width:20px;height:20px;font-size:9.5px}
+.act-own.grid{display:grid;grid-template-columns:repeat(2,13px);gap:1px;min-width:27px}
+.act-own.grid .av{width:13px;height:13px;font-size:7px}
+.claude-box{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--line);border-radius:12px;padding:10px;background:var(--card-hi)}
+.claude-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.claude-row .mini svg{width:11px;height:11px;vertical-align:-1px;margin-right:3px}
+#claude-panel{display:flex;flex-direction:column;gap:8px}
+#claude-panel[hidden]{display:none}
+#claude-text{min-height:140px}
 .act-x{flex:none;opacity:.6}
 .act-x:hover{opacity:1}
 .form-panel{display:flex;flex-direction:column;gap:10px}
@@ -873,7 +883,7 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .meeting ul{margin:0;padding-left:18px}
 .actions{display:flex;flex-direction:column;gap:6px}
 .action{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;background:var(--card-hi);border:1px solid var(--line);font-size:13.5px}
-.action span{flex:1;min-width:0}
+.action > span:not(.act-own){flex:1;min-width:0}
 .mini{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid #CDBBA4;background:var(--card);font-weight:600}
 .mini:hover{background:#fff}
 .mini.done{border-color:transparent;background:var(--green-soft);color:var(--green-ink);cursor:default}
@@ -1530,6 +1540,39 @@ const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(
 
 /* Områder som er slått sammen: gamle data tolkes inn i nytt område (og delfane), uten å skrive om databasen */
 const AREA_MOVED = { student: ["finans", "student"], jus: ["research", "juridisk"] };
+/* Actionpunkter i møter: { id, text, owners: [navn], taskId }. Alle fire = hele teamet.
+   Eldre møter hadde navnet som egen linje («Bård») og nummererte punkter under. De gjøres om her. */
+const TEAM_WORDS = ["hele teamet", "teamet", "alle", "team"];
+function parseOwners(str) {
+  const parts = String(str || "").split(/\s*(?:,|\bog\b|&|\/)\s*/i).map(x => x.trim()).filter(Boolean);
+  if (!parts.length) return null;
+  if (parts.length === 1 && TEAM_WORDS.includes(parts[0].toLowerCase())) return [...PEOPLE];
+  const names = parts.map(p => PEOPLE.find(n => n.toLowerCase() === p.toLowerCase()));
+  return names.every(Boolean) ? [...new Set(names)] : null;
+}
+const stripNum = t => String(t || "").replace(/^\s*\d+[.)]\s+/, "").trim();
+function normActions(m) {
+  if (!Array.isArray(m.actions)) { m.actions = []; return m; }
+  if (m.actions.some(a => Array.isArray(a.owners))) return m;
+  let cur = [], out = [];
+  for (const a of m.actions) {
+    const head = parseOwners(String(a.text || "").replace(/:$/, ""));
+    if (head && !a.taskId) { cur = head; continue; }
+    out.push(Object.assign({}, a, { text: stripNum(a.text), owners: [...cur] }));
+  }
+  m.actions = out; return m;
+}
+const ownersLabel = o => !o || !o.length ? "" : o.length >= PEOPLE.length && PEOPLE.every(p => o.includes(p)) ? "Hele teamet" : joinNames(o);
+// Én linje per actionpunkt i skjemaet: «Bård: Fikse dokumentet», «Bård og Julie: …», «Hele teamet: …»
+function parseActionLine(line) {
+  const i = line.indexOf(":");
+  if (i > 0) { const own = parseOwners(line.slice(0, i)); if (own) return { owners: own, text: stripNum(line.slice(i + 1)) }; }
+  return { owners: [], text: stripNum(line) };
+}
+function ownerBadge(o) {
+  if (!o || !o.length) return '<span class="act-own"></span>';
+  return `<span class="act-own${o.length >= 3 ? " grid" : ""}" title="${esc(ownersLabel(o))}">${o.map(p => avatar(p, true)).join("")}</span>`;
+}
 function normDoc(c, d) {
   // Finansiering er et eget område igjen (id «finans»). Det som lå under fanen Finansiering
   // (i Salg og partnere eller STUD-ENT), hører til oversikten. STUD-ENT er en fane under Finansiering.
@@ -1550,6 +1593,7 @@ function normDoc(c, d) {
     d.areas = [...new Set(d.areas.map(a => AREA_MOVED[a] ? AREA_MOVED[a][0] : a))];
   }
   if (c === "tasks") normTask(d);
+  if (c === "meetings") normActions(d);
   return d;
 }
 function loadFromArrays(src) {
@@ -2940,7 +2984,8 @@ VIEWS.moter = function () {
   if (!ms.length) return `<div class="card"><div class="empty">${UI.mtFuture ? "Ingen møter registrert ennå." : "Ingen gjennomførte møter ennå."}</div></div>`;
   // Kompakte linjer: tittel og dato. Trykk for å se deltakere, referat, beslutninger og actionpunkter.
   const rows = ms.map(m => {
-    const open = xpOpen(m.id), dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean), acts = m.actions || [];
+    const open = xpOpen(m.id), dec = (m.decisions || "").split("\n").map(s => s.trim()).filter(Boolean), allActs = m.actions || [];
+    const acts = mineView() ? allActs.filter(a => (a.owners || []).includes(UI.me)) : allActs, hiddenActs = allActs.length - acts.length;
     const meta = [m.prepNote || m.prepFileId || isUrl(m.prepLink) ? "forberedelse" : "", m.fileId || isUrl(m.link) ? "referat" : ""].filter(Boolean).join(" · ");
     return `<div class="mt-item${open ? " open" : ""}">
       <button class="mt-h" data-act="toggleXp" data-id="${m.id}" aria-expanded="${open}">
@@ -2954,7 +2999,7 @@ VIEWS.moter = function () {
           ${m.fileId || isUrl(m.link) ? `<div class="mt-docrow"><span class="eyebrow">Referat</span>${m.fileId ? fileLink(m.fileId, m.fileName) : ""}${isUrl(m.link) ? `<a class="linkout" href="${esc(m.link)}" target="_blank" rel="noopener">Åpne i Drive ↗</a>` : ""}</div>` : ""}</div>` : ""}
         ${m.prepNote ? `<div class="mt-agenda"><span class="eyebrow">Agenda og innspill</span><p>${ph(m.prepNote)}</p></div>` : ""}
         <div class="grid2"><div><span class="eyebrow">Beslutninger</span>${dec.length ? `<ul>${dec.map(d => `<li>${esc(d)}</li>`).join("")}</ul>` : '<p class="muted">Ingen registrert.</p>'}</div>
-        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action"><span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}</div></div></div>
+        <div><span class="eyebrow" style="display:block;margin-bottom:6px">Actionpunkter</span><div class="actions">${acts.map(a => `<div class="action">${ownerBadge(a.owners)}<span>${esc(a.text)}</span>${a.taskId && S.tasks[a.taskId] ? `<button class="mini done" data-act="editTask" data-id="${a.taskId}" style="cursor:pointer">${S.tasks[a.taskId].status === "Ferdig" ? "Ferdig" : "Oppgave opprettet"}</button>` : `<button class="mini" data-act="actionToTask" data-mid="${m.id}" data-aid="${a.id}">Opprett oppgave</button>`}<button class="step-x act-x" data-act="actionDel" data-mid="${m.id}" data-aid="${a.id}" aria-label="Fjern actionpunktet" title="Fjern">×</button></div>`).join("") || '<p class="muted">Ingen.</p>'}${hiddenActs ? `<p class="muted" style="font-size:12px;margin:2px 0 0">${hiddenActs} punkt${hiddenActs === 1 ? "" : "er"} for andre er skjult.</p>` : ""}</div></div></div>
         <div class="card-foot" style="margin-top:0">${miniBtn("editMeeting", "Rediger", `data-id="${m.id}"`)}</div></div>` : ""}</div>`;
   }).join("");
   return `<div class="card mt-list">${rows}</div>`;
@@ -3957,7 +4002,7 @@ function interviewForm(i, isNew) {
   });
 }
 function meetingForm(m, isNew) {
-  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => a.text).join("\n"), with: meetingWith(m) });
+  const v = Object.assign({}, m, { actionsText: (m.actions || []).map(a => (ownersLabel(a.owners) ? ownersLabel(a.owners) + ": " : "") + a.text).join("\n"), with: meetingWith(m) });
   openForm({
     title: isNew ? "Nytt møte" : "Rediger møte", value: v,
     fields: [{ k: "title", label: "Tittel", ph: "F.eks. Teammøte" }, { k: "date", label: "Dato", type: "date" },
@@ -3970,7 +4015,7 @@ function meetingForm(m, isNew) {
         hint: m.prepFileName ? `Nå: ${esc(m.prepFileName)}. Velg en ny fil for å bytte.` : "" },
       { k: "prepLink", label: "Lenke til forberedelse (f.eks. Google Docs)", full: true, ph: "https://", group: "prep" },
       { k: "decisions", label: "Beslutninger (én per linje)", type: "textarea", full: true, group: "dec" },
-      { k: "actionsText", label: "Actionpunkter (én per linje)", type: "textarea", full: true, group: "act" },
+      { k: "actionsText", label: "Actionpunkter (én per linje)", type: "textarea", full: true, group: "act", ph: "Bård: Fikse dokumentet\nHele teamet: Teste løsningen" },
       { k: "file", label: "Møtereferat (fil)", type: "file", accept: UPLOAD_ACCEPT, full: true, group: "ref",
         hint: m.fileName ? `Nå: ${esc(m.fileName)}. Velg en ny fil for å bytte.` : "" },
       { k: "link", label: "Lenke til referatet (f.eks. Google Docs)", full: true, ph: "https://", group: "ref" }],
@@ -3984,7 +4029,7 @@ function meetingForm(m, isNew) {
         catch (e) { btn.disabled = false; btn.textContent = "Lagre"; return formError(e.message); }
       }
       const old = m.actions || [];
-      const actions = f.actionsText.split("\n").map(s => s.trim()).filter(Boolean).map(text => { const hit = old.find(a => a.text === text); return hit ? hit : { id: uid("a"), text, taskId: "" }; });
+      const actions = f.actionsText.split("\n").map(s => s.trim().replace(/^[-•*]\s*/, "")).filter(Boolean).map(line => { const p = parseActionLine(line), hit = old.find(a => a.text === p.text); return Object.assign(hit ? clone(hit) : { id: uid("a"), taskId: "" }, p); });
       const o = Object.assign(clone(m), { title: f.title, date: f.date, time: f.time || "", endTime: f.endTime || "", with: f.with || "", attendees: f.attendees, place: f.place || "", prepNote: f.prepNote || "", prepLink: f.prepLink || "", decisions: f.decisions, actions, link: f.link || "" }, fileInfo);
       if (UI.mtWith && UI.mtWith !== meetingWith(o)) UI.mtWith = "";
       put("meetings", o); closeModal();
@@ -3992,6 +4037,54 @@ function meetingForm(m, isNew) {
     onDelete: isNew ? null : () => { del("meetings", m.id); closeModal(); }
   });
   groupFields([["prep", "Forberedelse og agenda"], ["dec", "Beslutninger"], ["act", "Actionpunkter"], ["ref", "Møtereferat"]]);
+  // «Lim inn fra Claude» øverst i skjemaet: fyller ut feltene, men lagrer ikke før man trykker Lagre
+  const form = document.getElementById("mform"), box = document.createElement("div"); box.className = "fl full claude-box";
+  box.innerHTML = `<div class="claude-row"><button type="button" class="mini" data-act="claudeToggle">${ico("plus", 2.4)}Lim inn fra Claude</button><button type="button" class="mini ghosty" data-act="claudePrompt">Kopier prompt</button></div>
+    <div id="claude-panel" hidden><textarea id="claude-text" placeholder="Lim inn svaret fra Claude her"></textarea><div class="claude-row"><button type="button" class="mini vreg" data-act="claudeFill">Fyll ut skjemaet</button><span class="muted" id="claude-msg"></span></div></div>`;
+  form.insertBefore(box, form.firstChild);
+}
+/* Prompten til Claude: sammen med transkripsjonen gir den et svar som «Lim inn fra Claude» kan lese */
+function claudePrompt() {
+  return `Du får en transkripsjon av et møte i Arvklart (Gruppe 6, NHH STR466). Teamet er ${joinNames(PEOPLE)}.
+
+Lag et møtereferat på norsk bokmål til Arvklart Kontrollsenter. Svar KUN med blokken under, i nøyaktig dette formatet, uten noe før eller etter. Ikke bruk fet skrift, overskrifter eller nummerering.
+
+TITTEL: [kort tittel, f.eks. Teammøte eller Møte med HVL Skape]
+DATO: [ÅÅÅÅ-MM-DD]
+FRA: [TT:MM, eller tom]
+TIL: [TT:MM, eller tom]
+MØTE MED: [Team, eller navnet på organisasjonen vi møtte]
+HVOR: [f.eks. Teams, eller tom]
+DELTAKERE: [navn fra teamet som var med, skilt med komma]
+BESLUTNINGER:
+- [én beslutning per linje]
+ACTIONPUNKTER:
+- [Navn]: [oppgaven]
+AGENDA:
+- [hovedtemaene i møtet, kort]
+
+Regler:
+1. Ta bare med det som faktisk ble sagt. Ikke dikt opp navn, tall, datoer eller avtaler. Er noe uklart, skriv [BEKREFT …].
+2. En beslutning er noe teamet ble enige om. Skriv den som en kort, hel setning.
+3. Et actionpunkt er noe en eller flere skal gjøre etter møtet. Start hver linje med hvem som har ansvaret, bare fornavn fra teamet: ${PEOPLE.join(", ")}. Flere personer skrives «Bård og Julie: …». Gjelder det alle, skriv «Hele teamet: …». Er det ingen tydelig ansvarlig, skriv «Hele teamet: …» og legg til [BEKREFT ansvarlig].
+4. Skriv actionpunktet som en konkret oppgave som starter med et verb, f.eks. «Bård: Sende utkastet av aksjonæravtalen til teamet». Ta med frist i teksten hvis den ble nevnt.
+5. Grupper actionpunktene etter person i denne rekkefølgen: ${PEOPLE.join(", ")}, og til slutt Hele teamet.
+6. Ingen nummerering. Én linje per punkt.
+7. Ikke ta med personopplysninger om andre enn teamet utover navn på organisasjoner og kontaktpersoner som er nødvendig for oppgaven.
+
+Her er transkripsjonen:
+[LIM INN TRANSKRIPSJONEN HER]`;
+}
+function parseClaude(txt) {
+  const out = { lists: {} }, keyOf = { "tittel": "title", "dato": "date", "fra": "time", "til": "endTime", "møte med": "with", "hvor": "place", "deltakere": "attendees", "beslutninger": "decisions", "actionpunkter": "actions", "agenda": "agenda" };
+  let cur = null;
+  for (const raw of String(txt || "").replace(/\*\*/g, "").split("\n")) {
+    const line = raw.trim(); if (!line) continue;
+    const m = line.match(/^#*\s*(tittel|dato|fra|til|møte med|hvor|deltakere|beslutninger|actionpunkter|agenda)\s*:\s*(.*)$/i);
+    if (m) { cur = keyOf[m[1].toLowerCase()]; if (m[2] && !["decisions", "actions", "agenda"].includes(cur)) out[cur] = m[2].trim(); else if (m[2]) (out.lists[cur] = out.lists[cur] || []).push(m[2].trim()); continue; }
+    if (cur && ["decisions", "actions", "agenda"].includes(cur)) (out.lists[cur] = out.lists[cur] || []).push(line.replace(/^[-•*]\s*/, "").replace(/^\d+[.)]\s+/, ""));
+  }
+  return out;
 }
 // Samler felt med «group» bak knapper som åpner dem (uttrekkbare deler i skjemaet). En prikk viser at delen har innhold.
 function groupFields(groups) {
@@ -4194,7 +4287,7 @@ const A = {
   editMeeting: el => { const m = S.meetings[el.dataset.id]; if (m) meetingForm(clone(m), false); },
   actionToTask: el => {
     const m = clone(S.meetings[el.dataset.mid]); const a = m.actions.find(x => x.id === el.dataset.aid); if (!a) return;
-    const t = newTask({ title: a.text, status: "Må gjøres", note: `Fra møte ${m.date ? fmtDate(m.date) : ""}`.trim() });
+    const t = newTask({ title: a.text, status: "Må gjøres", owners: [...(a.owners || [])], note: `Fra møte ${m.date ? fmtDate(m.date) : ""}`.trim() });
     put("tasks", t); a.taskId = t.id; put("meetings", m); toast("Actionpunktet er lagt til som oppgave i «Må gjøres».");
   },
   saveWin: () => {
@@ -4243,6 +4336,26 @@ const A = {
     if (ids.length) toast(ids.length === 1 ? "Oppgaven ligger nå i «Må gjøres»." : `${ids.length} oppgaver ligger nå i «Må gjøres».`);
   },
   noop: () => {},
+  claudeToggle: () => { const p = document.getElementById("claude-panel"); if (!p) return; p.hidden = !p.hidden; if (!p.hidden) document.getElementById("claude-text").focus(); },
+  claudePrompt: async () => {
+    const txt = claudePrompt();
+    try { await navigator.clipboard.writeText(txt); toast("Prompten er kopiert. Lim den inn hos Claude sammen med transkripsjonen."); }
+    catch (e) { const p = document.getElementById("claude-panel"), ta = document.getElementById("claude-text"); if (p && ta) { p.hidden = false; ta.value = txt; ta.select(); } toast("Kunne ikke kopiere automatisk. Prompten står i feltet. Kopier den med Cmd+C.", true); }
+  },
+  claudeFill: () => {
+    const r = parseClaude((document.getElementById("claude-text") || {}).value), msg = document.getElementById("claude-msg"), set = (k, v) => { const el = document.getElementById("f-" + k); if (el && v != null && v !== "") { el.value = v; el.classList.add("ai-filled"); } };
+    const valid = x => /^\d{4}-\d{2}-\d{2}$/.test(x || ""), tm = x => /^\d{1,2}[:.]\d{2}$/.test(x || "") ? x.replace(".", ":").padStart(5, "0") : "";
+    set("title", r.title); if (valid(r.date)) set("date", r.date); set("time", tm(r.time)); set("endTime", tm(r.endTime)); set("with", r.with); set("place", r.place);
+    if (r.attendees) { const names = r.attendees.split(/\s*(?:,|\bog\b)\s*/i).map(x => PEOPLE.find(p => p.toLowerCase() === x.trim().toLowerCase())).filter(Boolean);
+      if (names.length) modalEl.querySelectorAll('input[name="f-attendees"]').forEach(i => { i.checked = names.includes(i.value); }); }
+    const L = r.lists;
+    if (L.decisions) set("decisions", L.decisions.join("\n"));
+    if (L.actions) set("actionsText", L.actions.join("\n"));
+    if (L.agenda) set("prepNote", L.agenda.map(x => "- " + x).join("\n"));
+    const n = Object.keys(r).filter(k => k !== "lists" && r[k]).length + Object.keys(L).length;
+    if (msg) msg.textContent = n ? "Fylt ut. Se over feltene og trykk Lagre." : "Fant ikke noe å fylle ut. Sjekk at svaret følger formatet fra prompten.";
+    if (n) document.getElementById("claude-panel").hidden = true;
+  },
   actionDel: el => { const m = clone(S.meetings[el.dataset.mid]); if (!m) return; m.actions = (m.actions || []).filter(a => a.id !== el.dataset.aid); put("meetings", m); },
   toggleMtFuture: () => { UI.mtFuture = !UI.mtFuture; render(true); },
   newSubscription: () => subscriptionForm({ id: uid("ab"), platform: "", url: "", login: "", note: "" }, true),
