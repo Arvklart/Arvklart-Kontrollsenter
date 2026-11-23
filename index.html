@@ -812,6 +812,8 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .sub-name{display:flex;align-items:center;gap:10px}
 .sub-name b{font-size:14px;overflow-wrap:anywhere}
 .sub-row .clogo{width:28px;height:28px;flex:none}
+.sub-row .drive-logo{display:grid;place-items:center;background:#fff}
+.sub-row .drive-logo .drive-ico{width:18px;height:16px}
 .sub-link .linkout{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sub-login{overflow-wrap:anywhere}
 .sub-lab{display:none;color:var(--muted)}
@@ -2697,12 +2699,15 @@ VIEWS.selskap = function () {
   return tabs + selskapView() + (ts.length ? tasksBlock(ts, { area: "drift", sub: "selskap", hideTag: true, title: "Oppgaver om selskapet" }) : "");
 };
 /* Abonnement: plattformene vi bruker, med lenke, innlogging (uten passord) og notater. Samlingen «subscriptions». */
+// Logoen hentes fra nettstedet til plattformen. Kjente plattformer får logo selv uten lenke.
+const PLATFORM_DOMAINS = { "google drive": "drive.google.com", "google workspace": "workspace.google.com", "gmail": "mail.google.com", "supabase": "supabase.com", "vercel": "vercel.com", "github": "github.com", "canva": "canva.com", "figma": "figma.com", "notion": "notion.so", "slack": "slack.com", "claude": "claude.ai", "anthropic": "anthropic.com" };
+const platformDomain = x => PLATFORM_DOMAINS[String(x.platform || "").trim().toLowerCase()] || x.url || "";
 function subscriptionsView() {
   const list = arr("subscriptions").sort((a, b) => (a.platform || "").localeCompare(b.platform || "", "nb"));
   const rows = list.map(x => { const dom = cleanDomain(x.url);
     const none = '<span class="muted">–</span>';
     return `<div class="sub-row" data-act="editSubscription" data-id="${x.id}" tabindex="0">
-      <div class="sub-name">${orgLogo({ org: x.platform, website: x.url }, "sm")}<b>${esc(x.platform)}</b></div>
+      <div class="sub-name">${/^google drive$/i.test((x.platform || "").trim()) ? `<span class="clogo sm drive-logo" aria-hidden="true">${DRIVE_ICON}</span>` : orgLogo({ org: x.platform, website: platformDomain(x) }, "sm")}<b>${esc(x.platform)}</b></div>
       <div class="sub-link">${isUrl(x.url) ? `<a class="linkout" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(dom || x.url)} ↗</a>` : none}</div>
       <div class="sub-login"><span class="sub-lab">Innlogging: </span>${x.login ? `<span class="selectable">${esc(x.login)}</span>` : none}</div>
       <div class="sub-note">${x.note ? ph(x.note) : none}</div></div>`; }).join("");
