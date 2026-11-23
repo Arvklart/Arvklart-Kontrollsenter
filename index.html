@@ -812,8 +812,9 @@ td.num,th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
 .sub-name{display:flex;align-items:center;gap:10px}
 .sub-name b{font-size:14px;overflow-wrap:anywhere}
 .sub-row .clogo{width:28px;height:28px;flex:none}
-.sub-row .drive-logo{display:grid;place-items:center;background:#fff}
-.sub-row .drive-logo .drive-ico{width:18px;height:16px}
+.sub-row .plat-logo{display:grid;place-items:center;background:#fff}
+.sub-row .plat-logo svg{width:18px;height:18px}
+.sub-row .plat-logo .drive-ico{width:18px;height:16px}
 .sub-link .linkout{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sub-login{overflow-wrap:anywhere}
 .sub-lab{display:none;color:var(--muted)}
@@ -2701,13 +2702,24 @@ VIEWS.selskap = function () {
 /* Abonnement: plattformene vi bruker, med lenke, innlogging (uten passord) og notater. Samlingen «subscriptions». */
 // Logoen hentes fra nettstedet til plattformen. Kjente plattformer får logo selv uten lenke.
 const PLATFORM_DOMAINS = { "google drive": "drive.google.com", "google workspace": "workspace.google.com", "gmail": "mail.google.com", "supabase": "supabase.com", "vercel": "vercel.com", "github": "github.com", "canva": "canva.com", "figma": "figma.com", "notion": "notion.so", "slack": "slack.com", "claude": "claude.ai", "anthropic": "anthropic.com" };
-const platformDomain = x => PLATFORM_DOMAINS[String(x.platform || "").trim().toLowerCase()] || x.url || "";
+// Kjente plattformer får en liten, tegnet logo (SVG), siden bilder fra andre nettsteder ikke alltid lastes
+const PLATFORM_SVG = {
+  "google drive": DRIVE_ICON,
+  "supabase": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.7 23.1c-.6.8-1.8.3-1.8-.6V13.6H3.2c-1.5 0-2.3-1.7-1.3-2.9L10.3.9c.6-.8 1.8-.3 1.8.6v8.9h8.7c1.5 0 2.3 1.7 1.3 2.9z" fill="#3ECF8E"/></svg>',
+  "vercel": '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 22.5 21h-21z" fill="#000"/></svg>',
+  "github": '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#181717" d="M12 .3a12 12 0 0 0-3.8 23.4c.6.1.8-.3.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1.1 1.8 2.8 1.3 3.5 1 0-.8.4-1.3.7-1.6-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.2-3.2 0-.3-.5-1.5.2-3.2 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.7 1.7.2 2.9.1 3.2.8.8 1.2 1.9 1.2 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A12 12 0 0 0 12 .3"/></svg>'
+};
+function platformLogo(x) {
+  const svg = PLATFORM_SVG[String(x.platform || "").trim().toLowerCase()];
+  return svg ? `<span class="clogo sm plat-logo" aria-hidden="true">${svg}</span>` : orgLogo({ org: x.platform, website: platformDomain(x) }, "sm");
+}
+const platformDomain = x =>PLATFORM_DOMAINS[String(x.platform || "").trim().toLowerCase()] || x.url || "";
 function subscriptionsView() {
   const list = arr("subscriptions").sort((a, b) => (a.platform || "").localeCompare(b.platform || "", "nb"));
   const rows = list.map(x => { const dom = cleanDomain(x.url);
     const none = '<span class="muted">–</span>';
     return `<div class="sub-row" data-act="editSubscription" data-id="${x.id}" tabindex="0">
-      <div class="sub-name">${/^google drive$/i.test((x.platform || "").trim()) ? `<span class="clogo sm drive-logo" aria-hidden="true">${DRIVE_ICON}</span>` : orgLogo({ org: x.platform, website: platformDomain(x) }, "sm")}<b>${esc(x.platform)}</b></div>
+      <div class="sub-name">${platformLogo(x)}<b>${esc(x.platform)}</b></div>
       <div class="sub-link">${isUrl(x.url) ? `<a class="linkout" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(dom || x.url)} ↗</a>` : none}</div>
       <div class="sub-login"><span class="sub-lab">Innlogging: </span>${x.login ? `<span class="selectable">${esc(x.login)}</span>` : none}</div>
       <div class="sub-note">${x.note ? ph(x.note) : none}</div></div>`; }).join("");
